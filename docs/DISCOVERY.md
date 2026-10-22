@@ -3,9 +3,23 @@
 Run: 2026-10-22. Source: `stinkin_catalog` on Hetzner (PostgreSQL 15.17), role `hdchop_ro` (read-only; write attempt rejected).
 Raw output: `reports/0*_20261022_*.txt` (git-ignored, regenerate with `scripts/discovery/`).
 
-## Gate verdict: NOT PASSED
+## Gate verdict: NOT PASSED as originally written → path chosen
 
-Conditions partly survived extraction, but the bigger problem is row alignment. The table the docs assumed (`oem_fitment`) has part numbers, descriptions and models drifting apart. A cleaner table exists (`hd_oem_catalog_reference`) but has its own extractor defects. Fix the extractor (or at minimum the items under "Extractor fixes") before Phase 1 ETL.
+Conditions partly survived extraction, but the bigger problem is row alignment. The table the docs assumed (`oem_fitment`) has part numbers, descriptions and models drifting apart. A cleaner table exists (`hd_oem_catalog_reference`) but has its own extractor defects.
+
+## Decision (2026-10-22): assemble our own fitment from multiple sources
+
+Laken chose to build `hdchop` as a merged layer instead of fixing the extractor first. Each field comes from the source that is most reliable for it, other sources corroborate or repair it, and every fitment row records its source and confidence. Ambiguous or conflicting rows go to a review report, never into the app. Plan: `docs/ETL_PLAN.md`.
+
+Why it's viable: of 16,503 truncated (base, year) part numbers in the reference table, 13,884 (84%) have exactly one full-number candidate in the same year across `oem_fitment` + the reference table; 1,367 ambiguous, 230 unique in another year, 135 ambiguous in another year, 887 (5%) no candidate. Extractor fixes become optional follow-up for the remaining ~16%.
+
+| Field | Primary | Corroborate / repair |
+|---|---|---|
+| Part number | `hd_oem_catalog_reference` | `oem_fitment` + reference full numbers repair truncated ones |
+| Part name + fitted models | `hd_oem_catalog_reference` (`description`, `used_on_raw`) | `oem_fitment` same number + year raises confidence; its page-level models are not trusted |
+| Carb vs EFI | `…I` model codes | Description text |
+| Other conditions | Description + `used_on_raw` text | — |
+| Vehicles | `harley_families` → `harley_models` → `harley_model_years` (the live picker: 3,199 year×model, incl. 30 `…I` codes) | `hd_year_model_master` (1,618; 1,518 overlap, 100 only there) |
 
 ## Where the data lives
 
@@ -75,7 +89,7 @@ The `hdchop_ro` role currently has SELECT on every table in `public`, including 
 
 ## Decisions for Laken
 
-- **Primary fitment source:** `hd_oem_catalog_reference` (recommended) vs `oem_fitment`.
+- ~~**Primary fitment source**~~ — decided 2026-10-22: assembled, reference table primary (see Decision above).
 - **Supersession:** the 283 inferred A→B→C pairs conflict with the domain rule "letter suffixes at the same year = parallel options". Either drop them or confirm they're true revisions. Real supersession data (e.g. "use 63501-68B" notes — 40+ rows in `qty_note`, more in descriptions) could be mined instead.
 - **Vehicle platform mapping:** `hd_year_model_master.platform` is FL/FX/XL; map to touring/softail/dyna/sportster with the FL/FX domain rule, and add EFI `…I` codes.
 - **Seeds:** catalog wording confirmed for e.g. `FUEL TANK`, `FUEL TANK KIT (prime)`, `AIR CLEANER`, `SADDLEBAGS`, `HORN`, `HANDLEBAR`. Run the per-term match counts (ETL step 05) against the chosen table.
