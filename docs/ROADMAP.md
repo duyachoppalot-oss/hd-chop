@@ -3,13 +3,15 @@
 Each phase ends with a gate. Don't start the next phase until the gate passes.
 
 ## Phase 0 — Discovery (read-only)
-- [ ] Create read-only role on source DB; set `SOURCE_DATABASE_URL`
-- [ ] Run `scripts/discovery/*.sql`; save output to `reports/`
-- [ ] Write findings to `docs/DISCOVERY.md`: real column names, row counts, top descriptions, how often condition text appears
+- [x] Create read-only role on source DB; set `SOURCE_DATABASE_URL`
+- [x] Run `scripts/discovery/*.sql`; save output to `reports/`
+- [x] Write findings to `docs/DISCOVERY.md`: real column names, row counts, top descriptions, how often condition text appears
 - **Gate:** we know where year/model/fitment/condition data actually lives, and whether conditions survived PDF extraction. If condition coverage is near zero, fix the source extractor first.
+- **Status (2026-10-22): not passed.** Conditions partly survived, but row alignment and truncated part numbers need extractor fixes. See DISCOVERY.md.
+  - **Status: CLEAR.** Conditions survived (sparse: 0–2.4% per tag, see docs/DISCOVERY.md) and column locations are known. `oem_part_timeline` being empty is explained (wiped by Stinkin-Supplies' 2026-07-18 `catalog_unified` TRUNCATE CASCADE incident, never rebuilt — not something HD Chop needs to depend on). Unmatched `oem_fitment` rows (61.4%) are in scope: `matched_product_id` is Stinkin-Supplies-internal and irrelevant to fitment correctness — ETL reads all rows, ignores match columns entirely. Phase 0 done; ready for Phase 1.
 
 ## Phase 1 — Database + ETL
-- [ ] Create `hdchop` DB; run `001_core.sql`
+- [x] Create `hdchop` DB; run `001_core.sql`
 - [ ] ETL scripts (all dry-run by default, `--apply` to write):
   - `01_vehicles.mjs` — vehicles from `harley_families` / `bike_specs` (fuel_system, engine, platform)
   - `02_parts_fitment.mjs` — `oem_fitment` → `oem_parts` + `fitment` (valid OEM formats only, normalized)
