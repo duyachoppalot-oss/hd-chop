@@ -76,11 +76,15 @@ CREATE TABLE search_misses (
 );
 
 -- Collapse fitment years into continuous spans (gaps-and-islands).
+-- concept_id comes from the chain root's part, so it is one value per chain;
+-- older numbers in a chain tagged with a different concept can't split spans
+-- or break the unique index (needed for REFRESH ... CONCURRENTLY).
 CREATE MATERIALIZED VIEW fitment_spans AS
 WITH f AS (
-  SELECT DISTINCT p.chain_root, p.concept_id, v.model_code, fi.conditions, v.year
+  SELECT DISTINCT p.chain_root, r.concept_id, v.model_code, fi.conditions, v.year
   FROM fitment fi
   JOIN oem_parts p USING (oem_number)
+  LEFT JOIN oem_parts r ON r.oem_number = p.chain_root
   JOIN vehicles  v USING (vehicle_id)
 ), g AS (
   SELECT f.*,
