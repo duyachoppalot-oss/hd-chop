@@ -1,0 +1,42 @@
+# HD Chop — Claude Code instructions
+
+Harley-Davidson OEM part fitment lookup app. User picks year + model, types plain words ("gas tank"), gets every OEM part that fits, the year span each part was used, and the conditions that split it (carbureted vs EFI, ABS, etc.). Monetized as an App Store subscription. Brand-new repo. Owner: Laken (solo dev).
+
+## Read first, every session
+1. docs/SPEC.md — product, search pipeline, API contract
+2. docs/DATA_RIGHTS.md — what source data may be copied into this app
+3. docs/ROADMAP.md — current phase and gates
+4. docs/HANDOFF_LOG.md — append an entry at the end of every session
+
+## Stack
+- `apps/mobile` — Expo (Expo Router, TypeScript)
+- `apps/api` — Next.js 15 route handlers on Vercel (TypeScript)
+- `packages/db/migrations` — numbered plain `.sql` files
+- `scripts/etl`, `scripts/discovery` — Node ESM `.mjs`, `pg` Pool
+- DB: dedicated Postgres database `hdchop` (`APP_DATABASE_URL`)
+- Source data: existing Stinkin' Supplies catalog DB (`SOURCE_DATABASE_URL`, read-only role)
+- Search MVP: Postgres only (`pg_trgm` + synonym table). Typesense is optional later.
+- Subscriptions: RevenueCat (Phase 4)
+
+## Hard rules
+1. Never write to the source DB. Only SELECT from `SOURCE_DATABASE_URL`.
+2. Every ETL/mutation script is dry-run by default and writes only with `--apply`. Dry run writes `reports/<script>_<timestamp>.txt` with row counts + 20 sample rows.
+3. Real data over guesses. Query the source and show counts before mapping or seeding. Never invent part numbers, years, or fitment.
+4. Copy only the columns cleared in DATA_RIGHTS.md.
+5. Postgres regex word boundary is `\y`, not `\b` (write `\\y` inside JS template strings).
+6. Vercel can't resolve IPv6. Deployed code connects via `APP_DATABASE_URL` only.
+7. Redirect large script output: `node script.mjs > reports/out.txt 2>&1`
+8. Check syntax after edits: `node --check file.mjs && echo "SYNTAX OK"`
+9. Use `str_replace` for targeted edits; heredoc for full-file writes.
+10. Be terse. Act, then report.
+
+## Harley domain rules
+- FL/FX combined token = Softail; bare FL = Touring; bare FX = Dyna (mounting is physically incompatible).
+- Twin Cam is an engine generation, not a synonym for Big Twin.
+- EVO 883/1200 = Evolution-era Sportster XL883/XL1200.
+- OEM number year suffix (century-aware): 3–4 digit base = always 19XX; 5+ digit base: 00–26 = 20XX, 27–99 = 19XX.
+- Letter suffixes at the same year = parallel options, not timeline steps.
+- Model names get reused across platforms (Fat Bob: Dyna FXDF vs Softail FXFB). Model aliases must be year-bounded.
+
+## Design
+Mobile-first. Black and gold. Nostalgic: old dealer counter / shop-manual feel. Big tap targets, readable in a garage.

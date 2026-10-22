@@ -1,0 +1,37 @@
+alias,model_code,year_start,year_end,note
+road king,FLHR,,,
+road king classic,FLHRC,,,
+electra glide,FLHT,,,Standard
+electra glide classic,FLHTC,,,
+ultra classic,FLHTCU,,,
+ultra,FLHTCU,,,
+ultra limited,FLHTK,,,
+street glide,FLHX,,,
+street glide special,FLHXS,,,
+road glide,FLTR,,,check year bounds vs FLTRX
+road glide ultra,FLTRU,,,
+heritage,FLSTC,,2017,Heritage Softail Classic; verify end year
+heritage classic,FLHC,2018,,Milwaukee-Eight Softail; verify start year
+fat boy,FLSTF,,2017,verify end year
+fat boy,FLFB,2018,,verify start year
+softail standard,FXST,,,
+night train,FXSTB,,,
+softail custom,FXSTC,,,
+softail deluxe,FLSTN,,,
+breakout,FXSB,,2017,verify
+breakout,FXBR,2018,,verify
+fat bob,FXDF,,2017,Dyna Fat Bob; verify years
+fat bob,FXFB,2018,,Softail Fat Bob; verify years
+wide glide,FXDWG,,,Dyna Wide Glide
+low rider,FXDL,,2017,Dyna Low Rider; verify
+low rider,FXLR,2018,,Softail Low Rider; verify
+street bob,FXDB,,2017,Dyna Street Bob; verify
+street bob,FXBB,2018,,Softail Street Bob; verify
+super glide,FXD,,,
+sportster 883,XL883,,,
+iron 883,XL883N,,,
+sportster 1200,XL1200,,,
+1200 custom,XL1200C,,,
+nightster,XL1200N,,,
+forty eight,XL1200X,,,
+48,XL1200X,,,
