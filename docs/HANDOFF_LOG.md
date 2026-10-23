@@ -112,3 +112,9 @@ Append one entry per session. Newest at the bottom.
 - Decisions: ALL scope from codes the same document lists explicitly (≥2 rows); "FXRS CONV" ≠ FXRS; early/late boundary years low confidence
 - Follow-ups: vehicles missing for codes the catalogs use (FXDBP, XL1200CP, FXDBA/B/C, XL1200CB/CA, XL883HUG, FLHFB); option-letter scopes (GE, HX, BJ, KX) unmapped
 - Next: apply 03 (needs go-ahead); 04_conditions.mjs
+
+### 2026-10-23 (03 apply + gate spot-check)
+- Done: 03_fitment.mjs --apply → 751,589 fitment rows; fitment_spans refreshed (284,056 spans, 22,099 chain roots, 138 models; 4.7 s)
+- Gate spot-check: precision good (tanks, bags, oil filters, Fat Bob reuse all on the right platform/era); recall gaps — 51,223 one-year and 13,116 two-year holes inside spans, 46% of spans single-year; Evo outer primary covers missing. Gate NOT passed. Details in ETL_PLAN "Gate spot-check".
+- Decision needed: rule for bridging span holes (e.g. bridge a hole only when no catalog in that year covers the model at all)
+- Next: decide hole rule; 04_conditions.mjs

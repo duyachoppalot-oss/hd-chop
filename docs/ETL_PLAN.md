@@ -41,7 +41,7 @@ Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit
 - Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
 - Known leftovers: a few names keep OCR tails (`… eeeeen`, cut words); `1010` carries a figure heading ("Fuel tank & trim california…") — watch for it in 06 concept matching.
 
-### 03_fitment.mjs — dry-run reviewed 2026-10-23 (not applied)
+### 03_fitment.mjs — applied 2026-10-23 (751,589 rows)
 Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`lib/parts.mjs`), `used_on_raw` parsed by `lib/usedon.mjs`; `oem_fitment` for corroboration.
 1. `used_on_raw` kinds: `codes` (148,672 rows; tags `103`/`ANV`/`TC`/`SHRINE`/`CVO`/`SE` and glued `…ANV` stripped; `CONV` only for FXDS; a year next to a code wins over the catalog year), `all` (56,248), `family` `DYNA: 93*-ALL` (9,676; `*`/`'`/`•` = and later; no star = that year only), `range` `86 TO * - ALL MODELS` / `86 TO 92 - XLH, XLCH` (7,279; "early/late YY" boundary year → low), `unparsed` (17,645 → review: option-letter scopes like `DYNA: 95*-GE` 8,165, fragments, sidecar notes).
 2. **`ALL` scope** = every code listed explicitly in ≥2 rows of the same document, × the row's year. Per-model titles are family catalogs (e.g. "2016 DYNA FAT BOB (FXDF 103)" lists all Dyna codes); the report prints the scope per document — each maps to one platform.
@@ -79,3 +79,11 @@ Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report 
 
 ## Phase 1 gate (unchanged)
 Spot-check 10 known parts by hand (Touring fuel tank, EVO vs Twin Cam primary cover, …). Spans and conditions match reality. Also: review-file sizes are reported and accepted.
+
+### Gate spot-check — 2026-10-23, after 03 (conditions not built yet)
+Precision is good; recall is not.
+- Right part, right platform/era: Touring tank 61225-98 → 61268-03 (2004–07) → 61268-08 (2008+); Sportster tank 61348-03 (1999–2003) → 61348-04 (2004–06, rubber-mount frame); Touring saddlebag 90xxx-93 → 902004xx (2014+); Twin Cam oil filters 63798-99A / 63731-99A only on 1999+ Dyna/Softail/Touring; Dyna Fat Bob FXDF tank 61586-04A/B vs Softail Fat Bob FXFB 61000675 — the reused name doesn't cross. Only one tank/bag/primary-cover part spans two platforms (60563-08A: FLD + FLS), and the catalogs list it for both.
+- **Holes:** spans skip years when a catalog for that year doesn't list the part (61268-08: 2008, 2010, 2013–19). Of 284,056 spans, 129,796 are single-year; 51,223 one-year holes and 13,116 two-year holes between spans of the same part+model.
+- **Missing parts:** Evo-era outer primary covers for FLSTC/FXDWG don't show (only gaskets/screws); 63805-80A (Evo oil filter) shows only 1984–86 FXR and 1991.
+- **Verdict: not passed yet.** Needs a hole-bridging rule (decision pending) and conditions (04).
+
