@@ -62,13 +62,17 @@ Re-targets catalog rows exactly as 03 (`lib/fitment.mjs`, now shared) and tags `
 - Caveat: inferred carb/efi is mostly fuel-system parts (carburetor, needle, float, jets / fuel, throttle, regulator, sensor), but also screws, springs, washers, terminals — likely carb internals / EFI wiring, not verifiable from the data. Kept as `inferred` so the app can show it softer.
 - Applied (after the domestic fix): hdi 23,303; carb 6,464; efi 4,371; california 3,146; abs 2,651; laced 1,406; non_abs 671; cast 544; non_california 164 (all emissions parts: evaporative lines, vent hoses, valve-to-atmosphere tubes). catalog_text 32,160, inferred 9,904.
 
-### 05_supersession.mjs — real supersession only
-1. **Do not load** the 283 `oem_supersession` rows: all `inferred` letter bumps, which the domain rule says are parallel options.
-2. Mine `(use NNNNN-YY[A])` notes from reference descriptions and `oem_fitment.qty_note` (40+ rows) as `from → to`, `source='catalog_use_note'`.
-3. Compute `chain_root` (recursive, cycle-safe); cycles → review file.
+### 05_supersession.mjs — dry-run reviewed 2026-10-23 (not applied)
+1. **Do not load** the 283 source `oem_supersession` rows (all `inferred` letter bumps = parallel options).
+2. Mine reference descriptions: `(use X)` → line → X; `(replaces X & Y)` → X, Y → line. Skip `use w/ …`, `also order …`. Line numbers resolve as in 02. `oem_fitment` notes only corroborate (misaligned rows); pairs seen only there → review.
+3. Pairs whose part names have different head words → review (mostly "piece now sold as assembly": idler gear → complete starter; chaining would merge different parts' spans). A newer number with an older `-YY` is allowed (HD consolidates onto older numbers) and counted. An explicit "use" note on a same-year letter bump (74420-94 → 74420-94C) is accepted — catalog text beats the parallel-options default.
+4. `chain_root`: follow to the end; numbers replaced by several (left/right splits) or cycles keep themselves; the chain stops at the last number in `oem_parts`.
+- Dry run: 1,120 note lines → 270 pairs (161 also in oem_fitment) → 162 accepted (22 with older-suffix target), 128 parts get a new chain_root; chains 2: 102, 3: 7, 4: 4; no cycles. Review 322: unresolved line number 161, name mismatch 108, oem_fitment-only 40, replaced-by-several 13.
 
-### 06_concepts.mjs — unchanged from ROADMAP
-Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report per-term counts; 0-match terms fixed before `--apply`.
+### 06_concepts.mjs — dry-run reviewed 2026-10-23 (not applied)
+Seed `data/seed/concepts_seed.csv` (now with `match` and `exclude_terms` columns). Each name gives a head phrase and a reversed phrase ("Cover, primary" → "primary cover"), split on `,` and ` - `, with and without filler words (assembly, kit, set…). `head` mode: phrase must end with the term (noun agrees — "Gasket, primary cover" is a gasket). `contains` mode for component families (Tour-Pak, air cleaner). Excludes match anywhere. Head beats contains, then longest term.
+- Seed fixes from real wording: Harley says "rear fork" (swingarm), "fork slider & tube"/"slider" (fork tube), "cover, clutch"/"inspection cover, clutch" (derby cover), "pad kit"/"pad set" (brake pads), "cover, pushrod"; narrowed rotor → "brake rotor", regulator → "voltage regulator", filler cap → "fuel filler cap"; excluded seat/lower fairing, clutch master cylinder, fob battery; master cylinder concept renamed "Brake Master Cylinder". Synonyms with no catalog match moved from hd_terms to user_terms (still searchable).
+- Dry run: 67 concepts, 88 hd_terms, 0 zero-match terms, 0 empty concepts, 0 ties. 4,524 parts assigned (52,532 fitment rows of 767,788 — the rest is hardware: screws, washers, gaskets…, reachable via the trigram fallback).
 
 ### 07_bridge_holes.mjs — re-applied 2026-10-23 with `--max-hole 3` (16,871 rows)
 Fills year holes inside spans (gate finding). A hole between two listed years of the same part + model + conditions is bridged only if every hole year has a vehicle row and **no catalog covers that vehicle at all** (no oem_catalog fitment of any part). Bridged rows: `source='inferred_span'`, `confidence='medium'`, conditions copied, `source_ref='bridge:<left>|<right>'`. Runs after 03/04; `--apply` replaces all inferred_span rows. `--max-hole N` caps the hole length.

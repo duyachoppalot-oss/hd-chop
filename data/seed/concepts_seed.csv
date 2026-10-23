@@ -1,68 +1,68 @@
-slug,display_name,category,hd_terms,user_terms
-fuel_tank,Fuel Tank,fuel,fuel tank|tank fuel,gas tank|tank|gas
-fuel_cap,Fuel Cap,fuel,fuel cap|filler cap,gas cap|tank cap
-fuel_petcock,Fuel Valve,fuel,fuel valve|petcock,petcock|fuel shutoff|gas valve
-fuel_pump,Fuel Pump,fuel,fuel pump,gas pump
-carburetor,Carburetor,fuel,carburetor,carb|cv carb
-throttle_body,Throttle Body,fuel,throttle body|induction module,tb
-fuel_injector,Fuel Injector,fuel,injector,injectors
-air_cleaner,Air Cleaner,intake,air cleaner|air filter element,air filter|intake|breather
-front_fender,Front Fender,body,front fender,fender front
-rear_fender,Rear Fender,body,rear fender,fender rear|back fender
-saddlebag,Saddlebag,luggage,saddlebag,bags|saddle bags|hard bags|side bags
-tour_pak,Tour-Pak,luggage,tour-pak|tour pak,trunk|top case|top box|tour pack
-fairing_outer,Outer Fairing,body,outer fairing|fairing,batwing|front fairing
-fairing_inner,Inner Fairing,body,inner fairing,inner fairing|dash
-windshield,Windshield,body,windshield,windscreen|shield
-seat,Seat,seating,seat,saddle
-sissy_bar,Sissy Bar,seating,sissy bar|backrest upright,backrest|sissy
-luggage_rack,Luggage Rack,luggage,luggage rack,rack
-handlebar,Handlebar,controls,handlebar,bars|apes|ape hangers
-riser,Handlebar Riser,controls,riser,risers
-grip,Hand Grip,controls,grip,grips
-mirror,Mirror,controls,mirror,mirrors
-master_cyl_front,Front Master Cylinder,brakes,master cylinder,front brake lever|brake master
-brake_caliper,Brake Caliper,brakes,caliper,calipers|brake caliper
-brake_rotor,Brake Rotor,brakes,brake disc|rotor,rotor|brake disc|disc
-brake_pads,Brake Pads,brakes,brake pad|pad kit,pads|brake pads
-brake_pedal,Brake Pedal,controls,brake pedal,rear brake lever
-shift_lever,Shift Lever,controls,shift lever|shifter,shifter|heel toe|shift peg
-footpeg,Footpeg,controls,footpeg|footrest,pegs|foot pegs
-floorboard,Floorboard,controls,footboard|floorboard,boards|floor boards
-jiffy_stand,Jiffy Stand,frame,jiffy stand,kickstand|kick stand|side stand
-clutch_cable,Clutch Cable,controls,clutch cable,clutch line
-throttle_cable,Throttle Cable,controls,throttle cable|idle cable,throttle cables
-headlamp,Headlamp,lighting,headlamp,headlight|head light
-tail_lamp,Tail Lamp,lighting,tail lamp,taillight|tail light|brake light
-turn_signal,Turn Signal,lighting,turn signal,blinkers|blinker|signals|turn signals
-speedometer,Speedometer,instruments,speedometer,speedo|gauge|speed gauge
-tachometer,Tachometer,instruments,tachometer,tach|rpm gauge
-ignition_switch,Ignition Switch,electrical,ignition switch,key switch|ignition
-starter,Starter,electrical,starter motor|starter,starter motor
-stator,Stator,electrical,stator,alternator
-regulator,Voltage Regulator,electrical,voltage regulator|regulator,regulator|rectifier|reg rec
-battery,Battery,electrical,battery,batt
-horn,Horn,electrical,horn,horn
-wiring_harness,Wiring Harness,electrical,harness,wiring|wire harness|harness
-primary_cover,Primary Cover,drivetrain,primary cover|primary chaincase cover,primary|chaincase cover
-derby_cover,Derby Cover,drivetrain,derby cover,clutch cover
-timing_cover,Cam Cover,engine,cam cover|gearcase cover|timing cover,nose cone|timer cover
-rocker_cover,Rocker Cover,engine,rocker cover|rocker box,rocker box cover|rocker boxes
-cylinder_head,Cylinder Head,engine,cylinder head,heads|head
-pushrod_tube,Pushrod Cover,engine,push rod cover|pushrod tube,pushrod tubes|pushrod covers
-oil_filter,Oil Filter,engine,oil filter,filter
-oil_pump,Oil Pump,engine,oil pump,oil pump
-oil_cooler,Oil Cooler,engine,oil cooler,cooler
-oil_tank,Oil Tank,engine,oil tank,oil bag
-exhaust_muffler,Muffler,exhaust,muffler,pipes|slip ons|exhaust
-exhaust_header,Exhaust Header,exhaust,header pipe|exhaust pipe,headers|head pipe
-transmission_cover,Transmission Side Cover,drivetrain,transmission side cover|trap door,trans cover|tranny cover
-belt_drive,Final Drive Belt,drivetrain,drive belt|belt,belt|final belt
-sprocket_rear,Rear Sprocket,drivetrain,rear sprocket|rear pulley,rear pulley|sprocket
-shock,Shock Absorber,suspension,shock absorber,shocks|rear shocks|air shocks
-fork_tube,Fork Tube,suspension,fork tube,forks|fork tubes
-triple_clamp,Fork Bracket,suspension,fork bracket|triple clamp,trees|triple trees
-swingarm,Swingarm,frame,swing arm|swingarm,swing arm
-wheel_front,Front Wheel,wheels,front wheel,front rim|rim front
-wheel_rear,Rear Wheel,wheels,rear wheel,rear rim|back wheel
-license_bracket,License Plate Bracket,body,license plate bracket|license bracket,plate holder|tag bracket
+slug,display_name,category,hd_terms,user_terms,match,exclude_terms
+fuel_tank,Fuel Tank,fuel,fuel tank,gas tank|tank|gas,head,
+fuel_cap,Fuel Cap,fuel,fuel cap|fuel filler cap,gas cap|tank cap|fuel tank cap,head,
+fuel_petcock,Fuel Valve,fuel,fuel valve,petcock|fuel shutoff|gas valve,head,
+fuel_pump,Fuel Pump,fuel,fuel pump,gas pump,head,
+carburetor,Carburetor,fuel,carburetor,carb|cv carb,head,
+throttle_body,Throttle Body,fuel,throttle body|induction module,tb,head,
+fuel_injector,Fuel Injector,fuel,injector,injectors,head,
+air_cleaner,Air Cleaner,intake,air cleaner|air filter,air filter|intake|breather,contains,
+front_fender,Front Fender,body,front fender,fender front,head,
+rear_fender,Rear Fender,body,rear fender,fender rear|back fender,head,
+saddlebag,Saddlebag,luggage,saddlebag,bags|saddle bags|hard bags|side bags,head,
+tour_pak,Tour-Pak,luggage,tour-pak,trunk|top case|top box|tour pack,contains,
+fairing_outer,Outer Fairing,body,outer fairing|fairing,batwing|front fairing,head,seat fairing|lower
+fairing_inner,Inner Fairing,body,inner fairing,inner fairing|dash,head,
+windshield,Windshield,body,windshield,windscreen|shield,head,
+seat,Seat,seating,seat,saddle,head,
+sissy_bar,Sissy Bar,seating,sissy bar|backrest,backrest|sissy,head,
+luggage_rack,Luggage Rack,luggage,luggage rack,rack,head,
+handlebar,Handlebar,controls,handlebar,bars|apes|ape hangers,head,
+riser,Handlebar Riser,controls,riser,risers,head,
+grip,Hand Grip,controls,grip,grips,head,
+mirror,Mirror,controls,mirror,mirrors,head,
+master_cyl_front,Brake Master Cylinder,brakes,master cylinder,front brake lever|brake master,head,clutch master cylinder
+brake_caliper,Brake Caliper,brakes,caliper,calipers|brake caliper,head,
+brake_rotor,Brake Rotor,brakes,brake disc|brake rotor,rotor|brake disc|disc,head,
+brake_pads,Brake Pads,brakes,pad kit|pad set|pad and pin kit|pad & pin kit,pads|brake pads|brake pad,head,
+brake_pedal,Brake Pedal,controls,brake pedal,rear brake lever,head,
+shift_lever,Shift Lever,controls,shift lever,shifter|heel toe|shift peg,head,
+footpeg,Footpeg,controls,footpeg|footrest,pegs|foot pegs,head,
+floorboard,Floorboard,controls,footboard,boards|floor boards,head,
+jiffy_stand,Jiffy Stand,frame,jiffy stand,kickstand|kick stand|side stand,head,
+clutch_cable,Clutch Cable,controls,clutch cable,clutch line,head,
+throttle_cable,Throttle Cable,controls,throttle cable|idle cable,throttle cables,head,
+headlamp,Headlamp,lighting,headlamp,headlight|head light,head,
+tail_lamp,Tail Lamp,lighting,tail lamp,taillight|tail light|brake light,head,
+turn_signal,Turn Signal,lighting,turn signal,blinkers|blinker|signals|turn signals,head,
+speedometer,Speedometer,instruments,speedometer,speedo|gauge|speed gauge,head,
+tachometer,Tachometer,instruments,tachometer,tach|rpm gauge,head,
+ignition_switch,Ignition Switch,electrical,ignition switch,key switch|ignition,head,
+starter,Starter,electrical,starter motor|starter,starter motor,head,
+stator,Stator,electrical,stator,alternator,head,
+regulator,Voltage Regulator,electrical,voltage regulator,regulator|rectifier|reg rec,head,
+battery,Battery,electrical,battery,batt,head,fob battery
+horn,Horn,electrical,horn,horn,head,
+wiring_harness,Wiring Harness,electrical,harness,wiring|wire harness|harness,head,
+primary_cover,Primary Cover,drivetrain,primary cover,primary|chaincase cover,head,
+derby_cover,Derby Cover,drivetrain,clutch cover|clutch inspection cover,clutch cover|derby cover,head,
+timing_cover,Cam Cover,engine,cam cover|gearcase cover,nose cone|timer cover,head,
+rocker_cover,Rocker Cover,engine,rocker cover,rocker box cover|rocker boxes,head,
+cylinder_head,Cylinder Head,engine,cylinder head,heads|head,head,
+pushrod_tube,Pushrod Cover,engine,push rod cover|pushrod cover,pushrod tubes|pushrod covers|push rod tube|pushrod tube,head,
+oil_filter,Oil Filter,engine,oil filter,filter,head,
+oil_pump,Oil Pump,engine,oil pump,oil pump,head,
+oil_cooler,Oil Cooler,engine,oil cooler,cooler,head,
+oil_tank,Oil Tank,engine,oil tank,oil bag,head,
+exhaust_muffler,Muffler,exhaust,muffler,pipes|slip ons|exhaust,head,
+exhaust_header,Exhaust Header,exhaust,header pipe|exhaust pipe,headers|head pipe,head,
+transmission_cover,Transmission Side Cover,drivetrain,transmission side cover,trans cover|tranny cover,head,
+belt_drive,Final Drive Belt,drivetrain,drive belt|belt,belt|final belt,head,
+sprocket_rear,Rear Sprocket,drivetrain,rear sprocket,rear pulley|sprocket,head,
+shock,Shock Absorber,suspension,shock absorber,shocks|rear shocks|air shocks,head,
+fork_tube,Fork Slider / Tube,suspension,fork slider tube|slider tube|fork slider|slider,forks|fork tubes|fork tube,head,
+triple_clamp,Fork Bracket,suspension,fork bracket|triple clamp,trees|triple trees,head,
+swingarm,Swingarm,frame,rear fork,swing arm|swingarm,head,
+wheel_front,Front Wheel,wheels,front wheel,front rim|rim front,head,
+wheel_rear,Rear Wheel,wheels,rear wheel,rear rim|back wheel,head,
+license_bracket,License Plate Bracket,body,license plate bracket,plate holder|tag bracket,head,

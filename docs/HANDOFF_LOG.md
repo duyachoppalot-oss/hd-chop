@@ -148,3 +148,9 @@ Append one entry per session. Newest at the bottom.
 - Numbers: 751,135 catalog + 16,653 inferred_span fitment; 292,437 spans (22,555 with conditions); non_california 2,874 → 164 (all evap/vent parts)
 - Gate: 10 checks pass (carb/EFI, ABS, California, laced, Fat Bob, Evo/TC filter, tanks). Verdict passed on correctness; recall limits documented. Awaiting Laken's acceptance of review-file sizes (ROADMAP)
 - Next: 05_supersession, 06_concepts (search needs concepts), then Phase 2
+
+### 2026-10-23 (05 + 06 dry runs)
+- Phase 1 gate accepted by Laken (ROADMAP).
+- Done: 05_supersession.mjs, 06_concepts.mjs; concepts seed gains `match` + `exclude_terms`; dry-run only, NOT applied
+- Numbers: 05 — 162 accepted pairs, 128 chain_root changes, 0 cycles, review 322. 06 — 4,524 parts in 67 concepts, 0 zero-match terms, 0 ties
+- Next: apply 05 → 06 → 08 refresh; then Phase 2 (API + search)
