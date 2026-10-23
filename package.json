@@ -1,0 +1,9 @@
+{
+  "name": "hd-chop",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.0.0",
+    "pg": "^8.13.0"
+  }
+}

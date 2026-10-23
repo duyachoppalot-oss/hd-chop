@@ -9,7 +9,7 @@ Builds `hdchop` from several source tables (decision: DISCOVERY.md, 2026-10-22).
 - Anything ambiguous, unresolvable or contradictory goes to `reports/<script>_review_<ts>.csv`, not into `hdchop`. The review files are the to-do list for extractor fixes.
 - All rules from CLAUDE.md apply: SELECT-only on source, dry-run by default, `--apply` to write, report with counts + 20 samples, no invented numbers/years/fitment.
 
-## Schema changes — `002_merge_provenance.sql`
+## Schema changes — `002_merge_provenance.sql` (written, tested in a rolled-back transaction)
 
 | Table | Change | Why |
 |---|---|---|
@@ -17,16 +17,19 @@ Builds `hdchop` from several source tables (decision: DISCOVERY.md, 2026-10-22).
 | `fitment` | `confidence text NOT NULL` (`high` \| `medium` \| `low`) | Two-source agreement vs one source vs repaired |
 | `vehicles` | `platform` values lowercase (`touring`, `softail`, `dyna`, `sportster`, `fxr`, `trike`, `v_rod`, `street`, `revolution_max`, `vintage`) | Matches 001 comment; engine eras are not platforms |
 
-`fitment_spans` filters to `confidence IN ('high','medium')` by default; `low` stays queryable for review.
+`fitment_spans` filters to `confidence IN ('high','medium')` by default; `low` stays queryable for review. Also: `fitment.source_ref` NOT NULL; `cvo`/`cable_clutch`/`hydraulic_clutch` tags removed (step 04 item 3).
 
 ## Scripts (`scripts/etl/`)
 
-### 01_vehicles.mjs — exists, needs changes
+### 01_vehicles.mjs — done (dry-run reviewed 2026-10-23)
 Source: picker chain `harley_families → harley_models → harley_model_years` (3,199 year×model).
-- **Fix platform:** `harley_families` mixes platforms with engine eras (`Evolution`, `Twin Cam`). When a model code appears under both, take the platform family; never write an engine era to `platform`. Current dedupe keeps whichever row comes first — make it deterministic.
-- Lowercase platform values per 002.
-- `fuel_system`: `efi` for `…I` codes (30 in picker). Everything else stays `unknown` here; step 04 may refine.
-- Report: picker vs `hd_year_model_master` diff (1,681 picker-only, 100 master-only). Do not auto-add master-only rows; list them for review.
+- **Evidence gate:** the picker pads years (FLT "Tour Glide" 1939–2026, XL 1936–52, FX 1941–2026). A row loads only if `hd_year_model_master`, `oem_fitment.model_codes` or a code token in reference `used_on_raw`/`vehicle_model` confirms that year. Catalog evidence counts only from single-year rows; bare `FL`/`FX`/`XL` tokens are family abbreviations and need the master.
+- **Platform:** lowercase from family. Flathead/Knucklehead/Panhead/Shovelhead are engine eras → `vintage`, or platform from the other family when listed under both (engine from the era family). K series (Sportster family, `filter_group='VINTAGE'`) → vintage/flathead. FXLR under FXR + Softail before 2018 → `fxr`. Other conflicts → review.
+- **Engine:** `hd_engine_types` year ranges per platform; overlap years 1984/1999/2017 resolved per platform where known, else null.
+- `fuel_system`: `efi` when the code ends in `I` and the code without `I` is also a picker code (26 codes). Else `unknown`.
+- Upsert on `(year, model_code)`.
+- Dry run: 1,671 vehicles (1,492 in master, 179 catalog-only), engine 98.3%. Review 1,461: 1,286 no evidence, 75 multi-year-span only, 100 master-only (engine-era placeholders like `EVOLUTION_BIGTWIN`).
+- Known source quirk kept as-is: picker files FXEF (1983 Shovelhead Fat Bob) under FXR.
 
 ### 02_parts.mjs — oem_parts from reference
 Source: `hd_oem_catalog_reference.part_number`, with `oem_fitment.oem_part_no` + reference full numbers as the repair dictionary.
@@ -66,8 +69,9 @@ Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report 
 
 ## Before any script runs `--apply`
 
-- [ ] Create `hdchop` DB + app role; set `APP_DATABASE_URL`; run 001 + 002.
-- [ ] Narrow `hdchop_ro` grants to: `hd_oem_catalog_reference`, `oem_fitment`, `harley_families`, `harley_models`, `harley_model_years`, `hd_year_model_master`, `hd_engine_types`, `hd_family_engine_map`, `model_alias_map` (currently it can read `orders`, customer tables).
+- [x] Create `hdchop` DB + app role; set `APP_DATABASE_URL`; run 001. - [ ] Run 002.
+- [x] Narrow `hdchop_ro` grants to: `hd_oem_catalog_reference`, `oem_fitment`, `harley_families`, `harley_models`, `harley_model_years`, `hd_year_model_master`, `hd_engine_types`, `hd_family_engine_map`, `model_alias_map` (currently it can read `orders`, customer tables).
+- [ ] Review `reports/01_vehicles_review_*.csv` (catalog_span_only rows first).
 - [ ] Review the 02 repair report and 03 `ALL`-scope map by hand.
 
 ## Phase 1 gate (unchanged)

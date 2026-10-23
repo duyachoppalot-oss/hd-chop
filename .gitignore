@@ -5,3 +5,6 @@ reports/*
 !reports/.gitkeep
 .expo/
 .next/
+.vercel
+.env*
+!.env.example
