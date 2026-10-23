@@ -4,10 +4,11 @@
 // (ETL_PLAN step 03). Part numbers resolve exactly as in 02 (lib/parts.mjs);
 // used_on_raw parses with lib/usedon.mjs.
 //
+// Row targeting and confidence live in lib/fitment.mjs (shared with 04).
 // Targets per row:
 //   codes   each code (or its glued-ANV base) x the row's catalog years, or the
 //           year written next to the code; only (code, year) pairs in `vehicles`
-//   all     the document's scope: every code listed explicitly in >= DOC_SCOPE_MIN
+//   all     the document's scope: every code listed explicitly in >= 2
 //           rows of the same document, x the row's years
 //   family  "DYNA: 93*-ALL": every vehicle of that platform from 93 (open) or
 //           only 93, within the row's years
@@ -31,15 +32,13 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeResolver, normalize, yearsOk } from './lib/parts.mjs';
-import { parseUsedOn } from './lib/usedon.mjs';
+import { makeTargeter } from './lib/fitment.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
 const source = new pg.Pool({ connectionString: process.env.SOURCE_DATABASE_URL });
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
 
-const DOC_SCOPE_MIN = 2;
 const CONF_RANK = { high: 0, medium: 1, low: 2 };
 const BATCH = 20000;
 
@@ -51,8 +50,6 @@ function csvCell(v) {
   const s = v == null ? '' : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
-
-const span = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
 async function main() {
   const rows = (
@@ -70,41 +67,9 @@ async function main() {
   const vehicles = (await app.query(`SELECT vehicle_id, year, model_code, platform FROM vehicles`)).rows;
   const parts = new Set((await app.query(`SELECT oem_number FROM oem_parts`)).rows.map((r) => r.oem_number));
 
-  const { resolve } = makeResolver(rows, fitmentSrc);
+  const { target, confidence, parsed, docScope, byCode } = makeTargeter({ rows, fitmentSrc, vehicles, parts });
 
-  // oem_fitment number+year, for "high" confidence.
-  const corroborated = new Set();
-  for (const r of fitmentSrc) {
-    if (!yearsOk(r) || (r.year_end ?? r.year_start) - r.year_start > 15) continue;
-    const key = normalize(resolve({ part_number: r.display, year_start: r.year_start, year_end: r.year_end }).final ?? r.display);
-    for (const y of span(r.year_start, r.year_end ?? r.year_start)) corroborated.add(`${key}|${y}`);
-  }
-
-  const byCode = new Map(); // code -> Map(year -> vehicle)
-  const byPlatform = new Map(); // platform -> vehicles
-  for (const v of vehicles) {
-    if (!byCode.has(v.model_code)) byCode.set(v.model_code, new Map());
-    byCode.get(v.model_code).set(v.year, v);
-    if (!byPlatform.has(v.platform)) byPlatform.set(v.platform, []);
-    byPlatform.get(v.platform).push(v);
-  }
-  const codeOf = (item) => item.alts.find((c) => byCode.has(c)) ?? null;
-
-  // ---- pass 1: parse + document scope ----
-  const parsed = rows.map((r) => parseUsedOn(r.used_on_raw));
-  const docCodeRows = new Map(); // doc -> Map(code -> rows)
-  rows.forEach((r, i) => {
-    const p = parsed[i];
-    if (!p.items) return;
-    let m = docCodeRows.get(r.doc);
-    if (!m) docCodeRows.set(r.doc, (m = new Map()));
-    for (const c of new Set(p.items.map(codeOf).filter(Boolean))) m.set(c, (m.get(c) || 0) + 1);
-  });
-  const docScope = new Map();
-  for (const [doc, m] of docCodeRows) docScope.set(doc, [...m].filter(([, n]) => n >= DOC_SCOPE_MIN).map(([c]) => c));
-
-  // ---- pass 2: rows -> fitment ----
-  const fit = new Map(); // `${oem}|${vehicle_id}` -> { conf, id }
+  const fit = new Map(); // `${oem}|${vehicle_id}` -> { conf, id, kind }
   const stat = { rows: rows.length, part_unresolved: 0, part_not_loaded: 0, bad_year: 0, no_vehicle: 0, with_fitment: 0 };
   const kindRows = {};
   const kindFit = {};
@@ -118,62 +83,21 @@ async function main() {
   };
 
   rows.forEach((r, i) => {
-    const p = parsed[i];
-    kindRows[p.kind] = (kindRows[p.kind] || 0) + 1;
-    const res = resolve(r);
-    if (!res.final) { stat.part_unresolved++; return; } // listed in the 02 review file
-    const oem = normalize(res.final);
-    if (!parts.has(oem)) { stat.part_not_loaded++; return; }
-    if (!yearsOk(r)) { stat.bad_year++; addReview('bad_year', r, `${r.year_start}-${r.year_end}`); return; }
-    if (p.kind === 'unparsed') { addReview(`unparsed:${p.reason}`, r, (r.used_on_raw || '').slice(0, 60)); return; }
-
-    const ys = r.year_start;
-    const ye = r.year_end ?? r.year_start;
-    const targets = []; // [vehicle, lowBoundary]
-    const fromCodes = (items, years) => {
-      for (const item of items) {
-        const code = codeOf(item);
-        if (!code) { missingCodes.set(item.code, (missingCodes.get(item.code) || 0) + 1); continue; }
-        for (const y of item.year ? [item.year] : years) {
-          const v = byCode.get(code).get(y);
-          if (v) targets.push([v, false]);
-        }
-      }
-    };
-    const fromScope = (years) => {
-      const scope = docScope.get(r.doc) || [];
-      if (!scope.length) { addReview('all_without_doc_scope', r, ''); return; }
-      for (const c of scope) for (const y of years) { const v = byCode.get(c).get(y); if (v) targets.push([v, false]); }
-    };
-
-    if (p.kind === 'codes') {
-      fromCodes(p.items, span(ys, ye));
-      if (p.bad.length) addReview('bad_code_token', r, p.bad.join(' | ').slice(0, 60));
-    } else if (p.kind === 'all') {
-      fromScope(span(ys, ye));
-    } else if (p.kind === 'family') {
-      const years = new Set(p.open ? span(Math.max(p.from, ys), ye) : [p.from]);
-      for (const v of byPlatform.get(p.platform) || []) if (years.has(v.year)) targets.push([v, false]);
-    } else if (p.kind === 'range') {
-      const years = span(p.from, p.to ?? ye);
-      const before = targets.length;
-      if (p.all) fromScope(years);
-      else fromCodes(p.items, years);
-      for (let k = before; k < targets.length; k++) targets[k][1] = p.lowYears.includes(targets[k][0].year);
-    }
-
-    if (!targets.length) { stat.no_vehicle++; addReview(`no_vehicle:${p.kind}`, r, (r.used_on_raw || '').slice(0, 60)); return; }
+    const t = target(r, i);
+    kindRows[t.kind] = (kindRows[t.kind] || 0) + 1;
+    for (const c of t.missing) missingCodes.set(c, (missingCodes.get(c) || 0) + 1);
+    for (const [reason, detail] of t.notes) addReview(reason, r, detail);
+    if (t.status === 'part_unresolved') { stat.part_unresolved++; return; } // listed in the 02 review file
+    if (t.status === 'part_not_loaded') { stat.part_not_loaded++; return; }
+    if (t.status === 'bad_year') { stat.bad_year++; addReview('bad_year', r, t.reason); return; }
+    if (t.status === 'unparsed') { addReview(`unparsed:${t.reason}`, r, (r.used_on_raw || '').slice(0, 60)); return; }
+    if (t.status === 'no_vehicle') { stat.no_vehicle++; addReview(`no_vehicle:${t.kind}`, r, (r.used_on_raw || '').slice(0, 60)); return; }
     stat.with_fitment++;
-    for (const [v, low] of targets) {
-      const conf =
-        res.numberSource === 'repaired_other_year' || low
-          ? 'low'
-          : res.numberSource === 'extracted' && corroborated.has(`${oem}|${v.year}`)
-            ? 'high'
-            : 'medium';
-      const key = `${oem}|${v.vehicle_id}`;
+    for (const [v, low] of t.targets) {
+      const conf = confidence(t.oem, t.res, v, low);
+      const key = `${t.oem}|${v.vehicle_id}`;
       const e = fit.get(key);
-      if (!e) { fit.set(key, { conf, id: r.id, kind: p.kind }); kindFit[p.kind] = (kindFit[p.kind] || 0) + 1; }
+      if (!e) { fit.set(key, { conf, id: r.id, kind: t.kind }); kindFit[t.kind] = (kindFit[t.kind] || 0) + 1; }
       else {
         if (CONF_RANK[conf] < CONF_RANK[e.conf]) e.conf = conf;
         if (r.id < e.id) e.id = r.id;
@@ -234,7 +158,7 @@ async function main() {
   lines.push(`Review rows: ${reviewRows.reduce((n, r) => n + r.rows, 0)}`);
   for (const [k, n] of Object.entries(byReason).sort((a, b) => b[1] - a[1])) lines.push(`  ${k}: ${n}`);
   lines.push('');
-  lines.push(`Document scope for ALL rows (codes listed in >= ${DOC_SCOPE_MIN} rows of the doc):`);
+  lines.push(`Document scope for ALL rows (codes listed in >= 2 rows of the doc):`);
   const allDocs = new Set(rows.filter((_, i) => parsed[i].kind === 'all' || (parsed[i].kind === 'range' && parsed[i].all)).map((r) => r.doc));
   for (const doc of [...allDocs].sort()) {
     const scope = docScope.get(doc) || [];

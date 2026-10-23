@@ -51,12 +51,15 @@ Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`l
 6. `--apply` deletes and reloads all `source='oem_catalog'` rows (re-run 04 afterwards).
 - Dry run: 204,453 / 239,520 rows produce fitment (85.4%) → 751,589 fitment rows (high 51.8%, medium 37.3%, low 10.9%); 23,216 / 26,717 parts (86.9%) and 1,042 / 1,671 vehicles (62.4%) get fitment. Vehicles without fitment are catalog gaps: CVO/SE, 2020–24 Softail, Rev Max, Street, Trike, pre-1950, and older Sportster catalogs that say `XLH` rather than `XLH883`.
 
-### 04_conditions.mjs — tags + fuel system
-1. Regex tags from `description` + `used_on_raw` using `condition_tags.patterns`. Do **not** use `category` (sticky `INTERNATIONAL MODELS ONLY` heading on 35,969 rows); `hdi` only from line text.
-2. Tighten patterns per discovery: `california` from "(California only)", "(49 state, California)"; `carb` must not match part names like "HOSE, vacuum carburetor" — only qualifiers ("carbureted models", "w/ carb").
-3. Drop `cvo`, `cable_clutch`, `hydraulic_clutch` from the starter set until data shows them (0 / 10 hits).
-4. EFI/carb inference: where a concept has different parts for an `…I` code and its non-`I` sibling in the same year, tag `efi` / `carb` with `condition_source='inferred'`.
-5. Re-sort/dedupe `conditions`; report counts per tag and source.
+### 04_conditions.mjs — dry-run reviewed 2026-10-23 (not applied)
+Re-targets catalog rows exactly as 03 (`lib/fitment.mjs`, now shared) and tags `source='oem_catalog'` fitment. Rules in `lib/conditions.mjs`.
+1. **Markets** are lists, mostly parenthesised: "(california, canada, domestic)", "(hdi, australia, england)", "(except japan)", "(cal. only)" — parsed as lists, not regex. Domestic = 49-state (catalogs list "(domestic, california)" side by side). Result: domestic+california → no tag; domestic only → **`non_california`** (new tag); california only → `california`; neither → `hdi`. Unclosed trailing lists cut mid-word drop the cut token. `category` never used.
+2. Other tags only from qualifier pieces (split on `,` `(` `)` ` - `), never a part's own name: `abs`/`non_abs` ("harness - non-abs", "(abs)"), `efi`/`carb` ("fuel injected models", "w/ efi", ", efi"; "carbureted models"), `cast_wheel` ("cast wheel(s)"), `laced_wheel` ("laced", "wire/spoke wheel"). "9 spoke" = cast style; "wire" = mostly electrical, so neither counts alone.
+3. Per (part, vehicle) over all contributing rows: tags unioned; markets unioned (a row without a market list covers all). Contradictions (abs+non_abs, efi+carb, cast+laced) dropped → review.
+4. EFI/carb inference: in years where both X and XI exist and are catalog-covered (84 pairs, 1995–2006), part fits XI not X → `efi` on XI; X not XI → `carb` on X. `condition_source='inferred'` when only inferred tags.
+5. `--apply` updates fitment and upserts `condition_tags` (labels + patterns, `\b`→`\y`). Re-run 07 and 08 after.
+- Dry run: all 751,135 catalog fitment keys matched. Tagged rows: hdi 23,234; carb 6,464; efi 4,371; california 3,215; non_california 2,874; abs 2,651; laced 1,406; non_abs 671; cast 544. condition_source: catalog_text 34,860, inferred 9,882, none 706,393. 132 contradictions dropped.
+- Caveat: inferred carb/efi is mostly fuel-system parts (carburetor, needle, float, jets / fuel, throttle, regulator, sensor), but also screws, springs, washers, terminals — likely carb internals / EFI wiring, not verifiable from the data. Kept as `inferred` so the app can show it softer.
 
 ### 05_supersession.mjs — real supersession only
 1. **Do not load** the 283 `oem_supersession` rows: all `inferred` letter bumps, which the domain rule says are parallel options.

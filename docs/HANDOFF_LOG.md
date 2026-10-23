@@ -136,3 +136,9 @@ Append one entry per session. Newest at the bottom.
 - Numbers: oem_parts 26,460 (270 removed); fitment 751,135 catalog (high 389,165 / medium 360,139 / low 1,831) + 16,871 inferred_span; spans 287,575 over 22,993 parts; one-year holes 43,114
 - Gate: spot-checked tanks/filters now continuous where catalogs list them; no new cross-platform errors. Waits on 04 conditions.
 - Next: 04_conditions.mjs
+
+### 2026-10-23 (04_conditions)
+- Done: lib/fitment.mjs (03 targeting shared; 03 output verified identical), lib/conditions.mjs, 04_conditions.mjs; dry-run only, NOT applied
+- Numbers: 34,860 rows with catalog-text tags, 9,882 inferred-only, 132 contradictions dropped; new tag non_california (49-state)
+- Decisions: markets parsed as lists (domestic = 49-state); tags unioned across rows; inferred carb/efi kept with condition_source='inferred'
+- Next: apply 04 → re-run 07 (--max-hole 3) → 08 refresh → final gate check
