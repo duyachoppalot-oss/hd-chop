@@ -142,3 +142,9 @@ Append one entry per session. Newest at the bottom.
 - Numbers: 34,860 rows with catalog-text tags, 9,882 inferred-only, 132 contradictions dropped; new tag non_california (49-state)
 - Decisions: markets parsed as lists (domestic = 49-state); tags unioned across rows; inferred carb/efi kept with condition_source='inferred'
 - Next: apply 04 → re-run 07 (--max-hole 3) → 08 refresh → final gate check
+
+### 2026-10-23 (04 apply + final gate check)
+- Done: 04 applied, then fixed the market rule ("domestic" = all US; non_california only for "49 state"/"except california") after the gate check found reflectors/lamps tagged 49-state; re-applied 04 → 07 (--max-hole 3) → refresh
+- Numbers: 751,135 catalog + 16,653 inferred_span fitment; 292,437 spans (22,555 with conditions); non_california 2,874 → 164 (all evap/vent parts)
+- Gate: 10 checks pass (carb/EFI, ABS, California, laced, Fat Bob, Evo/TC filter, tanks). Verdict passed on correctness; recall limits documented. Awaiting Laken's acceptance of review-file sizes (ROADMAP)
+- Next: 05_supersession, 06_concepts (search needs concepts), then Phase 2

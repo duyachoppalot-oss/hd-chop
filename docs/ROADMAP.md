@@ -24,6 +24,7 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
   - `06_concepts.mjs` — load seeds, assign `oem_parts.concept_id`; report unmatched descriptions by frequency
   - `07_refresh.mjs` — `REFRESH MATERIALIZED VIEW CONCURRENTLY fitment_spans`
 - **Gate:** spot-check 10 known parts by hand (e.g. a Touring fuel tank, an EVO vs Twin Cam primary cover). Spans and conditions match reality. Review-file sizes reported and accepted.
+- **Status (2026-10-23): spot-check passed; review-file sizes reported, awaiting Laken's acceptance.** 10 parts/cases correct incl. carb vs EFI, ABS vs non-ABS, California vs 49-state, laced wheels, Fat Bob name reuse, Evo vs Twin Cam oil filter. Known recall limits: span holes where catalogs omit a part (43k one-year), 629 vehicles without catalogs, Evo outer primary covers missing. Details: ETL_PLAN.md "Final gate check". Steps 05 (supersession) and 06 (concepts) not built yet.
 
 ## Phase 2 — API
 - [ ] Scaffold `apps/api` (Next.js 15), read-only DB role

@@ -5,11 +5,12 @@
 //
 // Markets come as lists, mostly in parentheses: "(california, canada,
 // domestic)", "(hdi, australia, england)", "(except japan)", "(cal. only)".
-// Each list narrows which of two US markets the row covers:
-//   domestic + california -> no tag        domestic only -> non_california
-//   california only      -> california     neither       -> hdi
-// "Domestic" is the 49-state market: catalogs list "(domestic, california)"
-// side by side.
+// Each list narrows which of two US markets the row covers (49-state, California):
+//   both -> no tag    49-state only -> non_california
+//   California only -> california    neither -> hdi
+// "Domestic" means the whole US: on lights, reflectors, footboards it only
+// contrasts with HDI (gate check, 2026-10-23). 49-state-only needs explicit
+// wording: "49 state" or "except california".
 //
 // Other tags only from qualifier pieces of the text (split on , ( ) and " - "),
 // never from a part's own name: "HARNESS, main, non-abs" -> non_abs, but
@@ -18,7 +19,7 @@
 // "wire/spoke(d) wheel(s)" count for wheels.
 
 const MARKET = {
-  domestic: 'domestic', '49 state': 'domestic', '49-state': 'domestic', us: 'domestic', usa: 'domestic',
+  domestic: 'domestic', us: 'domestic', usa: 'domestic', '49 state': 'us49', '49-state': 'us49', '49 states': 'us49',
   california: 'california', 'california-gj': 'california', cal: 'california', 'cal.': 'california', calif: 'california', 'calif.': 'california',
   canada: 'canada', hdi: 'hdi', hoi: 'hdi', 'hd!': 'hdi', hd4: 'hdi', international: 'hdi',
   japan: 'japan', jp2: 'japan', australia: 'australia', aus: 'australia', au2: 'australia',
@@ -46,7 +47,7 @@ export const TAG_LABELS = {
 };
 export const MARKET_PATTERNS = {
   california: ['\\bcalif(ornia)?\\b', '\\bcal\\.? only\\b'],
-  non_california: ['\\bdomestic\\b', '\\b49[ -]state\\b'],
+  non_california: ['\\b49[ -]states?\\b', '\\bexcept california\\b'],
   hdi: ['\\bhdi\\b', '\\binternational\\b'],
 };
 
@@ -92,10 +93,14 @@ export function rowConditions(description, usedOn) {
     if (ml) {
       marketSeen = true;
       matched.push(g);
-      const hasDom = ml.markets.has('domestic');
-      const hasCal = ml.markets.has('california');
-      if (ml.except) { dom &&= !hasDom; cal &&= !hasCal; }
-      else { dom &&= hasDom; cal &&= hasCal; }
+      const m = ml.markets;
+      if (ml.except) {
+        dom &&= !m.has('domestic') && !m.has('us49');
+        cal &&= !m.has('domestic') && !m.has('california');
+      } else {
+        dom &&= m.has('domestic') || m.has('us49');
+        cal &&= m.has('domestic') || m.has('california');
+      }
     }
   }
   for (const piece of [...new Set([...groups, ...pieces])]) {
