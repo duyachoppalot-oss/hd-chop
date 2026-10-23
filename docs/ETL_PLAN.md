@@ -31,14 +31,14 @@ Source: picker chain `harley_families → harley_models → harley_model_years` 
 - Dry run: 1,671 vehicles (1,492 in master, 179 catalog-only), engine 98.3%. Review 1,461: 1,286 no evidence, 75 multi-year-span only, 100 master-only (engine-era placeholders like `EVOLUTION_BIGTWIN`).
 - Known source quirks kept as-is: picker files FXEF (1983 Shovelhead Fat Bob) under FXR and FXS (1978 Shovelhead Low Rider) under Softail.
 
-### 02_parts.mjs — oem_parts from reference
-Source: `hd_oem_catalog_reference.part_number`, with `oem_fitment.oem_part_no` + reference full numbers as the repair dictionary.
-1. Classify format: valid `NNNNN-YY[A]` (121,214 rows), dashless hardware/8-digit (87,005), truncated `NNNNN-` (21,959), other/junk (9,342).
-2. Repair truncated per (base, year): exactly one full candidate in the same catalog year → `repaired_same_year`; exactly one in another year → `repaired_other_year` (low confidence); otherwise → review file.
-3. Junk (`99A`, `79399181352960018`, `6400HB`-style) → review file. Dashless 3–8 digit numbers are kept.
-4. Normalize `oem_number` (uppercase, no dashes/spaces); keep `oem_display`.
-5. `description_clean`: strip quantity `(2)`, stray fragments (`1`, `2`, `Unkno` → null), trim. Short part name only (DATA_RIGHTS).
-6. `chain_root` = self for now (set in 05).
+### 02_parts.mjs — dry-run reviewed 2026-10-23 (not applied)
+Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit std numbers from reference + `oem_fitment` (23k). Logic in `scripts/etl/lib/parts.mjs` (shared with 03).
+1. Classify (after uppercasing, collapsing `--`): `std` `NNNNN-YY[A-ZZZ]` (121,309 rows; 86.7% of distinct also in oem_fitment), `modern` 8-digit + color suffix (23,484), `hardware` 4–5 digit + optional letter (57,853), `short_base` 3–4 digit base (4,222; only 9 numbers confirmed by oem_fitment — samples are 5-digit numbers missing their front digits), `truncated` `NNNNN-`/`NNNNN-D` (21,946), `ocr_suffix` `NNNNN-YYD` = letter read as digit (74), `junk` (10,632 → review).
+2. Repair truncated/ocr by prefix, short_base by tail (unless oem_fitment confirms it as-is). One candidate seen in the row's catalog years → `repaired_same_year`; else one anywhere → `repaired_other_year`; else review. Candidates whose `-YY` intro year is after the catalog year are excluded (century rule).
+3. `oem_number` = uppercase, no dashes. Collisions keep the most common display (0 after short_base change).
+4. `description_clean`: first column segment that starts with a capitalized word; drop parentheticals, `w/ …`/`with …` notes, part numbers, dimensions, non-ASCII; head + one qualifier, ≤60 chars, sentence case. Per number take the most common; names whose first word heads <3 part numbers are OCR noise → dropped.
+5. `chain_root` = self.
+- Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
 
 ### 03_fitment.mjs — fitment from used_on_raw
 Source: `hd_oem_catalog_reference` rows (parts resolved in 02), `oem_fitment` for corroboration.
@@ -72,7 +72,7 @@ Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report 
 - [x] Create `hdchop` DB + app role; set `APP_DATABASE_URL`; run 001 + 002.
 - [x] Narrow `hdchop_ro` grants to: `hd_oem_catalog_reference`, `oem_fitment`, `harley_families`, `harley_models`, `harley_model_years`, `hd_year_model_master`, `hd_engine_types`, `hd_family_engine_map`, `model_alias_map` (currently it can read `orders`, customer tables).
 - [ ] Review `reports/01_vehicles_review_*.csv` (catalog_span_only rows first).
-- [ ] Review the 02 repair report and 03 `ALL`-scope map by hand.
+- [x] Review the 02 repair report (dry run 2026-10-23) and 03 `ALL`-scope map by hand.
 
 ## Phase 1 gate (unchanged)
 Spot-check 10 known parts by hand (Touring fuel tank, EVO vs Twin Cam primary cover, …). Spans and conditions match reality. Also: review-file sizes are reported and accepted.
