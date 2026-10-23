@@ -41,14 +41,15 @@ Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit
 - Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
 - Known leftovers: a few names keep OCR tails (`… eeeeen`, cut words); `1010` carries a figure heading ("Fuel tank & trim california…") — watch for it in 06 concept matching.
 
-### 03_fitment.mjs — fitment from used_on_raw
-Source: `hd_oem_catalog_reference` rows (parts resolved in 02), `oem_fitment` for corroboration.
-1. Parse `used_on_raw` shapes: code list (94,100), single code (61,009), `ALL` (55,831), codes with years e.g. `FXR 1993, FXR 1994` (28,580). Year on the code wins over the row's catalog year.
-2. **`ALL` scope:** per-model documents (`2015 ROAD KING CLASSIC (FLHRC)`) → that model; family/all-model documents (`2021 Touring Models…`, `1995-96 All 1340cc…`) → every vehicle in that family/years. Build the doc → scope map from `source_document_title` and report it before applying.
-3. Resolve (code, year) against `vehicles`; unresolved → review file (baseline: 87% of non-ALL `vehicle_model` resolve).
-4. Reject years outside 1903–2027 (~100 bad rows + 182 null).
-5. Confidence: `high` = same number + year also in `oem_fitment` and number not repaired; `medium` = reference only, number extracted; `low` = repaired number or other-year repair.
-6. `source='oem_catalog'`, `source_ref='hd_oem_catalog_reference:<id>'`.
+### 03_fitment.mjs — dry-run reviewed 2026-10-23 (not applied)
+Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`lib/parts.mjs`), `used_on_raw` parsed by `lib/usedon.mjs`; `oem_fitment` for corroboration.
+1. `used_on_raw` kinds: `codes` (148,672 rows; tags `103`/`ANV`/`TC`/`SHRINE`/`CVO`/`SE` and glued `…ANV` stripped; `CONV` only for FXDS; a year next to a code wins over the catalog year), `all` (56,248), `family` `DYNA: 93*-ALL` (9,676; `*`/`'`/`•` = and later; no star = that year only), `range` `86 TO * - ALL MODELS` / `86 TO 92 - XLH, XLCH` (7,279; "early/late YY" boundary year → low), `unparsed` (17,645 → review: option-letter scopes like `DYNA: 95*-GE` 8,165, fragments, sidecar notes).
+2. **`ALL` scope** = every code listed explicitly in ≥2 rows of the same document, × the row's year. Per-model titles are family catalogs (e.g. "2016 DYNA FAT BOB (FXDF 103)" lists all Dyna codes); the report prints the scope per document — each maps to one platform.
+3. Only (code, year) pairs in `vehicles`. Codes missing from `vehicles` are counted (top: FXDBP, XL1200CP, FXDBA/B/C, XL1200CB/CA, XL883HUG, FLHFB) — candidates to add in 01.
+4. Bad years skipped (35 rows).
+5. Confidence: `low` = repaired number or boundary year; `high` = oem_fitment has the number in a catalog covering that year; else `medium`. One row per (part, vehicle): best confidence, lowest source id. `conditions = '{}'` until 04.
+6. `--apply` deletes and reloads all `source='oem_catalog'` rows (re-run 04 afterwards).
+- Dry run: 204,453 / 239,520 rows produce fitment (85.4%) → 751,589 fitment rows (high 51.8%, medium 37.3%, low 10.9%); 23,216 / 26,717 parts (86.9%) and 1,042 / 1,671 vehicles (62.4%) get fitment. Vehicles without fitment are catalog gaps: CVO/SE, 2020–24 Softail, Rev Max, Street, Trike, pre-1950, and older Sportster catalogs that say `XLH` rather than `XLH883`.
 
 ### 04_conditions.mjs — tags + fuel system
 1. Regex tags from `description` + `used_on_raw` using `condition_tags.patterns`. Do **not** use `category` (sticky `INTERNATIONAL MODELS ONLY` heading on 35,969 rows); `hdi` only from line text.
@@ -73,6 +74,7 @@ Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report 
 - [x] Create `hdchop` DB + app role; set `APP_DATABASE_URL`; run 001 + 002.
 - [x] Narrow `hdchop_ro` grants to: `hd_oem_catalog_reference`, `oem_fitment`, `harley_families`, `harley_models`, `harley_model_years`, `hd_year_model_master`, `hd_engine_types`, `hd_family_engine_map`, `model_alias_map` (currently it can read `orders`, customer tables).
 - [ ] Review `reports/01_vehicles_review_*.csv` (catalog_span_only rows first).
+- [ ] Review the 03 document-scope table and `03_fitment_review_*.csv`.
 - [x] Review the 02 repair report (dry run 2026-10-23) and 03 `ALL`-scope map by hand.
 
 ## Phase 1 gate (unchanged)

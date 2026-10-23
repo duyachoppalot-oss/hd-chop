@@ -140,3 +140,37 @@ export function cleanDescription(raw) {
   s = s.toLowerCase();
   return s[0].toUpperCase() + s.slice(1);
 }
+
+const YEAR_MIN = 1903;
+const YEAR_MAX = 2027;
+const validYear = (y) => y != null && y >= YEAR_MIN && y <= YEAR_MAX;
+export const yearsOk = (r) =>
+  validYear(r.year_start) && validYear(r.year_end ?? r.year_start) && (r.year_end ?? r.year_start) >= r.year_start;
+
+// Row -> part number, exactly as 02_parts builds oem_parts.
+// referenceRows: { part_number, year_start, year_end }; fitmentRows: { display, year_start, year_end }.
+// resolve() returns { cls, display, final, numberSource, outcome, candidates };
+// final is null when the row goes to review (outcome = reason).
+export function makeResolver(referenceRows, fitmentRows) {
+  const dict = buildDictionary([
+    ...referenceRows.filter(yearsOk).map((r) => ({ display: r.part_number, year_start: r.year_start, year_end: r.year_end })),
+    ...fitmentRows.filter(yearsOk),
+  ]);
+  const inFitment = new Set(fitmentRows.map((r) => classify(r.display).display));
+  function resolve(r) {
+    const { cls, display } = classify(r.part_number);
+    const out = { cls, display, final: null, numberSource: null, outcome: null, candidates: [] };
+    if (cls === 'std' || cls === 'modern' || cls === 'hardware' || (cls === 'short_base' && inFitment.has(display))) {
+      return { ...out, final: display, numberSource: 'extracted', outcome: 'extracted' };
+    }
+    if (cls === 'truncated' || cls === 'ocr_suffix' || cls === 'short_base') {
+      if (!yearsOk(r)) return { ...out, outcome: 'bad_year' };
+      const res = repair(dict, cls, display, r.year_start, r.year_end ?? r.year_start);
+      return res.display
+        ? { ...out, final: res.display, numberSource: res.outcome, outcome: res.outcome, candidates: res.candidates }
+        : { ...out, outcome: res.outcome, candidates: res.candidates };
+    }
+    return { ...out, outcome: 'junk_format' };
+  }
+  return { resolve, dict, inFitment };
+}

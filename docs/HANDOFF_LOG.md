@@ -104,3 +104,11 @@ Append one entry per session. Newest at the bottom.
 - Done: 02_parts.mjs --apply → oem_parts 26,717 (25,668 extracted, 1,028 repaired same-year, 21 other-year); 25,318 with description_clean; chain_root = self for all; trigram "fuel tank" search works
 - Known leftover: `1010` has a figure-heading description; some OCR tails in names
 - Next: 03_fitment.mjs dry-run
+
+### 2026-10-23 (03_fitment)
+- Phase: 1
+- Done: lib/usedon.mjs (used_on_raw parser), makeResolver() moved into lib/parts.mjs (02 output unchanged, verified), 03_fitment.mjs; dry-run only, NOT applied
+- Numbers: 751,589 fitment rows (high 51.8%, medium 37.3%, low 10.9%); parts covered 86.9%, vehicles 62.4%; review 26.9k rows (option-letter scopes 8,165 largest)
+- Decisions: ALL scope from codes the same document lists explicitly (≥2 rows); "FXRS CONV" ≠ FXRS; early/late boundary years low confidence
+- Follow-ups: vehicles missing for codes the catalogs use (FXDBP, XL1200CP, FXDBA/B/C, XL1200CB/CA, XL883HUG, FLHFB); option-letter scopes (GE, HX, BJ, KX) unmapped
+- Next: apply 03 (needs go-ahead); 04_conditions.mjs

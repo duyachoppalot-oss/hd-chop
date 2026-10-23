@@ -26,15 +26,13 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
-import { classify, normalize, buildDictionary, repair, cleanDescription } from './lib/parts.mjs';
+import { normalize, cleanDescription, makeResolver } from './lib/parts.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
 const source = new pg.Pool({ connectionString: process.env.SOURCE_DATABASE_URL });
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
 
-const YEAR_MIN = 1903;
-const YEAR_MAX = 2027;
 const MIN_HEAD_PARTS = 3;
 const SOURCE_RANK = { extracted: 0, repaired_same_year: 1, repaired_other_year: 2 };
 
@@ -46,8 +44,6 @@ function csvCell(v) {
   const s = v == null ? '' : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
-
-const validYear = (y) => y != null && y >= YEAR_MIN && y <= YEAR_MAX;
 
 async function main() {
   const { rows } = await source.query(`
@@ -62,12 +58,7 @@ async function main() {
     `)
   ).rows;
 
-  const yearsOk = (r) => validYear(r.year_start) && validYear(r.year_end ?? r.year_start) && (r.year_end ?? r.year_start) >= r.year_start;
-  const dict = buildDictionary([
-    ...rows.filter(yearsOk).map((r) => ({ display: r.part_number, year_start: r.year_start, year_end: r.year_end })),
-    ...fitment.filter(yearsOk),
-  ]);
-  const inFitment = new Set(fitment.map((r) => classify(r.display).display));
+  const { resolve, dict, inFitment } = makeResolver(rows, fitment);
 
   // ---- resolve every reference row ----
   const classRows = {};
@@ -90,30 +81,15 @@ async function main() {
   };
 
   for (const r of rows) {
-    const { cls, display } = classify(r.part_number);
+    const { cls, display, final, numberSource, outcome, candidates } = resolve(r);
     classRows[cls] = (classRows[cls] || 0) + 1;
     (classNumbers[cls] ||= new Set()).add(display);
     if (inFitment.has(display)) (classInFitment[cls] ||= new Set()).add(display);
-
-    let final = null;
-    let numberSource = null;
-    if (cls === 'std' || cls === 'modern' || cls === 'hardware') {
-      final = display;
-      numberSource = 'extracted';
-    } else if (cls === 'short_base' && inFitment.has(display)) {
-      final = display;
-      numberSource = 'extracted';
-    } else if (cls === 'truncated' || cls === 'ocr_suffix' || cls === 'short_base') {
-      if (!yearsOk(r)) { addReview('bad_year', r, display); continue; }
-      const res = repair(dict, cls, display, r.year_start, r.year_end ?? r.year_start);
-      repairRows[res.outcome] = (repairRows[res.outcome] || 0) + 1;
-      (repairPairs[res.outcome] ||= new Set()).add(`${display}|${r.year_start}`);
-      if (res.display) { final = res.display; numberSource = res.outcome; }
-      else { addReview(res.outcome, r, display, res.candidates); continue; }
-    } else {
-      addReview('junk_format', r, display);
-      continue;
+    if (outcome !== 'extracted' && outcome !== 'junk_format' && outcome !== 'bad_year') {
+      repairRows[outcome] = (repairRows[outcome] || 0) + 1;
+      (repairPairs[outcome] ||= new Set()).add(`${display}|${r.year_start}`);
     }
+    if (!final) { addReview(outcome, r, display, candidates); continue; }
 
     resolvedRows++;
     const key = normalize(final);
