@@ -1,8 +1,9 @@
 -- API login for apps/api (SPEC: read-only DB role). Run once as postgres
--- against the hdchop database; NOT run yet (needs Laken's go-ahead).
+-- against the hdchop database. Run 2026-10-23 without the PASSWORD clause;
+-- Laken sets it with \password hdchop_api.
 --   sudo -u postgres psql -d hdchop -f hdchop_api.sql
 -- Then set APP_DATABASE_URL on Vercel to this role (CLAUDE.md rule 6) with
--- sslmode (server has ssl = on), and add to pg_hba.conf:
+-- sslmode (server has ssl = on). pg_hba.conf line (added 2026-10-23, line 110):
 --   hostssl hdchop hdchop_api 0.0.0.0/0 scram-sha-256
 -- (Vercel functions have no fixed IPs.)
 CREATE ROLE hdchop_api LOGIN PASSWORD 'REPLACE_WITH_PASSWORD' CONNECTION LIMIT 30;

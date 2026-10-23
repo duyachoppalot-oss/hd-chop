@@ -28,7 +28,7 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
 
 ## Phase 2 — API
 - [x] Scaffold `apps/api` (Next.js 15.5, route handlers only)
-- [ ] Read-only DB role — SQL ready (`packages/db/roles/hdchop_api.sql`: SELECT + insert into search_misses), not run; needs pg_hba `hostssl … 0.0.0.0/0` for Vercel
+- [x] Read-only DB role `hdchop_api` created 2026-10-23 (`packages/db/roles/hdchop_api.sql`: SELECT + insert into search_misses; no insert/update/delete elsewhere) + pg_hba `hostssl hdchop hdchop_api 0.0.0.0/0 scram-sha-256`. Password pending (Laken)
 - [x] `/v1/years`, `/v1/models`, `/v1/search`, `/v1/part/:oem`
 - [x] `search_misses` logging (queries with no concept)
 - **Gate:** "gas tank", "blinkers", "bags", "kickstand", "speedo" return correct results for 5 test bikes across Touring/Softail/Dyna/Sportster.
