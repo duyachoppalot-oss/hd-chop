@@ -66,7 +66,7 @@ Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`l
 ### 06_concepts.mjs — unchanged from ROADMAP
 Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report per-term counts; 0-match terms fixed before `--apply`.
 
-### 07_bridge_holes.mjs — dry-run reviewed 2026-10-23 (not applied)
+### 07_bridge_holes.mjs — applied 2026-10-23 with `--max-hole 3` (13,787 rows)
 Fills year holes inside spans (gate finding). A hole between two listed years of the same part + model + conditions is bridged only if every hole year has a vehicle row and **no catalog covers that vehicle at all** (no oem_catalog fitment of any part). Bridged rows: `source='inferred_span'`, `confidence='medium'`, conditions copied, `source_ref='bridge:<left>|<right>'`. Runs after 03/04; `--apply` replaces all inferred_span rows. `--max-hole N` caps the hole length.
 - Dry run, no cap: 82,671 holes → 15,864 bridged (+32,449 rows); 56,353 kept (a catalog covers the model that year), 10,454 kept (model not produced). Long bridges (5–9 yrs) mostly fill vehicle rows the year master pads (FXDC 1997–2004, FLST 1997–2005, FLHT 2011–18), plus real gaps (FLHC/FLFB/FXBB 2020–24: no Softail catalogs).
 - Dry run, `--max-hole 3`: 12,798 bridged (+13,787 rows), spans 284,056 → 271,258; every filled year is a missing catalog year (Softail 2002/2016, Dyna 2006, FXDWG 2009, FXST 1997–98).
@@ -91,4 +91,10 @@ Precision is good; recall is not.
 - **Holes:** spans skip years when a catalog for that year doesn't list the part (61268-08: 2008, 2010, 2013–19). Of 284,056 spans, 129,796 are single-year; 51,223 one-year holes and 13,116 two-year holes between spans of the same part+model.
 - **Missing parts:** Evo-era outer primary covers for FLSTC/FXDWG don't show (only gaskets/screws); 63805-80A (Evo oil filter) shows only 1984–86 FXR and 1991.
 - **Verdict: not passed yet.** Hole rule decided (bridge only where no catalog covers the model; see 07). Long uncovered runs point at padded vehicle rows in 01. Conditions (04) still to do.
+
+### Gate re-check — 2026-10-23, after 07 (`--max-hole 3`) + refresh
+- Spans 284,056 → 271,258 (single-year 129,796 → 121,766). Filled as expected: FLHTC tank 61356-03 now 2003–07; 63798-99A Dyna 2002–08; 60563-08A FLS 2014–17. No new cross-platform tank/bag/primary-cover parts.
+- Remaining holes are mostly **repair policy**, not missing catalogs: e.g. FLHR tank 61268-08 skips 2009/2011/2012 because those catalogs print `68-08` (2-digit base → junk), `356-08` and `61356-` (repaired → `low` → hidden from spans).
+- Options: (a) `repaired_same_year` → `medium` (unique same-year candidate; `number_source` still marks it), keep `repaired_other_year` low; (b) allow 2-digit front-truncated bases (`68-08`) in short_base tail repair. Then re-run 03 → 07 → 08.
+- Verdict: still not passed (recall + conditions).
 

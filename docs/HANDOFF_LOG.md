@@ -124,3 +124,9 @@ Append one entry per session. Newest at the bottom.
 - Numbers: 82,671 holes; no cap → 15,864 bridged (+32,449 rows); --max-hole 3 → 12,798 bridged (+13,787 rows), spans 284,056 → 271,258
 - Finding: long uncovered runs are mostly vehicle rows the year master pads (FXDC 1997–2004, FLST 1997–2005, FLHT 2011–18) — 01's evidence gate trusts the master; those rows need review
 - Decision needed: apply with --max-hole 3 or uncapped
+
+### 2026-10-23 (07 apply + gate re-check)
+- Done: 07_bridge_holes.mjs --max-hole 3 --apply → 13,787 inferred_span rows; fitment_spans refreshed concurrently (271,258 spans, 4.2 s)
+- Gate re-check: bridged years filled correctly; no new cross-platform errors. Remaining holes traced to repair policy (2009 Touring prints `68-08`/`356-08`; repaired rows are low → hidden)
+- Decision needed: repaired_same_year → medium? accept 2-digit front-truncated bases?
+- Next: that decision, then re-run 03 → 07 → 08; 04_conditions.mjs
