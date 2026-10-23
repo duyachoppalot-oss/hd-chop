@@ -27,10 +27,12 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
 - **Status (2026-10-23): PASSED — accepted by Laken** (spot-check + review-file sizes + recall limits as recorded). 10 parts/cases correct incl. carb vs EFI, ABS vs non-ABS, California vs 49-state, laced wheels, Fat Bob name reuse, Evo vs Twin Cam oil filter. Known recall limits: span holes where catalogs omit a part (43k one-year), 629 vehicles without catalogs, Evo outer primary covers missing. Details: ETL_PLAN.md "Final gate check". Steps 05 (supersession) and 06 (concepts) not built yet.
 
 ## Phase 2 — API
-- [ ] Scaffold `apps/api` (Next.js 15), read-only DB role
-- [ ] `/v1/years`, `/v1/models`, `/v1/search`, `/v1/part/:oem`
-- [ ] `search_misses` logging
+- [x] Scaffold `apps/api` (Next.js 15.5, route handlers only)
+- [ ] Read-only DB role — SQL ready (`packages/db/roles/hdchop_api.sql`: SELECT + insert into search_misses), not run; needs pg_hba `hostssl … 0.0.0.0/0` for Vercel
+- [x] `/v1/years`, `/v1/models`, `/v1/search`, `/v1/part/:oem`
+- [x] `search_misses` logging (queries with no concept)
 - **Gate:** "gas tank", "blinkers", "bags", "kickstand", "speedo" return correct results for 5 test bikes across Touring/Softail/Dyna/Sportster.
+- **Status (2026-10-23): gate run locally (`apps/api/scripts/gate.mjs`), all 25 cells answer correctly** — 2004 FLHR, 2010 FLHX, 2005 FLSTC, 2004 FXDL, 2004 XL883. "bags" empty on FXDL/XL883 (no OEM bags) is correct. Fix during gate: jiffy stand is a component family ("Leg, jiffy stand") → `contains` concept. Deploy to Vercel pending the API role.
 
 ## Phase 3 — Mobile MVP (free features)
 - [ ] Scaffold `apps/mobile` (Expo Router, TS); black/gold theme

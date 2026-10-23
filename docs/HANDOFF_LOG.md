@@ -161,3 +161,10 @@ Append one entry per session. Newest at the bottom.
 - Seed fixes from spot-check: "tail lamp light", dropped "pad & pin kit", saddlebag → contains, "saddlebags" user term
 - Phase 2 notes: normalize plurals in query → concept; 2008 FXDB "bags" correctly empty (no OEM bags)
 - Next: Phase 2 — API (apps/api) + search endpoint
+
+### 2026-10-23 (Phase 2 API)
+- Phase: 2
+- Done: apps/api (Next.js 15.5.28, pg 8.23.1): /v1/years, /v1/models (has_parts), /v1/search (SPEC pipeline + singular fallback + trigram fallback + search_misses), /v1/part/:oem (chain + spans); edge cache 1 h; gate script apps/api/scripts/gate.mjs; .claude/launch.json "api" on :3001
+- Gate: 25/25 cells correct locally after making jiffy_stand a contains concept (06 re-applied, spans refreshed)
+- Not done: hdchop_api role (SQL in packages/db/roles/, needs go-ahead + pg_hba hostssl 0.0.0.0/0), Vercel deploy. Server has ssl=on; node-postgres needs sslmode handling for the server cert.
+- Next: create API role → deploy to Vercel → Phase 3 mobile
