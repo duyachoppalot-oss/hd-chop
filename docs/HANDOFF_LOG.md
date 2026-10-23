@@ -99,3 +99,8 @@ Append one entry per session. Newest at the bottom.
 - Numbers: 239,520 rows → 225,439 resolved (94.1%) → 26,717 oem_parts (1,028 repaired same-year, 21 other-year); review 14,081 (junk 10,632, ambiguous 2,444, no candidate 1,003)
 - Decisions: 3–4 digit bases treated as front-truncated unless oem_fitment confirms (9 of 2,650 do) — conflicts with the CLAUDE.md "3–4 digit base" century note, which assumes they're real; color-variant ambiguity left unresolved (parallel options)
 - Next: apply 02 (needs go-ahead); 03_fitment.mjs dry-run
+
+### 2026-10-23 (02 apply)
+- Done: 02_parts.mjs --apply → oem_parts 26,717 (25,668 extracted, 1,028 repaired same-year, 21 other-year); 25,318 with description_clean; chain_root = self for all; trigram "fuel tank" search works
+- Known leftover: `1010` has a figure-heading description; some OCR tails in names
+- Next: 03_fitment.mjs dry-run

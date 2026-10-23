@@ -31,7 +31,7 @@ Source: picker chain `harley_families → harley_models → harley_model_years` 
 - Dry run: 1,671 vehicles (1,492 in master, 179 catalog-only), engine 98.3%. Review 1,461: 1,286 no evidence, 75 multi-year-span only, 100 master-only (engine-era placeholders like `EVOLUTION_BIGTWIN`).
 - Known source quirks kept as-is: picker files FXEF (1983 Shovelhead Fat Bob) under FXR and FXS (1978 Shovelhead Low Rider) under Softail.
 
-### 02_parts.mjs — dry-run reviewed 2026-10-23 (not applied)
+### 02_parts.mjs — applied 2026-10-23 (26,717 rows)
 Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit std numbers from reference + `oem_fitment` (23k). Logic in `scripts/etl/lib/parts.mjs` (shared with 03).
 1. Classify (after uppercasing, collapsing `--`): `std` `NNNNN-YY[A-ZZZ]` (121,309 rows; 86.7% of distinct also in oem_fitment), `modern` 8-digit + color suffix (23,484), `hardware` 4–5 digit + optional letter (57,853), `short_base` 3–4 digit base (4,222; only 9 numbers confirmed by oem_fitment — samples are 5-digit numbers missing their front digits), `truncated` `NNNNN-`/`NNNNN-D` (21,946), `ocr_suffix` `NNNNN-YYD` = letter read as digit (74), `junk` (10,632 → review).
 2. Repair truncated/ocr by prefix, short_base by tail (unless oem_fitment confirms it as-is). One candidate seen in the row's catalog years → `repaired_same_year`; else one anywhere → `repaired_other_year`; else review. Candidates whose `-YY` intro year is after the catalog year are excluded (century rule).
@@ -39,6 +39,7 @@ Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit
 4. `description_clean`: first column segment that starts with a capitalized word; drop parentheticals, `w/ …`/`with …` notes, part numbers, dimensions, non-ASCII; head + one qualifier, ≤60 chars, sentence case. Per number take the most common; names whose first word heads <3 part numbers are OCR noise → dropped.
 5. `chain_root` = self.
 - Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
+- Known leftovers: a few names keep OCR tails (`… eeeeen`, cut words); `1010` carries a figure heading ("Fuel tank & trim california…") — watch for it in 06 concept matching.
 
 ### 03_fitment.mjs — fitment from used_on_raw
 Source: `hd_oem_catalog_reference` rows (parts resolved in 02), `oem_fitment` for corroboration.
