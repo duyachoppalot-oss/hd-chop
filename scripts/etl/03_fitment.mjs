@@ -14,9 +14,10 @@
 //   range   "86 TO * - ALL MODELS": the explicit years (to = row end for "*"),
 //           for the document's scope or the listed codes
 //
-// confidence: low if the number was repaired or the year is an "early/late YY"
-// boundary; high if oem_fitment has the same number in a catalog covering that
-// year; else medium. One row per (part, vehicle): best confidence, lowest
+// confidence: low if the number was repaired from another year's catalogs or
+// the year is an "early/late YY" boundary; high if the number was read as-is
+// and oem_fitment has it in a catalog covering that year; else medium (incl.
+// repaired_same_year: one candidate in that year's catalogs). One row per (part, vehicle): best confidence, lowest
 // source id. conditions stay '{}' (step 04).
 //
 // --apply replaces every fitment row with source = 'oem_catalog'. Re-run 04
@@ -56,7 +57,7 @@ const span = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => 
 async function main() {
   const rows = (
     await source.query(`
-      SELECT id, part_number, used_on_raw, year_start, year_end, source_document_title AS doc
+      SELECT id, part_number, description, used_on_raw, year_start, year_end, source_document_title AS doc
       FROM hd_oem_catalog_reference ORDER BY id
     `)
   ).rows;
@@ -165,7 +166,11 @@ async function main() {
     stat.with_fitment++;
     for (const [v, low] of targets) {
       const conf =
-        res.numberSource !== 'extracted' || low ? 'low' : corroborated.has(`${oem}|${v.year}`) ? 'high' : 'medium';
+        res.numberSource === 'repaired_other_year' || low
+          ? 'low'
+          : res.numberSource === 'extracted' && corroborated.has(`${oem}|${v.year}`)
+            ? 'high'
+            : 'medium';
       const key = `${oem}|${v.vehicle_id}`;
       const e = fit.get(key);
       if (!e) { fit.set(key, { conf, id: r.id, kind: p.kind }); kindFit[p.kind] = (kindFit[p.kind] || 0) + 1; }

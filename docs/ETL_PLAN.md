@@ -31,23 +31,23 @@ Source: picker chain `harley_families → harley_models → harley_model_years` 
 - Dry run: 1,671 vehicles (1,492 in master, 179 catalog-only), engine 98.3%. Review 1,461: 1,286 no evidence, 75 multi-year-span only, 100 master-only (engine-era placeholders like `EVOLUTION_BIGTWIN`).
 - Known source quirks kept as-is: picker files FXEF (1983 Shovelhead Fat Bob) under FXR and FXS (1978 Shovelhead Low Rider) under Softail.
 
-### 02_parts.mjs — applied 2026-10-23 (26,717 rows)
+### 02_parts.mjs — re-applied 2026-10-23 (26,460 rows)
 Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit std numbers from reference + `oem_fitment` (23k). Logic in `scripts/etl/lib/parts.mjs` (shared with 03).
-1. Classify (after uppercasing, collapsing `--`): `std` `NNNNN-YY[A-ZZZ]` (121,309 rows; 86.7% of distinct also in oem_fitment), `modern` 8-digit + color suffix (23,484), `hardware` 4–5 digit + optional letter (57,853), `short_base` 3–4 digit base (4,222; only 9 numbers confirmed by oem_fitment — samples are 5-digit numbers missing their front digits), `truncated` `NNNNN-`/`NNNNN-D` (21,946), `ocr_suffix` `NNNNN-YYD` = letter read as digit (74), `junk` (10,632 → review).
-2. Repair truncated/ocr by prefix, short_base by tail (unless oem_fitment confirms it as-is). One candidate seen in the row's catalog years → `repaired_same_year`; else one anywhere → `repaired_other_year`; else review. Candidates whose `-YY` intro year is after the catalog year are excluded (century rule).
+1. Classify (after uppercasing, collapsing `--`): `std` `NNNNN-YY[A-ZZZ]` (121,309 rows; 86.7% of distinct also in oem_fitment), `modern` 8-digit + color suffix (23,484), `hardware` 4–5 digit + optional letter (57,853), `short_base` 2–4 digit base (4,961; only 9 numbers confirmed by oem_fitment — samples are 5-digit numbers missing their front digits; 2-digit like `68-08` added 2026-10-23), `truncated` `NNNNN-`/`NNNNN-D` (21,946), `ocr_suffix` `NNNNN-YYD` = letter read as digit (74), `junk` (10,632 → review).
+2. Repair truncated/ocr by prefix, short_base by tail (unless oem_fitment confirms it as-is). One candidate seen in the row's catalog years → `repaired_same_year`; else one anywhere → `repaired_other_year`; else review. Candidates whose `-YY` intro year is after the catalog year are excluded (century rule). **Name check** (added 2026-10-23): candidates whose catalog names don't share the row's head word are dropped; tail repairs need a known matching name. Without it, head-word agreement was 91% (truncated), 82–93% (short_base). Rejects 1,056 rows (`name_mismatch`) + 123 (`name_unverified`), resolves 265 formerly ambiguous. `--apply` also deletes parts no longer produced, with their fitment (270 on re-apply).
 3. `oem_number` = uppercase, no dashes. Collisions keep the most common display (0 after short_base change).
 4. `description_clean`: first column segment that starts with a capitalized word; drop parentheticals, `w/ …`/`with …` notes, part numbers, dimensions, non-ASCII; head + one qualifier, ≤60 chars, sentence case. Per number take the most common; names whose first word heads <3 part numbers are OCR noise → dropped.
 5. `chain_root` = self.
 - Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
 - Known leftovers: a few names keep OCR tails (`… eeeeen`, cut words); `1010` carries a figure heading ("Fuel tank & trim california…") — watch for it in 06 concept matching.
 
-### 03_fitment.mjs — applied 2026-10-23 (751,589 rows)
+### 03_fitment.mjs — re-applied 2026-10-23 (751,135 rows)
 Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`lib/parts.mjs`), `used_on_raw` parsed by `lib/usedon.mjs`; `oem_fitment` for corroboration.
 1. `used_on_raw` kinds: `codes` (148,672 rows; tags `103`/`ANV`/`TC`/`SHRINE`/`CVO`/`SE` and glued `…ANV` stripped; `CONV` only for FXDS; a year next to a code wins over the catalog year), `all` (56,248), `family` `DYNA: 93*-ALL` (9,676; `*`/`'`/`•` = and later; no star = that year only), `range` `86 TO * - ALL MODELS` / `86 TO 92 - XLH, XLCH` (7,279; "early/late YY" boundary year → low), `unparsed` (17,645 → review: option-letter scopes like `DYNA: 95*-GE` 8,165, fragments, sidecar notes).
 2. **`ALL` scope** = every code listed explicitly in ≥2 rows of the same document, × the row's year. Per-model titles are family catalogs (e.g. "2016 DYNA FAT BOB (FXDF 103)" lists all Dyna codes); the report prints the scope per document — each maps to one platform.
 3. Only (code, year) pairs in `vehicles`. Codes missing from `vehicles` are counted (top: FXDBP, XL1200CP, FXDBA/B/C, XL1200CB/CA, XL883HUG, FLHFB) — candidates to add in 01.
 4. Bad years skipped (35 rows).
-5. Confidence: `low` = repaired number or boundary year; `high` = oem_fitment has the number in a catalog covering that year; else `medium`. One row per (part, vehicle): best confidence, lowest source id. `conditions = '{}'` until 04.
+5. Confidence (revised 2026-10-23): `low` = repaired from another year or boundary year; `high` = number read as-is and oem_fitment has it in a catalog covering that year; else `medium` (includes `repaired_same_year`). Re-apply: high 389,165, medium 360,139, low 1,831. One row per (part, vehicle): best confidence, lowest source id. `conditions = '{}'` until 04.
 6. `--apply` deletes and reloads all `source='oem_catalog'` rows (re-run 04 afterwards).
 - Dry run: 204,453 / 239,520 rows produce fitment (85.4%) → 751,589 fitment rows (high 51.8%, medium 37.3%, low 10.9%); 23,216 / 26,717 parts (86.9%) and 1,042 / 1,671 vehicles (62.4%) get fitment. Vehicles without fitment are catalog gaps: CVO/SE, 2020–24 Softail, Rev Max, Street, Trike, pre-1950, and older Sportster catalogs that say `XLH` rather than `XLH883`.
 
@@ -66,7 +66,7 @@ Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`l
 ### 06_concepts.mjs — unchanged from ROADMAP
 Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report per-term counts; 0-match terms fixed before `--apply`.
 
-### 07_bridge_holes.mjs — applied 2026-10-23 with `--max-hole 3` (13,787 rows)
+### 07_bridge_holes.mjs — re-applied 2026-10-23 with `--max-hole 3` (16,871 rows)
 Fills year holes inside spans (gate finding). A hole between two listed years of the same part + model + conditions is bridged only if every hole year has a vehicle row and **no catalog covers that vehicle at all** (no oem_catalog fitment of any part). Bridged rows: `source='inferred_span'`, `confidence='medium'`, conditions copied, `source_ref='bridge:<left>|<right>'`. Runs after 03/04; `--apply` replaces all inferred_span rows. `--max-hole N` caps the hole length.
 - Dry run, no cap: 82,671 holes → 15,864 bridged (+32,449 rows); 56,353 kept (a catalog covers the model that year), 10,454 kept (model not produced). Long bridges (5–9 yrs) mostly fill vehicle rows the year master pads (FXDC 1997–2004, FLST 1997–2005, FLHT 2011–18), plus real gaps (FLHC/FLFB/FXBB 2020–24: no Softail catalogs).
 - Dry run, `--max-hole 3`: 12,798 bridged (+13,787 rows), spans 284,056 → 271,258; every filled year is a missing catalog year (Softail 2002/2016, Dyna 2006, FXDWG 2009, FXST 1997–98).
@@ -97,4 +97,10 @@ Precision is good; recall is not.
 - Remaining holes are mostly **repair policy**, not missing catalogs: e.g. FLHR tank 61268-08 skips 2009/2011/2012 because those catalogs print `68-08` (2-digit base → junk), `356-08` and `61356-` (repaired → `low` → hidden from spans).
 - Options: (a) `repaired_same_year` → `medium` (unique same-year candidate; `number_source` still marks it), keep `repaired_other_year` low; (b) allow 2-digit front-truncated bases (`68-08`) in short_base tail repair. Then re-run 03 → 07 → 08.
 - Verdict: still not passed (recall + conditions).
+
+### Gate re-check 2 — 2026-10-23, after repair-policy change (02 → 03 → 07 → refresh)
+- Spans 287,575 over 22,993 parts (was 271,258 / 22,099). One-year holes 51,223 → 43,114.
+- Filled: FLHR tank 61225-98 1998–2002; FLHTC 61356-08 2008–11, 2013; Dyna Fat Bob 61586-04B 2010, 2012–17; Sportster 61348-07 2007–08; 63798-99A FLSTC 1999–2015 continuous. Still one cross-platform tank/bag/primary-cover part (60563-08A, catalog-confirmed).
+- Left as-is: FLHR 61268-08 2009 (`68-08` matches 61268-08 and 75168-08, both "Fuel …" — genuinely ambiguous); 2011–12 not listed in those catalogs.
+- Verdict: recall acceptable for spot-checked parts; gate waits on conditions (04).
 

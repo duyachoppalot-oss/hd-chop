@@ -130,3 +130,9 @@ Append one entry per session. Newest at the bottom.
 - Gate re-check: bridged years filled correctly; no new cross-platform errors. Remaining holes traced to repair policy (2009 Touring prints `68-08`/`356-08`; repaired rows are low → hidden)
 - Decision needed: repaired_same_year → medium? accept 2-digit front-truncated bases?
 - Next: that decision, then re-run 03 → 07 → 08; 04_conditions.mjs
+
+### 2026-10-23 (repair policy change)
+- Done: short_base accepts 2-digit bases; name check on all repairs (lib/parts.mjs repair()); repaired_same_year → medium in 03; 02 --apply deletes parts no longer produced. Re-applied 02 → 03 → 07 (--max-hole 3) → refreshed spans.
+- Numbers: oem_parts 26,460 (270 removed); fitment 751,135 catalog (high 389,165 / medium 360,139 / low 1,831) + 16,871 inferred_span; spans 287,575 over 22,993 parts; one-year holes 43,114
+- Gate: spot-checked tanks/filters now continuous where catalogs list them; no new cross-platform errors. Waits on 04 conditions.
+- Next: 04_conditions.mjs

@@ -7,16 +7,19 @@
 // - Valid numbers (std NNNNN-YY[A], modern 8-digit, 4-5 digit hardware) are
 //   kept as extracted.
 // - Truncated "NNNNN-" / "NNNNN-D", OCR'd "NNNNN-YYD" and front-truncated
-//   3-4 digit bases (unless oem_fitment confirms them) are repaired from the
+//   2-4 digit bases (unless oem_fitment confirms them) are repaired from the
 //   full std numbers in both catalog tables: exactly one candidate seen in the
 //   row's catalog years -> repaired_same_year; else exactly one anywhere ->
 //   repaired_other_year; else review. A candidate's -YY intro year must not be
-//   later than the row's catalog year.
+//   later than the row's catalog year, and its catalog names must share the
+//   row's head word (see repair() in lib/parts.mjs).
 // - Everything else (OCR noise, item numbers, fragments) goes to review.
 // - description_clean: most common cleaned name across the number's rows. A
 //   name whose first word heads fewer than MIN_HEAD_PARTS part numbers is
 //   treated as OCR noise.
 // - chain_root = self; concept_id null (set in 05 / 06).
+// - --apply also deletes parts this run no longer produces, with their
+//   fitment rows (re-run 03 -> 07 -> 08 afterwards).
 //
 // Usage:
 //   node scripts/etl/02_parts.mjs            (dry-run, prints + writes report only)
@@ -149,7 +152,7 @@ async function main() {
   }
   lines.push('');
   lines.push('Repair outcome (rows / distinct (number, year) pairs):');
-  for (const o of ['repaired_same_year', 'repaired_other_year', 'ambiguous_same_year', 'ambiguous_other_year', 'no_candidate'])
+  for (const o of ['repaired_same_year', 'repaired_other_year', 'ambiguous_same_year', 'ambiguous_other_year', 'no_candidate', 'name_mismatch', 'name_unverified'])
     lines.push(`  ${o.padEnd(21)} ${String(repairRows[o] || 0).padStart(6)}  ${String(repairPairs[o]?.size || 0).padStart(6)}`);
   lines.push('');
   lines.push(`Reference rows resolved to a part number: ${resolvedRows} (${pct(resolvedRows, rows.length)})`);
@@ -198,6 +201,13 @@ async function main() {
   const client = await app.connect();
   try {
     await client.query('BEGIN');
+    const keep = oemParts.map((p) => p.oem_number);
+    const staleFit = await client.query(
+      `DELETE FROM fitment WHERE oem_number IN (SELECT oem_number FROM oem_parts WHERE oem_number <> ALL($1::text[]))`,
+      [keep]
+    );
+    const stale = await client.query(`DELETE FROM oem_parts WHERE oem_number <> ALL($1::text[])`, [keep]);
+    console.log(`Deleted ${stale.rowCount} parts no longer produced (and ${staleFit.rowCount} of their fitment rows).`);
     const res = await client.query(
       `INSERT INTO oem_parts (oem_number, oem_display, description_clean, chain_root, number_source)
        SELECT n, d, c, n, s FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(n, d, c, s)
