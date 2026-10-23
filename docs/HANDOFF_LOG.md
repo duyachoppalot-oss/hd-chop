@@ -154,3 +154,10 @@ Append one entry per session. Newest at the bottom.
 - Done: 05_supersession.mjs, 06_concepts.mjs; concepts seed gains `match` + `exclude_terms`; dry-run only, NOT applied
 - Numbers: 05 — 162 accepted pairs, 128 chain_root changes, 0 cycles, review 322. 06 — 4,524 parts in 67 concepts, 0 zero-match terms, 0 ties
 - Next: apply 05 → 06 → 08 refresh; then Phase 2 (API + search)
+
+### 2026-10-23 (05 + 06 apply, search spot-check)
+- Done: 05 applied (162 pairs, 128 chain roots); 06 applied (4,684 parts / 67 concepts after seed fixes); fitment_spans refreshed. Added scripts/dev/search.mjs — read-only CLI of the SPEC search pipeline (port to the API in Phase 2).
+- Spot-checks (correct): 2004 FLHR / 2003 FLHTC / 2016 FXDF / 2019 FXFB gas tank; 2005 FLSTC blinkers; 2004 XL883 kickstand; 2010 FLHX speedo (kph/dual tagged hdi); 2001 FLHTC tail light (68140-04 replaces 3 older numbers); 2003 FLHTCI throttle body {efi ~inferred}; 2012 FLHR brake pads; 2005 FLSTC primary cover (60543-99B replaces 60543-99); 2007 FXDL swingarm; 1996 FLHTCU carb (49-state vs California); 2008 FLHTCU / 2015 FLHR bags; typo "gas tnak" → Fuel Tank.
+- Seed fixes from spot-check: "tail lamp light", dropped "pad & pin kit", saddlebag → contains, "saddlebags" user term
+- Phase 2 notes: normalize plurals in query → concept; 2008 FXDB "bags" correctly empty (no OEM bags)
+- Next: Phase 2 — API (apps/api) + search endpoint
