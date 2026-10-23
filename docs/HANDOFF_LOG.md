@@ -118,3 +118,9 @@ Append one entry per session. Newest at the bottom.
 - Gate spot-check: precision good (tanks, bags, oil filters, Fat Bob reuse all on the right platform/era); recall gaps — 51,223 one-year and 13,116 two-year holes inside spans, 46% of spans single-year; Evo outer primary covers missing. Gate NOT passed. Details in ETL_PLAN "Gate spot-check".
 - Decision needed: rule for bridging span holes (e.g. bridge a hole only when no catalog in that year covers the model at all)
 - Next: decide hole rule; 04_conditions.mjs
+
+### 2026-10-23 (07 bridge holes)
+- Done: 07_bridge_holes.mjs (renumbered refresh to 08); dry-run only, NOT applied
+- Numbers: 82,671 holes; no cap → 15,864 bridged (+32,449 rows); --max-hole 3 → 12,798 bridged (+13,787 rows), spans 284,056 → 271,258
+- Finding: long uncovered runs are mostly vehicle rows the year master pads (FXDC 1997–2004, FLST 1997–2005, FLHT 2011–18) — 01's evidence gate trusts the master; those rows need review
+- Decision needed: apply with --max-hole 3 or uncapped

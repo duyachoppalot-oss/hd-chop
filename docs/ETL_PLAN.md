@@ -66,8 +66,13 @@ Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`l
 ### 06_concepts.mjs — unchanged from ROADMAP
 Seeds → `part_concepts`; match `hd_terms` against `description_clean`; report per-term counts; 0-match terms fixed before `--apply`.
 
-### 07_refresh.mjs
-`REFRESH MATERIALIZED VIEW CONCURRENTLY fitment_spans`.
+### 07_bridge_holes.mjs — dry-run reviewed 2026-10-23 (not applied)
+Fills year holes inside spans (gate finding). A hole between two listed years of the same part + model + conditions is bridged only if every hole year has a vehicle row and **no catalog covers that vehicle at all** (no oem_catalog fitment of any part). Bridged rows: `source='inferred_span'`, `confidence='medium'`, conditions copied, `source_ref='bridge:<left>|<right>'`. Runs after 03/04; `--apply` replaces all inferred_span rows. `--max-hole N` caps the hole length.
+- Dry run, no cap: 82,671 holes → 15,864 bridged (+32,449 rows); 56,353 kept (a catalog covers the model that year), 10,454 kept (model not produced). Long bridges (5–9 yrs) mostly fill vehicle rows the year master pads (FXDC 1997–2004, FLST 1997–2005, FLHT 2011–18), plus real gaps (FLHC/FLFB/FXBB 2020–24: no Softail catalogs).
+- Dry run, `--max-hole 3`: 12,798 bridged (+13,787 rows), spans 284,056 → 271,258; every filled year is a missing catalog year (Softail 2002/2016, Dyna 2006, FXDWG 2009, FXST 1997–98).
+
+### 08_refresh.mjs
+`REFRESH MATERIALIZED VIEW CONCURRENTLY fitment_spans`. (Refreshed by hand after 03 for the gate check.)
 
 ## Before any script runs `--apply`
 
@@ -85,5 +90,5 @@ Precision is good; recall is not.
 - Right part, right platform/era: Touring tank 61225-98 → 61268-03 (2004–07) → 61268-08 (2008+); Sportster tank 61348-03 (1999–2003) → 61348-04 (2004–06, rubber-mount frame); Touring saddlebag 90xxx-93 → 902004xx (2014+); Twin Cam oil filters 63798-99A / 63731-99A only on 1999+ Dyna/Softail/Touring; Dyna Fat Bob FXDF tank 61586-04A/B vs Softail Fat Bob FXFB 61000675 — the reused name doesn't cross. Only one tank/bag/primary-cover part spans two platforms (60563-08A: FLD + FLS), and the catalogs list it for both.
 - **Holes:** spans skip years when a catalog for that year doesn't list the part (61268-08: 2008, 2010, 2013–19). Of 284,056 spans, 129,796 are single-year; 51,223 one-year holes and 13,116 two-year holes between spans of the same part+model.
 - **Missing parts:** Evo-era outer primary covers for FLSTC/FXDWG don't show (only gaskets/screws); 63805-80A (Evo oil filter) shows only 1984–86 FXR and 1991.
-- **Verdict: not passed yet.** Needs a hole-bridging rule (decision pending) and conditions (04).
+- **Verdict: not passed yet.** Hole rule decided (bridge only where no catalog covers the model; see 07). Long uncovered runs point at padded vehicle rows in 01. Conditions (04) still to do.
 
