@@ -17,4 +17,4 @@ npm --prefix apps/api run dev        # http://localhost:3001
 node apps/api/scripts/gate.mjs       # Phase 2 gate queries
 ```
 
-Deploy: Vercel project rooted at `apps/api`; `APP_DATABASE_URL` = the `hdchop_api` role (`packages/db/roles/hdchop_api.sql`), with SSL. Responses cache at the edge for an hour (data changes only when the ETL runs); misses are `no-store`.
+Deploy: Vercel project rooted at `apps/api`; `APP_DATABASE_URL` = the `hdchop_api` role (`packages/db/roles/hdchop_api.sql`) **without `sslmode`** — `lib/db.ts` pins the server's self-signed cert (`lib/dbCert.ts`). Check a URL with `node apps/api/scripts/check-db.mjs API_DATABASE_URL`. Responses cache at the edge for an hour (data changes only when the ETL runs); misses are `no-store`.

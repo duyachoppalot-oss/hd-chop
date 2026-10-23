@@ -172,3 +172,7 @@ Append one entry per session. Newest at the bottom.
 ### 2026-10-23 (API role)
 - Done: created hdchop_api on hdchop (no password yet; LOGIN, CONNECTION LIMIT 30, statement_timeout 8s). Verified: SELECT on fitment_spans/vehicles, INSERT on search_misses only (no INSERT fitment / UPDATE oem_parts / DELETE search_misses). pg_hba line 110 `hostssl hdchop hdchop_api 0.0.0.0/0 scram-sha-256`, 0 rule errors, reloaded. Backup: /tmp/pg_hba.conf.bak.20261023_111152 on the server.
 - Pending: Laken sets the password (\password hdchop_api); then Vercel APP_DATABASE_URL with SSL; deploy
+
+### 2026-10-23 (API TLS + role test)
+- Done: hdchop_api password set (Laken); API pins the server's self-signed cert (apps/api/lib/dbCert.ts, SHA-256 9C:8A:51…:51:27, valid to 2036; checked against the server file over SSH) — URL must not contain sslmode. apps/api/scripts/check-db.mjs: hdchop_api over TLSv1.3 reads fitment_spans (291,429), INSERT search_misses allowed, INSERT fitment / UPDATE oem_parts denied. API_DATABASE_URL added to local .env (git-ignored).
+- Blocked: Vercel deploy — only scope is the Fallen Cycles team on Hobby (non-commercial terms); waiting on Laken's choice

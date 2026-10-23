@@ -1,0 +1,24 @@
+// Postgres server certificate (Ubuntu ssl-cert-snakeoil, self-signed, CN=ubuntu-4gb-ash-2,
+// valid to 2036-03-20). SHA-256 9C:8A:51:3F:CE:56:EF:86:F8:2E:0E:10:4E:FB:60:CA:FC:78:C5:2A:A5:3B:A1:B1:BA:9A:8C:97:A8:24:51:27,
+// checked against /etc/ssl/certs/ssl-cert-snakeoil.pem over SSH on 2026-10-23.
+// Public, not a secret. Replace if the server's cert changes.
+export const DB_CA = `-----BEGIN CERTIFICATE-----
+MIIDDTCCAfWgAwIBAgIUHXTLtlDgMXKhENFxINIRGh4MHGcwDQYJKoZIhvcNAQEL
+BQAwGzEZMBcGA1UEAwwQdWJ1bnR1LTRnYi1hc2gtMjAeFw0yNjAzMjMxNzMzNDJa
+Fw0zNjAzMjAxNzMzNDJaMBsxGTAXBgNVBAMMEHVidW50dS00Z2ItYXNoLTIwggEi
+MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDWmaszKjQcFNY1HMBLqzjfTAb/
+uFrwU0aFXMveqwaWPnZgrVIWA4xVHmWAQk9eVsNtr2QdssPhoYZBky7ggGRSRu9s
+8YpQjQRIC505Or7FOjuialv8/w8vT8f+fMjI2qXsiXIqid5sGu738G1YhwAulp/X
+zk0sjICkRv8P6IjeytAPeacejOta7J/r3nouzki6nwwiRg+IEKJajNThPH8DQldz
++aTZhyflerNxoGODFlNL5XhvnocQ48zZNGMFIL7QRTapfuY31zKTSZJID351g8hp
+VwGAbaBFxUkwXhcWqM+f4uf21pYLNbtU6Y17k7xyojc0EMzsaogQKbGalpC9AgMB
+AAGjSTBHMAkGA1UdEwQCMAAwGwYDVR0RBBQwEoIQdWJ1bnR1LTRnYi1hc2gtMjAd
+BgNVHQ4EFgQUbBDuIK9UvlQ6eozmiXANdwY1aykwDQYJKoZIhvcNAQELBQADggEB
+ANKbwoC9R8L0CvSbHBMVeINLsOU4+vu3AefkujnVW3koH0tcTM2q0AJ8FbDOIl0I
+77e8Ua6wSG0gg4BP5tasj+BjVR4pENj+nKl+YvV0oXA54R9WeaviREoC3EsLSkvQ
+5tKyuYESEVWAx3N7Zk7zK4TvkpTAG2vglgttvsN6x9cPVSsyn/XspADcDM2nWgO6
+yA08XQoNxZMTSqM7jPuv/ZxQMVH1MEHbvzpe/p1CIv10/3iaRAtrt0sHMwAG0EHE
+IY3tB/U062XjwZyYZu4xk3DeUcPvNteDd7csV+KNU4gmbNheeGK58A2lOBM6Swzx
+7lB1Rxf+aAWIfQuaIgar+uo=
+-----END CERTIFICATE-----
+`;
