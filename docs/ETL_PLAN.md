@@ -53,6 +53,7 @@ Source: `hd_oem_catalog_reference` rows, part numbers resolved exactly as 02 (`l
 4. Bad years skipped (35 rows).
 5. Confidence (revised 2026-10-23): `low` = repaired from another year or boundary year; `high` = number read as-is and oem_fitment has it in a catalog covering that year; else `medium` (includes `repaired_same_year`). Re-apply: high 389,165, medium 360,139, low 1,831. One row per (part, vehicle): best confidence, lowest source id. `conditions = '{}'` until 04.
 6. `--apply` deletes and reloads all `source='oem_catalog'` rows (re-run 04 afterwards).
+7. **Police (2026-10-24, not yet re-applied):** a family row (`FLT: 95*-ALL`) reaching a police model (`POLICE_CODE` in `lib/fitment.mjs`) gives `low`: civilian books never list police codes and the 1995 police book confirms only 72% of those pairs (mirrors, wheels, reflectors differ). Dry run: low 1,832 → 7,632; ~2,400 existing FXRP pairs drop out of search on re-apply. Police fitment should come from the police books (09). Check: `scripts/dev/check_police_family.mjs`.
 - Dry run: 204,453 / 239,520 rows produce fitment (85.4%) → 751,589 fitment rows (high 51.8%, medium 37.3%, low 10.9%); 23,216 / 26,717 parts (86.9%) and 1,042 / 1,671 vehicles (62.4%) get fitment. Vehicles without fitment are catalog gaps: CVO/SE, 2020–24 Softail, Rev Max, Street, Trike, pre-1950, and older Sportster catalogs that say `XLH` rather than `XLH883`.
 
 ### 04_conditions.mjs — applied 2026-10-23

@@ -8,6 +8,13 @@ import { parseUsedOn } from './usedon.mjs';
 
 const DOC_SCOPE_MIN = 2;
 
+// Police models. Civilian catalogs never list these codes (0 rows in the
+// 1995-2004 touring books); H-D catalogs them in separate police books. A
+// family row ("FLT: 95*-ALL") reaching one is right for shared mechanical parts
+// but wrong for police equipment (1995 police book: 566 of 783 such pairs
+// listed; mirrors, wheels, reflectors differ), so those pairs are low.
+export const POLICE_CODE = /^(FLHP|FLHPI|FLHPE|FLHPEI|FLHTP|FLHTPI|FLTRXP|FXRP|FXDP|FXDBP)$/;
+
 export const span = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
 // rows: hd_oem_catalog_reference { id, part_number, description, used_on_raw, year_start, year_end, doc }
@@ -47,7 +54,7 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
   const docScope = new Map();
   for (const [doc, m] of docCodeRows) docScope.set(doc, [...m].filter(([, n]) => n >= DOC_SCOPE_MIN).map(([c]) => c));
 
-  // One catalog row -> { status, kind, oem?, res?, targets: [[vehicle, lowBoundary]], missing, notes }.
+  // One catalog row -> { status, kind, oem?, res?, targets: [[vehicle, low]], missing, notes }.
   // status: ok | part_unresolved | part_not_loaded | bad_year | unparsed | no_vehicle
   // notes: [reason, detail] pairs worth a review line even when status is ok.
   function target(r, i) {
@@ -86,7 +93,7 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
       fromScope(span(ys, ye));
     } else if (p.kind === 'family') {
       const years = new Set(p.open ? span(Math.max(p.from, ys), ye) : [p.from]);
-      for (const v of byPlatform.get(p.platform) || []) if (years.has(v.year)) targets.push([v, false]);
+      for (const v of byPlatform.get(p.platform) || []) if (years.has(v.year)) targets.push([v, POLICE_CODE.test(v.model_code)]);
     } else if (p.kind === 'range') {
       const years = span(p.from, p.to ?? ye);
       const before = targets.length;
@@ -97,10 +104,11 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
     return { ...out, status: targets.length ? 'ok' : 'no_vehicle', oem, res };
   }
 
-  // confidence: low if repaired from another year or a boundary year; high if
-  // read as-is and oem_fitment has it in a catalog covering that year; else medium.
-  function confidence(oem, res, vehicle, lowBoundary) {
-    if (res.numberSource === 'repaired_other_year' || lowBoundary) return 'low';
+  // confidence: low if repaired from another year, a boundary year, or a family
+  // row reaching a police model; high if read as-is and oem_fitment has it in a
+  // catalog covering that year; else medium.
+  function confidence(oem, res, vehicle, low) {
+    if (res.numberSource === 'repaired_other_year' || low) return 'low';
     return res.numberSource === 'extracted' && corroborated.has(`${oem}|${vehicle.year}`) ? 'high' : 'medium';
   }
 
