@@ -18,14 +18,19 @@
 // Conditions as 04 (lib/conditions.mjs) from the description + models text.
 // The X/XI efi/carb inference is not repeated here.
 //
-// Merge: a (part, vehicle) pair already in `fitment` (any source) is counted as
-// agreement and left alone. Only new pairs would be added, as
+// Merge: a (part, vehicle) pair already in 03's fitment (source = 'oem_catalog')
+// is counted as agreement and left alone. Only new pairs are added, as
 // source = 'service_catalog', source_ref = 'catalog_extract:<book>:<line>'.
-// Numbers not in oem_parts would be added (number_source 'extracted',
-// description_clean via cleanDescription, chain_root self). Concepts for those
-// are previewed with lib/concepts.mjs (06 assigns them for real).
+// Numbers not in 02's parts are added to oem_parts with source =
+// 'service_catalog' (number_source 'extracted', description_clean via
+// cleanDescription, chain_root self, no concept: 05/06 set those). Concepts are
+// previewed in the report with lib/concepts.mjs.
 //
-// --apply is not implemented yet: dry-run only until the report is reviewed.
+// --apply, in one transaction: deletes earlier service_catalog fitment and parts
+// and all inferred_span rows (07 bridged holes against the old fitment), then
+// inserts this run's parts and pairs. Afterwards re-run 05 -> 06 -> 07 and
+// refresh fitment_spans. Run after 03/04 (03 --apply clears these rows).
+// Removing the source: see packages/db/migrations/003_part_source.sql.
 //
 // Usage:
 //   node scripts/etl/09_service_catalog.mjs > reports/09_out.txt 2>&1
@@ -48,6 +53,7 @@ const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
 
 const CONF_RANK = { high: 0, medium: 1, low: 2 };
 const VALID = new Set(['std', 'modern', 'hardware']);
+const BATCH = 20000;
 
 // Phase 2 gate bikes + the concepts riders asked for that came back empty.
 const GATE_BIKES = [[2004, 'FLHR'], [2010, 'FLHX'], [2005, 'FLSTC'], [2004, 'FXDL'], [2004, 'XL883']];
@@ -73,11 +79,13 @@ async function main() {
   const vehicles = (await app.query(`SELECT vehicle_id, year, model_code, platform FROM vehicles`)).rows;
   const existingParts = new Map(
     (
-      await app.query(`SELECT p.oem_number, p.oem_display, p.chain_root, c.slug FROM oem_parts p LEFT JOIN part_concepts c USING (concept_id)`)
+      await app.query(
+        `SELECT p.oem_number, p.oem_display, p.chain_root, c.slug FROM oem_parts p LEFT JOIN part_concepts c USING (concept_id) WHERE p.source = 'oem_catalog'`
+      )
     ).rows.map((r) => [r.oem_number, r])
   );
-  const existingFit = new Map(); // oem|vehicle_id -> best confidence
-  for (const r of (await app.query(`SELECT oem_number || '|' || vehicle_id AS k, confidence FROM fitment`)).rows) {
+  const existingFit = new Map(); // oem|vehicle_id -> best confidence, 03's rows only
+  for (const r of (await app.query(`SELECT oem_number || '|' || vehicle_id AS k, confidence FROM fitment WHERE source = 'oem_catalog'`)).rows) {
     const e = existingFit.get(r.k);
     if (!e || CONF_RANK[r.confidence] < CONF_RANK[e]) existingFit.set(r.k, r.confidence);
   }
@@ -192,8 +200,8 @@ async function main() {
   for (const [k, n] of Object.entries(kindRows).sort((a, b) => b[1] - a[1])) lines.push(`  ${k.padEnd(9)} ${String(n).padStart(8)}`);
   lines.push('');
   lines.push(`(part, vehicle) pairs from the books: ${fit.size}`);
-  lines.push(`  already in fitment (agree, left alone): ${merge.agree} (${pct(merge.agree, fit.size)}); of those, existing row is low and the books say high/medium: ${merge.agree_existing_low}`);
-  lines.push(`  NEW pairs: ${merge.new} (current fitment: ${existingFit.size})`);
+  lines.push(`  already in 03 fitment (agree, left alone): ${merge.agree} (${pct(merge.agree, fit.size)}); of those, existing row is low and the books say high/medium: ${merge.agree_existing_low}`);
+  lines.push(`  NEW pairs: ${merge.new} (03 fitment: ${existingFit.size})`);
   const confCount = { high: 0, medium: 0, low: 0 };
   const srcCount = { catalog_text: 0, none: 0 };
   const platCount = {};
@@ -288,12 +296,51 @@ async function main() {
   console.log(`\nReport written to ${reportPath}`);
   console.log(`Review rows written to ${reviewPath}`);
 
-  if (APPLY) {
-    console.log('\n--apply is not implemented yet: dry-run only until the report is reviewed (ETL_PLAN step 09).');
-    process.exitCode = 1;
+  if (!APPLY) {
+    console.log('\nDry run only. Re-run with --apply to write to APP_DATABASE_URL.');
     return;
   }
-  console.log('\nDry run only. Nothing written.');
+
+  const client = await app.connect();
+  try {
+    await client.query('BEGIN');
+    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'inferred_span')`);
+    const delParts = await client.query(`DELETE FROM oem_parts WHERE source = 'service_catalog'`);
+    console.log(`Deleted ${delFit.rowCount} service_catalog / inferred_span fitment rows and ${delParts.rowCount} service_catalog parts.`);
+    const np = [...newParts];
+    const insParts = await client.query(
+      `INSERT INTO oem_parts (oem_number, oem_display, description_clean, chain_root, number_source, source)
+       SELECT n, d, c, n, 'extracted', 'service_catalog' FROM unnest($1::text[], $2::text[], $3::text[]) AS t(n, d, c)`,
+      [np.map(([n]) => n), np.map(([, p]) => p.display), np.map(([, p]) => p.description_clean)]
+    );
+    const entries = [...newFit];
+    let inserted = 0;
+    for (let i = 0; i < entries.length; i += BATCH) {
+      const chunk = entries.slice(i, i + BATCH);
+      const res = await client.query(
+        `INSERT INTO fitment (oem_number, vehicle_id, conditions, condition_source, source, source_ref, confidence)
+         SELECT o, v, coalesce(string_to_array(nullif(c, ''), ','), '{}'), cs, 'service_catalog', 'catalog_extract:' || r, cf
+         FROM unnest($1::text[], $2::int[], $3::text[], $4::text[], $5::text[], $6::text[]) AS t(o, v, c, cs, r, cf)`,
+        [
+          chunk.map(([k]) => k.split('|')[0]),
+          chunk.map(([k]) => Number(k.split('|')[1])),
+          chunk.map(([, e]) => e.conditions.join(',')),
+          chunk.map(([, e]) => e.condition_source),
+          chunk.map(([, e]) => e.id),
+          chunk.map(([, e]) => e.conf),
+        ]
+      );
+      inserted += res.rowCount;
+    }
+    await client.query('COMMIT');
+    console.log(`Inserted ${insParts.rowCount} parts and ${inserted} fitment rows (source = 'service_catalog').`);
+    console.log('Next: 05 --apply, 06 --apply, 07 --max-hole 3 --apply, refresh fitment_spans.');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 main()

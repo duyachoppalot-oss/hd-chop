@@ -21,8 +21,10 @@
 // repaired_same_year: one candidate in that year's catalogs). One row per (part, vehicle): best confidence, lowest
 // source id. conditions stay '{}' (step 04).
 //
-// --apply replaces every fitment row with source = 'oem_catalog'. Re-run 04
-// afterwards.
+// --apply replaces every fitment row with source = 'oem_catalog' and also clears
+// the rows built on top of it (service_catalog from 09 merges against these
+// pairs; inferred_span from 07 bridges their holes). Re-run 04 -> 09 -> 05 ->
+// 06 -> 07 and refresh fitment_spans afterwards.
 //
 // Usage:
 //   node scripts/etl/03_fitment.mjs            (dry-run, prints + writes report only)
@@ -200,8 +202,8 @@ async function main() {
   const client = await app.connect();
   try {
     await client.query('BEGIN');
-    const del = await client.query(`DELETE FROM fitment WHERE source = 'oem_catalog'`);
-    console.log(`Deleted ${del.rowCount} previous oem_catalog fitment rows.`);
+    const del = await client.query(`DELETE FROM fitment WHERE source IN ('oem_catalog', 'service_catalog', 'inferred_span')`);
+    console.log(`Deleted ${del.rowCount} previous oem_catalog / service_catalog / inferred_span fitment rows.`);
     const entries = [...fit];
     let inserted = 0;
     for (let i = 0; i < entries.length; i += BATCH) {
@@ -221,6 +223,7 @@ async function main() {
     }
     await client.query('COMMIT');
     console.log(`Inserted ${inserted} fitment rows.`);
+    console.log('Next: 04_conditions --apply, 09_service_catalog --apply, 05, 06, 07 --max-hole 3, refresh fitment_spans.');
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

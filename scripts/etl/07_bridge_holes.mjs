@@ -1,18 +1,19 @@
 // scripts/etl/07_bridge_holes.mjs
 //
 // Fills year holes inside fitment spans (Phase 1 gate finding, 2026-10-23).
-// For each (part, model, conditions) listed in high/medium fitment, a hole is
+// For each (part, model, conditions) listed in high/medium catalog fitment
+// (oem_catalog or service_catalog), a hole is
 // the run of missing years between two listed years. The hole is bridged only
 // when, for every year in it:
 //   - the vehicle (model, year) exists, and
-//   - no catalog covers that vehicle at all (it has no oem_catalog fitment of
-//     any part, any confidence).
+//   - no catalog covers that vehicle at all (it has no oem_catalog or
+//     service_catalog fitment of any part, any confidence).
 // If any catalog covers the model in a hole year, the part may really have
 // changed, so the hole stays.
 //
 // Bridged rows: source = 'inferred_span', confidence = medium (never high:
 // no catalog lists them), conditions + condition_source copied from the left
-// neighbour, source_ref names both neighbouring catalog rows. Runs after 03/04; --apply replaces all
+// neighbour, source_ref names both neighbouring catalog rows. Runs after 03/04/09; --apply replaces all
 // inferred_span rows. Refresh fitment_spans afterwards (08).
 //
 // Usage:
@@ -44,13 +45,13 @@ async function main() {
   const vehicles = (await app.query(`SELECT vehicle_id, year, model_code FROM vehicles`)).rows;
   const vehicleAt = new Map(vehicles.map((v) => [`${v.model_code}|${v.year}`, v.vehicle_id]));
   const covered = new Set(
-    (await app.query(`SELECT DISTINCT vehicle_id FROM fitment WHERE source = 'oem_catalog'`)).rows.map((r) => r.vehicle_id)
+    (await app.query(`SELECT DISTINCT vehicle_id FROM fitment WHERE source IN ('oem_catalog', 'service_catalog')`)).rows.map((r) => r.vehicle_id)
   );
   const rows = (
     await app.query(`
       SELECT f.oem_number, v.model_code, v.year, f.conditions, f.condition_source, f.source_ref
       FROM fitment f JOIN vehicles v USING (vehicle_id)
-      WHERE f.source = 'oem_catalog' AND f.confidence IN ('high','medium')
+      WHERE f.source IN ('oem_catalog', 'service_catalog') AND f.confidence IN ('high','medium')
     `)
   ).rows;
 
@@ -105,7 +106,7 @@ async function main() {
   const pct = (n, d) => (d ? `${((100 * n) / d).toFixed(1)}%` : '-');
   const lines = [];
   lines.push(`07_bridge_holes.mjs — ${APPLY ? 'APPLY' : 'DRY RUN'} — ${new Date().toISOString()}`);
-  lines.push(`high/medium oem_catalog fitment rows: ${rows.length}`);
+  lines.push(`high/medium catalog fitment rows (oem_catalog + service_catalog): ${rows.length}`);
   lines.push(`(part, model, conditions) groups: ${groups.size}`);
   lines.push(`Vehicles covered by any catalog: ${covered.size} of ${vehicles.length}`);
   lines.push('');

@@ -235,3 +235,10 @@ Append one entry per session. Newest at the bottom.
 - Applied: 06 --apply (4,711 parts / 67 concepts); fitment_spans refreshed (291,429 rows). Committed as 5faeec7 before applying.
 - Live gate (reports/gate_public_after06.txt): all 25 cells answer. Changes: 2004 FLHR "bags" 1 → 0 (the old hit was label 90820-93D; the Road King's real bags only arrive with 09); 2010 FLHX bags 11 → 7 (hardware out), blinkers +68973-00 (lens via section rule); FXDL/XL883 blinkers +68973-00. /v1/models?year=2004 lists 53 models (01 re-apply), 37 with parts.
 - Spot checks 2004 FXDL: front fender → 58998-83E; seat → 53078-04 only; headlight → 67677-96B.
+
+### 2026-10-24 (09 applied; 05-07 re-run; live gate)
+- Laken accepted the open terms-of-use question for now. Migration 003 (oem_parts.source) applied; 02/03/07 guarded for the second source; 09 --apply written and applied: 657,791 fitment rows, 20,913 parts (all source = 'service_catalog', removable — SQL in 003).
+- Re-ran: 05 (chain_root changed on 2), 06 (concepts on 10,597 parts), 07 --max-hole 3 (12,806 inferred_span), fitment_spans 406,748.
+- Live gate 25/25; 2004 FLHR bags 7, mirror/headlight/front fender/seat/rotor/primary cover all found; V-Rod searchable.
+- Pipeline order now: 03 → 04 → 09 → 05 → 06 → 07 → refresh.
+- Next: re-apply 03 with the police rule (then 04 → 09 → 05 → 06 → 07 → refresh); TestFlight prep.

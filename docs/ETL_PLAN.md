@@ -91,7 +91,7 @@ Fills year holes inside spans (gate finding). A hole between two listed years of
 `REFRESH MATERIALIZED VIEW CONCURRENTLY fitment_spans`. (Refreshed by hand after 03 for the gate check.)
 
 
-### 09_service_catalog.mjs — dry-run 2026-10-24, NOT applied (`--apply` not implemented)
+### 09_service_catalog.mjs — applied 2026-10-24 (657,791 fitment rows, 20,913 parts)
 Second fitment source: `~/Developer/catalog-extract/rows/*.tsv`, 391 HD parts catalogs (1991–2027) scraped from the H-D service portal (DATA_RIGHTS row + open terms question). Why: stinkin_catalog's year-range books are partial (2004-touring 22 of ~244 pages) and ~9% of its numbers are cut at the hyphen.
 1. Only 7-column lines are fitment (852,048). 5-column lines are the numeric part index at the back of each book (no models; filed under the last section) → skipped; 6-column sidecar cross-refs skipped. Years per book from `manifest.json`.
 2. Models column → same parser/targeter as 03 (`lib/usedon.mjs`, `lib/fitment.mjs`); confidence as 03 (high = oem_fitment corroborates); conditions as 04 (`lib/conditions.mjs`) without the X/XI inference.
@@ -101,7 +101,9 @@ Second fitment source: `~/Developer/catalog-extract/rows/*.tsv`, 391 HD parts ca
 - Gate bikes (high+medium pairs): 2004 FLHR 583 → 1,230; 2010 FLHX +50; 2005 FLSTC +14; 2004 FXDL +1; 2004 XL883 +0. 2004 FLHR: mirror 0→2, seat 0→5, brake rotor 0→3, primary cover 0→1, saddlebag 1→11.
 - Not fixed by this source: headlamp/front fender stay 0 — books name them "LENS, less bulb with boot", "BULB", "FENDER" and only the section title says headlamp/front fender → needs section-aware concept matching (06). Concept precision: `seat` catches "SEAT, clutch spring"; `saddlebag` (contains) catches supports/brackets/latches and the decal 90820-93D.
 - Review: 254,796 rows — mostly codes absent from `vehicles` (CVO numbered SE2–SE8, V-Rod VRSC*, Police FLHP*, LiveWire, Buell) → candidates for 01.
-- Before `--apply`: Laken's go-ahead (DATA_RIGHTS terms question), then write the apply path (insert new parts + new pairs in one transaction), re-run 05 → 06 → 07 → 08, gate check.
+- **Applied 2026-10-24** (Laken accepted the open terms question for now). `003_part_source.sql` adds `oem_parts.source` (`oem_catalog` | `service_catalog`); 02 only deletes its own parts; 03 `--apply` also clears `service_catalog` + `inferred_span`; 09 merges against 03's rows only and its `--apply` replaces its own rows plus `inferred_span`; 07 counts both catalog sources as coverage. **Pipeline order: 03 → 04 → 09 → 05 → 06 → 07 (`--max-hole 3`) → refresh.** Removal SQL in 003.
+- Apply results: 657,791 pairs (high 321,175 / medium 336,616), 20,913 parts; 05 chain_root changed on 2 parts; 06 concepts on 10,597 parts (was 4,711); 07 12,806 inferred_span (was 16,653 — books now cover years that were bridged); fitment_spans 291,429 → 406,748.
+- Live gate (`reports/gate_public_after09.txt`): 25/25 answer; 2004 FLHR bags 0 → 7, spans continuous (e.g. 68766-94 1994–2022); 2004 models with parts 37 → 42. 2004 FLHR now: mirror 91840-03B/91845-03B, headlight 67755-81A, front fender 59087-00B, seat rider/passenger, brake discs ×3, primary cover 60665-99B. 2006 VRSCA gas tank → 62921-01.
 
 ### Final gate check — 2026-10-23, after 04 → 07 (`--max-hole 3`) → refresh
 State: 751,135 catalog fitment + 16,653 inferred_span; 292,437 spans over 22,993 parts, 22,555 spans with conditions.

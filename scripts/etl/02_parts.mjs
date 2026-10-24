@@ -203,17 +203,18 @@ async function main() {
     await client.query('BEGIN');
     const keep = oemParts.map((p) => p.oem_number);
     const staleFit = await client.query(
-      `DELETE FROM fitment WHERE oem_number IN (SELECT oem_number FROM oem_parts WHERE oem_number <> ALL($1::text[]))`,
+      `DELETE FROM fitment WHERE oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'oem_catalog' AND oem_number <> ALL($1::text[]))`,
       [keep]
     );
-    const stale = await client.query(`DELETE FROM oem_parts WHERE oem_number <> ALL($1::text[])`, [keep]);
+    // Only parts 02 created; 09_service_catalog's parts (source = 'service_catalog') stay.
+    const stale = await client.query(`DELETE FROM oem_parts WHERE source = 'oem_catalog' AND oem_number <> ALL($1::text[])`, [keep]);
     console.log(`Deleted ${stale.rowCount} parts no longer produced (and ${staleFit.rowCount} of their fitment rows).`);
     const res = await client.query(
-      `INSERT INTO oem_parts (oem_number, oem_display, description_clean, chain_root, number_source)
-       SELECT n, d, c, n, s FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(n, d, c, s)
+      `INSERT INTO oem_parts (oem_number, oem_display, description_clean, chain_root, number_source, source)
+       SELECT n, d, c, n, s, 'oem_catalog' FROM unnest($1::text[], $2::text[], $3::text[], $4::text[]) AS t(n, d, c, s)
        ON CONFLICT (oem_number) DO UPDATE
          SET oem_display = EXCLUDED.oem_display, description_clean = EXCLUDED.description_clean,
-             number_source = EXCLUDED.number_source`,
+             number_source = EXCLUDED.number_source, source = 'oem_catalog'`,
       [
         oemParts.map((p) => p.oem_number),
         oemParts.map((p) => p.oem_display),
