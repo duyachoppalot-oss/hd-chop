@@ -36,6 +36,22 @@
         "dev"
       ],
       "port": 3002
+    },
+    {
+      "name": "mobile-web-local-api",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "EXPO_PUBLIC_API_URL=http://localhost:3001",
+        "npm",
+        "--prefix",
+        "apps/mobile",
+        "run",
+        "web",
+        "--",
+        "--port",
+        "8083"
+      ],
+      "port": 8083
     }
   ]
 }

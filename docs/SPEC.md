@@ -50,7 +50,7 @@ Starter tags: `carb`, `efi`, `abs`, `non_abs`, `cvo`, `california`, `hdi`, `cabl
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/v1/years` | available years |
-| GET | `/v1/models?year=` | `[{model_code, model_name, platform}]` |
+| GET | `/v1/models?year=` | `[{model_code, model_name, platform, has_parts, specs: [{ci, cc, speeds, horsepower, compression, mid_year_change, source_ref}]}]` (specs from `vehicle_specs`; several = engines sold that year; `[]` when no H-D document covers the bike) |
 | GET | `/v1/search?year=&model=&q=` | `{concepts:[...], results:[{concept, parts:[{oem, replaces[], description, conditions[], condition_source, spans:[{model_code, year_start, year_end}]}]}]}` |
 | GET | `/v1/part/:oem` | part detail, full chain, all spans |
 | GET | `/v1/vin/:vin` | Phase 4: decode VIN (NHTSA vPIC) → year + model |

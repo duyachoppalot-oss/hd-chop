@@ -13,7 +13,17 @@ export type Part = {
   condition_source: ConditionSource;
   spans: Span[];
 };
-export type Model = { model_code: string; model_name: string | null; platform: string; has_parts: boolean };
+// Engine / transmission option from an H-D document; several = options sold that year.
+export type Spec = {
+  ci: number | null;
+  cc: number | null;
+  speeds: number | null;
+  horsepower: string | null;
+  compression: string | null;
+  mid_year_change: boolean;
+  source_ref: string;
+};
+export type Model = { model_code: string; model_name: string | null; platform: string; has_parts: boolean; specs: Spec[] };
 export type SearchResponse = {
   query: string;
   vehicle: { year: number; model_code: string; model_name: string | null; platform: string };

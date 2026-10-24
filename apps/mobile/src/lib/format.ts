@@ -1,4 +1,4 @@
-import type { Span } from './api';
+import type { Span, Spec } from './api';
 
 // Condition tags (docs/SPEC.md "Conditions") as a rider would say them.
 const CONDITION_LABEL: Record<string, string> = {
@@ -49,3 +49,19 @@ export const PLATFORM_LABEL: Record<string, string> = {
 
 export const platformLabel = (p: string) =>
   PLATFORM_LABEL[p] ?? p.replace(/_/g, ' ').replace(/\b([a-z])/g, (m) => m.toUpperCase());
+
+// Spec options -> lines for the bike header. "53.9 ci (883 cc) · 4-speed", then
+// horsepower / compression when the document prints them. Two options = H-D sold
+// both engines that year (or changed mid-year).
+const ci = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1));
+export function specLines(specs: Spec[]): { lines: string[]; note: string | null } {
+  const lines = specs.map((s) =>
+    [s.ci != null ? `${ci(s.ci)} ci${s.cc != null ? ` (${s.cc} cc)` : ''}` : null, s.speeds != null ? `${s.speeds}\u2011speed` : null]
+      .filter(Boolean)
+      .join(' · ')
+  );
+  const extra = [...new Set(specs.map((s) => [s.horsepower, s.compression && `${s.compression} compression`].filter(Boolean).join(' · ')).filter(Boolean))];
+  const note =
+    specs.length > 1 ? (specs.some((s) => s.mid_year_change) ? 'Engine changed mid-year' : 'Sold with either engine this year') : null;
+  return { lines: [...new Set(lines.filter(Boolean))].concat(extra), note };
+}

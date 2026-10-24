@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Redirect, router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { bikeLabel, useBike } from '@/lib/bike';
+import { specLines } from '@/lib/format';
 import { color, font, space, TAP } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Chip, Footer, Heading, Section } from '@/components/ui';
@@ -14,6 +15,7 @@ export default function Search() {
   const { bike } = useBike();
   const [q, setQ] = useState('');
   if (!bike) return <Redirect href="/" />;
+  const spec = specLines(bike.specs ?? []);
 
   const go = (words: string) => {
     const w = words.trim();
@@ -32,6 +34,15 @@ export default function Search() {
           <Text style={s.changeText}>Change</Text>
         </Pressable>
       </View>
+
+      {spec.lines.length > 0 && (
+        <View style={s.specs} accessibilityLabel={`Engine and transmission: ${spec.lines.join('; ')}`}>
+          {spec.lines.map((l) => (
+            <Text key={l} style={s.specLine}>{l}</Text>
+          ))}
+          {spec.note && <Text style={s.specNote}>{spec.note}</Text>}
+        </View>
+      )}
 
       <Section title="What do you need?" />
       <TextInput
@@ -71,6 +82,9 @@ const s = StyleSheet.create({
   bikeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
   kicker: { fontFamily: font.sign, fontSize: 13, color: color.gold, letterSpacing: 2 },
   code: { fontFamily: font.type, fontSize: 16, color: color.muted, marginTop: 2 },
+  specs: { marginTop: space.sm, paddingLeft: space.sm, borderLeftWidth: 2, borderLeftColor: color.goldDim, gap: 2 },
+  specLine: { fontFamily: font.type, fontSize: 17, color: color.cream },
+  specNote: { fontFamily: font.type, fontSize: 14, color: color.muted, fontStyle: 'italic' },
   change: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.md, borderWidth: 1, borderColor: color.goldDim, borderRadius: 4 },
   changeText: { fontFamily: font.sign, fontSize: 16, color: color.gold },
   input: {

@@ -320,3 +320,9 @@ Append one entry per session. Newest at the bottom.
 - Dry run reports/11_catalog_books_20261024_174518.txt: FX 1971-84 77% clean, 60,834 pairs (38,617 new); 1961-76 FL-FX 16% (poor scan); XR 393 pairs on XR750 1970; older books all improved.
 - Specs: scripts/catalog/specs/ironhead_1959_69_service.mjs (99484-69 p1A-3: 883 cc / 53.9 ci, 4-speed, XLH/XLCH 55 hp, 9.0:1). 12_vehicle_specs now 66 vehicles (57 4-speed, 6 5-speed), also horsepower + compression. reports/12_vehicle_specs_20261024_174622.txt. Still no specs table (needs migration).
 - Nothing loaded; nothing committed.
+
+### 2026-10-24 (vehicle_specs live)
+- Added packages/db/migrations/006_vehicle_specs.sql (one row per option a source states: ci, cc, transmission speeds, hp, compression, mid_year_change, note, source + source_ref; UNIQUE NULLS NOT DISTINCT (vehicle_id, source, ci, speeds); ON DELETE CASCADE). Tested in a rolled-back transaction, then applied (Laken approved). hdchop_api has SELECT via default privileges (checked).
+- 12_vehicle_specs --apply: replaces rows of its own sources only. Live: 70 rows, 66 vehicles (99427-84 model history 48, 99484-69 1A-3 22); 7 rows with no transmission stated (FXE 80, FXS 80 rows print none). Re-run is idempotent.
+- Not done: API/app don't read vehicle_specs yet (bike page "80 ci / 1340 cc · 4-speed").
+- Specs in the app: /v1/models returns `specs` per model (json_agg of vehicle_specs); mobile Bike carries them, YOUR BIKE screen (search.tsx) shows "53.9 ci (883 cc) · 4‑speed", hp/compression when printed, and "Sold with either engine this year" / "Engine changed mid-year" for two options. Checked in the browser at phone width against a local API (1965 XLH, 1981 FXE, 1981 FX without specs), then deployed API (hd-chop-api:d60e6d5-dirty, healthy) and checked /v1/models?year=1981 live. Added launch config `mobile-web-local-api` (web app on :8083 against the local API). SPEC.md API row updated.

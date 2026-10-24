@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useState } from 'react';
+import type { Spec } from './api';
 
-export type Bike = { year: number; model_code: string; model_name: string | null };
+export type Bike = { year: number; model_code: string; model_name: string | null; specs: Spec[] };
 
 const Ctx = createContext<{ bike: Bike | null; setBike: (b: Bike | null) => void }>({ bike: null, setBike: () => {} });
 

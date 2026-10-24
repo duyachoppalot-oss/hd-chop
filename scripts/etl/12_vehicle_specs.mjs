@@ -1,6 +1,6 @@
 // scripts/etl/12_vehicle_specs.mjs
 //
-// Dry run: engine displacement (ci/cc) and transmission speeds per vehicle, from
+// Engine displacement (ci/cc) and transmission speeds per vehicle, from
 // documented H-D tables in scripts/catalog/specs/: the 99427-84 "Shovelhead Model
 // History" (Shovel FL/FX/FXR 1966-84) and the 99484-69 Sportster service manual
 // specifications (XLH/XLCH 1959-69, also horsepower and compression ratio).
@@ -11,11 +11,14 @@
 // side; FXE 1981-84; "1/2" years), the vehicle gets both, as options.
 //
 // Also reports where the table and `vehicles` disagree on a model's years (e.g.
-// a code we carry past the table's last year), for review. Nothing is changed.
-// There is no specs table yet: --apply is refused until a migration adds one.
+// a code we carry past the table's last year), for review; vehicles are never changed.
+//
+// --apply writes vehicle_specs (migration 006): one row per option, replacing
+// every row whose source is one of TABLES (other sources are left alone).
 //
 // Usage:
-//   node scripts/etl/12_vehicle_specs.mjs        (dry run, writes reports/12_vehicle_specs_<ts>.txt + .csv)
+//   node scripts/etl/12_vehicle_specs.mjs          (dry run, writes reports/12_vehicle_specs_<ts>.txt + .csv)
+//   node scripts/etl/12_vehicle_specs.mjs --apply  (writes vehicle_specs in APP_DATABASE_URL)
 
 import 'dotenv/config';
 import pg from 'pg';
@@ -24,10 +27,7 @@ import path from 'node:path';
 import * as shovel from '../catalog/specs/shovelhead_model_history.mjs';
 import * as ironhead from '../catalog/specs/ironhead_1959_69_service.mjs';
 
-if (process.argv.includes('--apply')) {
-  console.error('12_vehicle_specs has no target table yet (needs a migration). Dry run only.');
-  process.exit(1);
-}
+const APPLY = process.argv.includes('--apply');
 
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
 const TABLES = [shovel, ironhead];
@@ -64,8 +64,8 @@ async function main() {
         const v = byKey.get(`${y}|${r.code}`);
         if (!v) { unmatched.push({ code: r.code, year: y }); continue; }
         const s = specs.get(v.vehicle_id) ?? specs.set(v.vehicle_id, { v, options: [] }).get(v.vehicle_id);
-        if (!s.options.some((o) => o.ci === r.ci && o.speeds === r.speeds))
-          s.options.push({ ci: r.ci, cc: r.cc ?? t.CC[r.ci], speeds: r.speeds, hp: r.hp, compression: r.compression, label: r.label, note: r.note, source: t.SOURCE.key, half: r.half && ((r.half === 'from' && y === r.from) || (r.half === 'to' && y === r.to)) });
+        if (!s.options.some((o) => o.source === t.SOURCE.key && o.ci === r.ci && o.speeds === r.speeds))
+          s.options.push({ ci: r.ci, cc: r.cc ?? t.CC[r.ci], speeds: r.speeds, hp: r.hp, compression: r.compression, label: r.label, note: r.note, source: t.SOURCE.key, source_ref: `${r.label}, ${t.SOURCE.pages}`, half: r.half && ((r.half === 'from' && y === r.from) || (r.half === 'to' && y === r.to)) });
       }
     }
   }
@@ -98,7 +98,18 @@ async function main() {
   }
 
   const L = [];
-  L.push(`12_vehicle_specs — DRY RUN — ${new Date().toISOString()}`);
+  // vehicle_specs rows (one per option) vs what's in the table now.
+  const specRows = [...specs.values()].flatMap(({ v, options }) =>
+    options.map((o) => ({ vehicle_id: v.vehicle_id, ci: o.ci, cc: o.cc, speeds: o.speeds ?? null, hp: o.hp ?? null, compression: o.compression ?? null, half: !!o.half, note: o.note || null, source: o.source, source_ref: o.source_ref }))
+  );
+  const sourceKeys = TABLES.map((t) => t.SOURCE.key);
+  const tableExists = (await app.query(`SELECT to_regclass('vehicle_specs') IS NOT NULL AS ok`)).rows[0].ok;
+  const existing = tableExists ? (await app.query(`SELECT source, count(*)::int n FROM vehicle_specs GROUP BY 1`)).rows : [];
+  if (APPLY && !tableExists) throw new Error('vehicle_specs is missing: apply packages/db/migrations/006_vehicle_specs.sql first.');
+
+  L.push(`12_vehicle_specs — ${APPLY ? 'APPLY' : 'DRY RUN'} — ${new Date().toISOString()}`);
+  L.push(`vehicle_specs: ${tableExists ? `exists, ${existing.reduce((n, r) => n + r.n, 0)} rows (${existing.map((r) => `${r.source} ${r.n}`).join(', ') || 'empty'})` : 'table not created yet (migration 006)'}`);
+  L.push(`Rows to write: ${specRows.length} (replacing ${existing.filter((r) => sourceKeys.includes(r.source)).reduce((n, r) => n + r.n, 0)} from the same sources)`);
   for (const t of TABLES) L.push(`Source: ${t.SOURCE.title}, ${t.SOURCE.pages} (${t.ROWS.length} printed rows)`);
   L.push(`Vehicles that would get specs: ${rows.length}`);
   L.push(`  with transmission: ${rows.filter((r) => r.transmission_speeds !== '').length} (4-speed ${rows.filter((r) => r.transmission_speeds === 4).length}, 5-speed ${rows.filter((r) => r.transmission_speeds === 5).length})`);
@@ -124,7 +135,26 @@ async function main() {
   const cols = ['vehicle_id', 'year', 'model_code', 'platform', 'engine', 'displacement_ci', 'displacement_cc', 'transmission_speeds', 'horsepower', 'compression', 'flags', 'rows', 'source'];
   fs.writeFileSync(cp, [cols.join(','), ...rows.map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n');
   console.log(L.join('\n'));
-  console.log(`\n→ ${rp} (+ .csv). Dry run: nothing written.`);
+  console.log(`\n→ ${rp} (+ .csv).`);
+  if (!APPLY) { console.log('Dry run: nothing written. Re-run with --apply to write vehicle_specs.'); return; }
+
+  const client = await app.connect();
+  try {
+    await client.query('BEGIN');
+    const del = await client.query('DELETE FROM vehicle_specs WHERE source = ANY($1)', [sourceKeys]);
+    const ins = await client.query(
+      `INSERT INTO vehicle_specs (vehicle_id, displacement_ci, displacement_cc, transmission_speeds, horsepower, compression_ratio, mid_year_change, note, source, source_ref)
+       SELECT * FROM unnest($1::int[], $2::numeric[], $3::smallint[], $4::smallint[], $5::text[], $6::text[], $7::boolean[], $8::text[], $9::text[], $10::text[])`,
+      ['vehicle_id', 'ci', 'cc', 'speeds', 'hp', 'compression', 'half', 'note', 'source', 'source_ref'].map((k) => specRows.map((r) => r[k]))
+    );
+    await client.query('COMMIT');
+    console.log(`Deleted ${del.rowCount}, inserted ${ins.rowCount} vehicle_specs rows.`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 main().catch((e) => { console.error(e); process.exitCode = 1; }).finally(() => app.end());
