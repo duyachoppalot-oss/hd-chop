@@ -225,3 +225,8 @@ Append one entry per session. Newest at the bottom.
 ### 2026-10-24 (Police family-row check, dry run)
 - Check: scripts/dev/check_police_family.mjs (read-only) → reports/police_family*.txt. 03 reaches police models through family rows ("FLT: 95*-ALL", "FXR: 91*-ALL"): 5,812 police pairs only that way. Civilian touring books never name police codes (0 rows, 1995–2004); police books from 1996 are supplements (436–581 rows); 1995 is the only full police book in range: 566 of 783 pairs listed (72%); unlisted = police-specific equipment with different numbers (mirrors 91875-82A/91892-82A, wheels, reflectors) plus variant/oversize numbers.
 - Change (not applied): lib/fitment.mjs marks family-row pairs on police models (POLICE_CODE) low. 03 dry run: low 1,832 → 7,632; high/medium −5,800 (incl. ~2,400 existing FXRP 1984–94 pairs that would drop out of search on re-apply). Police fitment should come from the police books (09).
+
+### 2026-10-24 (06 concept precision + section rules, dry run)
+- Done: seed fixes (seat, saddlebag, headlamp); lib/concepts.mjs SECTION_RULES (generic Fender/Lens by catalog section, competing rules, vote thresholds); 06 reads source categories (SELECT only) and reports gate-bike changes. Dry run only.
+- Gate: front fender 0→1 on 4 bikes; seats = real seats; saddlebag hardware/labels out.
+- Next: apply 06 → refresh fitment_spans → API gate.

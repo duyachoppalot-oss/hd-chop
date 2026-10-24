@@ -34,11 +34,17 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readSeed, seedTerms, matchConcept } from './lib/concepts.mjs';
+import { readSeed, seedTerms, matchConcept, matchBySection, SECTION_RULES } from './lib/concepts.mjs';
+import { classify, normalize } from './lib/parts.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
+const source = new pg.Pool({ connectionString: process.env.SOURCE_DATABASE_URL });
+
+// Phase 2 gate bikes (apps/api/scripts/gate.mjs).
+const GATE_BIKES = [[2004, 'FLHR'], [2010, 'FLHX'], [2005, 'FLSTC'], [2004, 'FXDL'], [2004, 'XL883']];
+const GATE_SQL = `(${GATE_BIKES.map(([y, m]) => `(${y},'${m}')`).join(',')})`;
 
 function timestamp() {
   return new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '_');
@@ -55,6 +61,19 @@ async function main() {
     `)
   ).rows;
 
+  // Catalog sections per part number (read-only, for generic names; see SECTION_RULES).
+  const sectionsOf = new Map(); // oem_number -> Map(section -> rows)
+  for (const r of (
+    await source.query(`SELECT part_number, upper(category) AS section, count(*)::int AS n FROM hd_oem_catalog_reference WHERE category IS NOT NULL GROUP BY 1, 2`)
+  ).rows) {
+    const { cls, display } = classify(r.part_number);
+    if (!['std', 'modern', 'hardware'].includes(cls)) continue;
+    const k = normalize(display);
+    if (!sectionsOf.has(k)) sectionsOf.set(k, new Map());
+    sectionsOf.get(k).set(r.section, (sectionsOf.get(k).get(r.section) || 0) + r.n);
+  }
+  const bySection = []; // [part, slug]
+
   const assigned = new Map(); // oem_number -> slug
   const termHits = new Map(terms.map((x) => [`${x.slug}|${x.raw}`, []]));
   const ties = [];
@@ -63,6 +82,8 @@ async function main() {
     if (!p.description_clean) continue;
     const m = matchConcept(terms, p.description_clean);
     if (m.none !== undefined) {
+      const sec = matchBySection(p.description_clean, sectionsOf.get(p.oem_number) ?? new Map());
+      if (sec) { assigned.set(p.oem_number, sec); bySection.push([p, sec]); continue; }
       const e = unmatched.get(m.none) ?? { parts: 0, fit: 0 };
       e.parts++; e.fit += p.fit;
       unmatched.set(m.none, e);
@@ -85,6 +106,11 @@ async function main() {
   lines.push(`hd_terms with 0 matches (${zero.length}): ${zero.map((x) => `${x.slug}:"${x.raw}"`).join(', ')}`);
   const emptyConcepts = concepts.filter((c) => !assigned.size || ![...assigned.values()].includes(c.slug));
   lines.push(`Concepts with 0 parts (${emptyConcepts.length}): ${emptyConcepts.map((c) => c.slug).join(', ')}`);
+  lines.push(`Assigned from catalog sections (generic names, SECTION_RULES): ${bySection.length}`);
+  for (const slug of [...new Set(SECTION_RULES.map((r) => r.slug))]) {
+    const xs = bySection.filter(([, s]) => s === slug);
+    lines.push(`  ${slug.padEnd(14)} ${String(xs.length).padStart(4)}  ${xs.slice(0, 6).map(([p]) => `${p.oem_display} ${p.description_clean}`).join(' | ')}`);
+  }
   lines.push('');
   lines.push('Per concept: parts / fitment rows; per term: parts; 4 sample names');
   for (const c of concepts) {
@@ -95,6 +121,26 @@ async function main() {
       const step = Math.max(1, Math.floor(hs.length / 4));
       lines.push(`      "${t}": ${hs.length}  ${hs.filter((_, i) => i % step === 0).slice(0, 4).map((p) => `${p.oem_display} ${p.description_clean}`).join(' | ').slice(0, 150)}`);
     }
+  }
+  lines.push('');
+  // Gate bikes: distinct chain roots per concept on high/medium fitment, current DB -> this run.
+  const gate = (
+    await app.query(`
+      SELECT v.year, v.model_code, p.oem_number, p.chain_root, c.slug
+      FROM fitment f JOIN vehicles v USING (vehicle_id) JOIN oem_parts p USING (oem_number) LEFT JOIN part_concepts c USING (concept_id)
+      WHERE f.confidence IN ('high','medium') AND (v.year, v.model_code) IN ${GATE_SQL}
+    `)
+  ).rows;
+  lines.push('Gate bikes — parts per concept (chain roots, high+medium fitment), current DB -> this run (changes only):');
+  for (const [y, m] of GATE_BIKES) {
+    const rs = gate.filter((r) => r.year === y && r.model_code === m);
+    const cells = [];
+    for (const slug of new Set([...rs.map((r) => r.slug), ...rs.map((r) => assigned.get(r.oem_number))].filter(Boolean))) {
+      const a = new Set(rs.filter((r) => r.slug === slug).map((r) => r.chain_root)).size;
+      const b = new Set(rs.filter((r) => assigned.get(r.oem_number) === slug).map((r) => r.chain_root)).size;
+      if (a !== b) cells.push(`${slug} ${a}->${b}`);
+    }
+    lines.push(`  ${y} ${m}: ${cells.sort().join(' | ') || 'no change'}`);
   }
   lines.push('');
   lines.push('Top 60 unmatched head phrases by fitment rows (parts / fitment):');
@@ -148,4 +194,7 @@ main()
     console.error(err);
     process.exitCode = 1;
   })
-  .finally(() => app.end());
+  .finally(() => {
+    app.end();
+    source.end();
+  });
