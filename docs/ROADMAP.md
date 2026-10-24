@@ -38,7 +38,8 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
 ## Phase 3 — Mobile MVP (free features)
 - [x] Scaffold `apps/mobile` (Expo SDK 58, Expo Router, TS); black/gold theme (Oswald + Courier Prime)
 - [x] Screens: Pick bike → Search → Results → Part detail (2026-10-24; walked in Expo web at phone size against the deployed API)
-- [ ] TestFlight build — needs Xcode or EAS Build + Apple Developer account
+- [x] TestFlight prep (2026-10-24): app icon + splash (`apps/mobile/scripts/make-icons.py`), `expo-splash-screen` + `expo-system-ui`, bundle ID placeholder `com.yourname.hdchop`, `eas.json` (simulator / preview / production + submit). expo-doctor 20/20; `expo prebuild` clean. Checked on the iPhone 17 simulator (iOS 27.1).
+- [ ] TestFlight build — needs Laken: Apple Developer Program membership, bundle ID, Team ID, App Store Connect app record, Expo account (`apps/mobile/README.md` → TestFlight)
 - **Gate:** 5 riders use it without help.
 
 ## Phase 4 — Monetize

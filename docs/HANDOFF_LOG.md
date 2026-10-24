@@ -247,3 +247,7 @@ Append one entry per session. Newest at the bottom.
 - Applied in order: 03 (police rule) → 04 → 09 → 05 → 06 → 07 --max-hole 3 → refresh. 09 changed: a low 03 row is replaced by the book's row when a book lists the pair (2,644).
 - Final fitment: oem_catalog 751,912 (low 4,988), service_catalog 659,122, inferred_span 12,811; spans 406,351. Live gate unchanged (25/25); police searches use police-book parts (1995 FLHTP mirrors 91875-82A/91892-82A).
 - Next: TestFlight prep (needs Apple Developer account + bundle ID).
+
+### 2026-10-24 (TestFlight prep)
+- Done: app icon/splash generator (apps/mobile/scripts/make-icons.py; opaque 1024 icon, Android adaptive + mono, favicon); expo-splash-screen (held until fonts load) + expo-system-ui; app.json bundle ID placeholder com.yourname.hdchop, supportsTablet false, ITSAppUsesNonExemptEncryption false; eas.json profiles + submit placeholders. expo-doctor 20/20, expo prebuild clean (ios/ removed after), typecheck OK, app runs on the iPhone 17 simulator. Back-button overlap was iPhone-Duo-only.
+- Waiting on Laken: Apple Developer membership, bundle ID, Team ID, ASC app record, Expo account.
