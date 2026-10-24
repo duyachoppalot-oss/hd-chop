@@ -21,7 +21,7 @@ Builds `hdchop` from several source tables (decision: DISCOVERY.md, 2026-10-22).
 
 ## Scripts (`scripts/etl/`)
 
-### 01_vehicles.mjs — applied 2026-10-23 (1,671 rows)
+### 01_vehicles.mjs — applied 2026-10-23 (1,671 rows); re-applied 2026-10-24 (1,807 rows)
 Source: picker chain `harley_families → harley_models → harley_model_years` (3,199 year×model).
 - **Evidence gate:** the picker pads years (FLT "Tour Glide" 1939–2026, XL 1936–52, FX 1941–2026). A row loads only if `hd_year_model_master`, `oem_fitment.model_codes` or a code token in reference `used_on_raw`/`vehicle_model` confirms that year. Catalog evidence counts only from single-year rows; bare `FL`/`FX`/`XL` tokens are family abbreviations and need the master.
 - **Platform:** lowercase from family. Flathead/Knucklehead/Panhead/Shovelhead are engine eras → `vintage`, or platform from the other family when listed under both (engine from the era family). K series (Sportster family, `filter_group='VINTAGE'`) → vintage/flathead. FXLR under FXR + Softail before 2018 → `fxr`. Other conflicts → review.
@@ -30,6 +30,10 @@ Source: picker chain `harley_families → harley_models → harley_model_years` 
 - Upsert on `(year, model_code)`.
 - Dry run: 1,671 vehicles (1,492 in master, 179 catalog-only), engine 98.3%. Review 1,461: 1,286 no evidence, 75 multi-year-span only, 100 master-only (engine-era placeholders like `EVOLUTION_BIGTWIN`).
 - Known source quirks kept as-is: picker files FXEF (1983 Shovelhead Fat Bob) under FXR and FXS (1978 Shovelhead Low Rider) under Softail.
+
+- **2026-10-24, applied:** 4th evidence source = model codes in the scraped service-portal catalogs (`lib/servicecatalog.mjs`; single-year books, or `CODE YYYY` in multi-year books). Confirms picker rows only, never adds a model. 1,671 → **1,807** vehicles (+136 backed only by that source): Police touring (FLHP/FLHTP…), V-Rod (VRSCA/B/D/DX/F/R/AW…), numbered CVO (FLHTCUSE2–8, FLHRSE4–5, FLTRXSE2, FXSTDSE2…), 2002 Softail EFI codes, FXR2–4, XR 2008–10. Picker fix: FXDRS is the FXDR 114 Softail (its catalog: "YV=FXDRS FXDR114"), not Dyna "Low Rider S". Generic `VRSC` stays out (family code). These vehicles depend on the DATA_RIGHTS open terms question for that source.
+- Downstream dry runs after the re-apply (nothing else applied): **03** 751,135 → 754,556 fitment (+3,421, all via `FLT: 95*-ALL` family rows now reaching Police touring — check before applying 03 that police bikes really take every touring part in those rows); vehicles with fitment 1,042 → 1,047. **09** new pairs 502,867 → 646,406 (+143,539; V-Rod 36,895), vehicles getting their first fitment 185 → 318. Still missing from the picker/vehicles: FXDP, XL1200 (plain), XL883HUG, XL1200CP/CB/CA, FLHRSE5, FLTRSE3, FLHPE/FLHPI, Buell BLAST.
+- Until 03/09 are applied the new vehicles have no fitment, so `/v1/models` lists them greyed out ("no parts data yet").
 
 ### 02_parts.mjs — re-applied 2026-10-23 (26,460 rows)
 Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit std numbers from reference + `oem_fitment` (23k). Logic in `scripts/etl/lib/parts.mjs` (shared with 03).

@@ -210,3 +210,14 @@ Append one entry per session. Newest at the bottom.
 - Numbers: 502,867 new fitment pairs, 15,473 new parts, 57.6% of book pairs already in fitment; 2004 FLHR 583 → 1,230 (mirror 0→2, seat 0→5, rotor 0→3).
 - Not done: apply; headlamp/front fender need section-aware concepts; seat/saddlebag concept precision; CVO/V-Rod/Police codes missing from vehicles.
 - Next: Laken decides on the source → implement --apply → 05-08 → gate.
+
+### 2026-10-24 (01 vehicles: service-catalog evidence, dry run)
+- Done: lib/servicecatalog.mjs (TSV reader shared by 01 + 09; 09 report identical); 01 counts model codes in the scraped books as evidence; FXDRS → Softail "FXDR 114" picker fix. Dry run only.
+- Numbers: vehicles 1,671 → 1,807 (+136: Police 63, V-Rod 39, Softail 27 incl. numbered CVO, FXR 3, XR 3, Dyna 1).
+- Next: apply 01 (upsert, additive) → dry-run 03 and 09 to see the fitment those vehicles pick up.
+
+### 2026-10-24 (01 applied; 03/09 dry runs)
+- Applied: 01_vehicles.mjs --apply → 1,807 vehicles (+136; upsert, nothing removed). FXDRS = Softail "FXDR 114".
+- Dry runs (not applied): 03 +3,421 fitment (Police via FLT family rows — verify); 09 +143,539 new pairs (646,406 total), 318 vehicles would get first fitment.
+- Live API: new vehicles show greyed out in /v1/models until 03/09 are applied.
+- Next: decide on 09 (terms question) → write its --apply; check police family rows before re-applying 03.

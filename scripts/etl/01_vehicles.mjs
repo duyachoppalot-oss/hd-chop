@@ -6,8 +6,13 @@
 //
 // The picker pads model years (e.g. FLT "Tour Glide" 1939-2026, XL 1936-1952,
 // FX 1941-2026), so a picker row is loaded only when another source shows the
-// model existed that year: hd_year_model_master, oem_fitment.model_codes, or a
-// model code in hd_oem_catalog_reference.used_on_raw / vehicle_model. The rest
+// model existed that year: hd_year_model_master, oem_fitment.model_codes, a
+// model code in hd_oem_catalog_reference.used_on_raw / vehicle_model, or a model
+// code in the models column of a scraped H-D service-portal catalog
+// (lib/servicecatalog.mjs; single-year books, or "FXDB 1992" in multi-year
+// ones). That last source fills numbered CVO (FLHTCUSE2-8), V-Rod and Police
+// years stinkin_catalog has no single-year catalog for. It only confirms
+// picker rows; it never adds a model the picker lacks. The rest
 // goes to the review CSV. A vehicle with no catalog evidence would have no
 // fitment anyway. Catalog evidence counts only from single-year rows: a
 // "1952-66" row listing XLH doesn't mean XLH existed in 1952. Rows backed only
@@ -35,6 +40,7 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -128,12 +134,28 @@ async function loadEvidence(codes) {
        AND t = ANY($1)`,
     [codes]
   );
+  // Scraped service-portal books: every token of the models column in a
+  // single-year book, plus "CODE YYYY" pairs in multi-year books.
+  const service = new Set();
+  if (serviceCatalogAvailable()) {
+    const want = new Set(codes);
+    for (const r of readBooks().rows) {
+      const text = (r.used_on_raw || '').toUpperCase();
+      if (r.year_start === r.year_end)
+        for (const t of text.split(/[^A-Z0-9]+/)) if (want.has(t)) service.add(`${r.year_start}|${t}`);
+      for (const m of text.matchAll(/\b([A-Z][A-Z0-9]+) (\d{4})\b/g)) {
+        const y = Number(m[2]);
+        if (want.has(m[1]) && y >= r.year_start && y <= r.year_end) service.add(`${y}|${m[1]}`);
+      }
+    }
+  }
   return {
     masterRows: master.rows,
     master: new Set(master.rows.map(key)),
     fitment: new Set(fitment.rows.filter((r) => r.single_year).map(key)),
     reference: new Set(reference.rows.filter((r) => r.single_year).map(key)),
     span: new Set([...fitment.rows, ...reference.rows].map(key)),
+    service,
   };
 }
 
@@ -177,6 +199,11 @@ async function main() {
   // The K series (K, KH, KR, ...) sits in the Sportster family with
   // filter_group VINTAGE; it's the flathead predecessor, not a Sportster.
   for (const r of rows) if (r.family === 'Sportster' && r.filter_group === 'VINTAGE') r.family = 'Flathead';
+  // The picker files FXDRS under Dyna as "LOW RIDER S". It's the FXDR 114
+  // Softail: its 2019 parts catalog reads "YV=FXDRS FXDR114" and the 2020
+  // Softail catalog lists FXDRS with FXBRS/FXFB. (Low Rider S is FXLRS.)
+  for (const r of rows)
+    if (r.code === 'FXDRS' && r.family === 'Dyna') { r.family = 'Softail'; r.model_name = 'FXDR 114'; }
 
   const inRange = rows.filter((r) => r.year >= VEHICLES_YEAR_MIN && r.year <= VEHICLES_YEAR_MAX);
   const outOfRange = rows.length - inRange.length;
@@ -200,12 +227,13 @@ async function main() {
       master: ev.master.has(k),
       oem_fitment: textOk && ev.fitment.has(k),
       reference: textOk && ev.reference.has(k),
+      service_catalog: textOk && ev.service.has(k),
     };
     const families = [...new Set(g.map((r) => r.family))];
     const reject = (reason) =>
       review.push({ reason, year, code, model_name: g[0].model_name, families: families.join('+'), ...evidence });
 
-    if (!evidence.master && !evidence.oem_fitment && !evidence.reference) {
+    if (!evidence.master && !evidence.oem_fitment && !evidence.reference && !evidence.service_catalog) {
       reject(textOk && ev.span.has(k) ? 'catalog_span_only' : 'no_catalog_evidence');
       continue;
     }
@@ -279,6 +307,13 @@ async function main() {
   lines.push(`  hd_year_model_master: ${vehicles.filter((v) => v.evidence.master).length}`);
   lines.push(`  oem_fitment model_codes: ${vehicles.filter((v) => v.evidence.oem_fitment).length}`);
   lines.push(`  reference used_on/vehicle_model: ${vehicles.filter((v) => v.evidence.reference).length}`);
+  lines.push(`  service-portal catalogs (lib/servicecatalog.mjs): ${vehicles.filter((v) => v.evidence.service_catalog).length}`);
+  const svcOnly = vehicles.filter((v) => v.evidence.service_catalog && !v.evidence.master && !v.evidence.oem_fitment && !v.evidence.reference);
+  lines.push(`  service-portal catalogs ONLY (new because of that source): ${svcOnly.length}`);
+  const svcBy = {};
+  for (const v of svcOnly) (svcBy[v.platform] ||= []).push(`${v.model_code} ${v.year}`);
+  for (const [pl, xs] of Object.entries(svcBy).sort((a, b) => b[1].length - a[1].length))
+    lines.push(`    ${pl.padEnd(15)} ${String(xs.length).padStart(4)}  ${xs.slice(0, 10).join(', ')}${xs.length > 10 ? ' …' : ''}`);
   lines.push(`  catalog only (not in master): ${vehicles.filter((v) => !v.evidence.master).length}`);
   lines.push('');
   lines.push(`Engine resolved: ${withEngine} (${pct(withEngine, total)}); null: ${total - withEngine}`);
@@ -307,7 +342,7 @@ async function main() {
   const reviewPath = path.join('reports', `01_vehicles_review_${ts}.csv`);
   fs.mkdirSync('reports', { recursive: true });
   fs.writeFileSync(reportPath, lines.join('\n') + '\n');
-  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference'];
+  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog'];
   fs.writeFileSync(
     reviewPath,
     [cols.join(','), ...review.sort((a, b) => a.reason.localeCompare(b.reason) || a.code.localeCompare(b.code) || a.year - b.year).map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n'
