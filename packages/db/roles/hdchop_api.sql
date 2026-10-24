@@ -2,10 +2,10 @@
 -- against the hdchop database. Run 2026-10-23 without the PASSWORD clause;
 -- Laken sets it with \password hdchop_api.
 --   sudo -u postgres psql -d hdchop -f hdchop_api.sql
--- Then set APP_DATABASE_URL on Vercel to this role (CLAUDE.md rule 6) with
--- sslmode (server has ssl = on). pg_hba.conf line (added 2026-10-23, line 110):
---   hostssl hdchop hdchop_api 0.0.0.0/0 scram-sha-256
--- (Vercel functions have no fixed IPs.)
+-- The API runs on the DB server (apps/api/README.md), so it logs in over
+-- 127.0.0.1 via the existing `host all all 127.0.0.1/32` rule. The
+-- internet-wide `hostssl hdchop hdchop_api 0.0.0.0/0` rule added for Vercel
+-- on 2026-10-23 was removed 2026-10-24.
 CREATE ROLE hdchop_api LOGIN PASSWORD 'REPLACE_WITH_PASSWORD' CONNECTION LIMIT 30;
 GRANT CONNECT ON DATABASE hdchop TO hdchop_api;
 GRANT USAGE ON SCHEMA public TO hdchop_api;

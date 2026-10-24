@@ -10,7 +10,7 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 
 ## Stack
 - `apps/mobile` — Expo (Expo Router, TypeScript)
-- `apps/api` — Next.js 15 route handlers on Vercel (TypeScript)
+- `apps/api` — Next.js 15 route handlers (TypeScript), Docker container on the Hetzner DB server behind nginx: https://hdchop.5.161.100.126.nip.io
 - `packages/db/migrations` — numbered plain `.sql` files
 - `scripts/etl`, `scripts/discovery` — Node ESM `.mjs`, `pg` Pool
 - DB: dedicated Postgres database `hdchop` (`APP_DATABASE_URL`)
@@ -24,7 +24,7 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 3. Real data over guesses. Query the source and show counts before mapping or seeding. Never invent part numbers, years, or fitment.
 4. Copy only the columns cleared in DATA_RIGHTS.md.
 5. Postgres regex word boundary is `\y`, not `\b` (write `\\y` inside JS template strings).
-6. Vercel can't resolve IPv6. Deployed code connects via `APP_DATABASE_URL` only.
+6. Deployed code connects via `APP_DATABASE_URL` only (the `hdchop_api` role over 127.0.0.1, set in `~/hd-chop/api.env` on the server). Deploy with `scripts/deploy/api.sh`. hdchop_api has no internet-facing pg_hba rule; don't add one.
 7. Redirect large script output: `node script.mjs > reports/out.txt 2>&1`
 8. Check syntax after edits: `node --check file.mjs && echo "SYNTAX OK"`
 9. Use `str_replace` for targeted edits; heredoc for full-file writes.

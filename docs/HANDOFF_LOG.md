@@ -176,3 +176,13 @@ Append one entry per session. Newest at the bottom.
 ### 2026-10-23 (API TLS + role test)
 - Done: hdchop_api password set (Laken); API pins the server's self-signed cert (apps/api/lib/dbCert.ts, SHA-256 9C:8A:51…:51:27, valid to 2036; checked against the server file over SSH) — URL must not contain sslmode. apps/api/scripts/check-db.mjs: hdchop_api over TLSv1.3 reads fitment_spans (291,429), INSERT search_misses allowed, INSERT fitment / UPDATE oem_parts denied. API_DATABASE_URL added to local .env (git-ignored).
 - Blocked: Vercel deploy — only scope is the Fallen Cycles team on Hobby (non-commercial terms); waiting on Laken's choice
+
+### 2026-10-24 (API deploy on Hetzner)
+- Phase: 2
+- Decision: host the API on the Hetzner DB server instead of Vercel (Laken; Vercel scope was a Hobby team, non-commercial)
+- Done: apps/api Dockerfile (standalone) + scripts/deploy/api.sh (rsync, build, swap container, health check, rollback); container hd-chop-api on 127.0.0.1:3001 (~32 MB of 512 MB); nginx + Let's Encrypt at https://hdchop.5.161.100.126.nip.io (Laken)
+- Env: ~/hd-chop/api.env (600) copied from local API_DATABASE_URL with host → 127.0.0.1. First two attempts failed auth (typo, then an empty file from running the copy outside the repo)
+- Gate: apps/api/scripts/gate.mjs over public HTTPS identical to the run through an SSH tunnel (reports/gate_public.txt)
+- Security: removed pg_hba `hostssl hdchop hdchop_api 0.0.0.0/0` (was line 110); 0 rule errors, reloaded. Backup ~/hd-chop/pg_hba.conf.bak.20261024_005656 on the server. Remote hdchop_api login now refused ("no pg_hba.conf entry"); hdchop_app remote access unchanged
+- Docs: CLAUDE.md stack + rule 6, apps/api/README.md, ROADMAP, role SQL comments
+- Next: real domain before App Store; Phase 3 mobile (apps/mobile, Expo)

@@ -17,4 +17,15 @@ npm --prefix apps/api run dev        # http://localhost:3001
 node apps/api/scripts/gate.mjs       # Phase 2 gate queries
 ```
 
-Deploy: Vercel project rooted at `apps/api`; `APP_DATABASE_URL` = the `hdchop_api` role (`packages/db/roles/hdchop_api.sql`) **without `sslmode`** — `lib/db.ts` pins the server's self-signed cert (`lib/dbCert.ts`). Check a URL with `node apps/api/scripts/check-db.mjs API_DATABASE_URL`. Responses cache at the edge for an hour (data changes only when the ETL runs); misses are `no-store`.
+Deploy (Hetzner, 5.161.100.126 — same box as Postgres):
+
+```
+./scripts/deploy/api.sh > reports/deploy_api.txt 2>&1
+node apps/api/scripts/gate.mjs https://hdchop.5.161.100.126.nip.io
+```
+
+- `api.sh` rsyncs `apps/api` to `~/hd-chop/api`, builds `hd-chop-api:<git sha>` from the `Dockerfile` (Next.js standalone), and replaces the `hd-chop-api` container (`--network host`, listens on 127.0.0.1:3001, 512 MB, restart unless-stopped). It health-checks `/v1/years` for 20 s and rolls back to the previous image on failure.
+- Env: `~/hd-chop/api.env` on the server (chmod 600), one line `APP_DATABASE_URL=postgres://hdchop_api:…@127.0.0.1:5432/hdchop` — the `hdchop_api` role (`packages/db/roles/hdchop_api.sql`), **no `sslmode`, no quotes**. `lib/db.ts` pins the server's self-signed cert (`lib/dbCert.ts`). Check a URL with `node apps/api/scripts/check-db.mjs API_DATABASE_URL`.
+- Public: nginx site `hd-chop-api` proxies `hdchop.5.161.100.126.nip.io` → 127.0.0.1:3001; Let's Encrypt cert via certbot, http → https redirect.
+- hdchop_api can only log in from the server itself (pg_hba `host all all 127.0.0.1/32`); the internet-wide rule was removed 2026-10-24.
+- Responses send `s-maxage=3600, stale-while-revalidate=86400` (data changes only when the ETL runs); misses are `no-store`.
