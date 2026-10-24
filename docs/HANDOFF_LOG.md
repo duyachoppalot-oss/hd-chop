@@ -286,3 +286,37 @@ Append one entry per session. Newest at the bottom.
 - Applied 005 (platforms `fl`, `fx`); 01 chassisPlatform + range evidence reads ";" cells and single years. Live: FXWG/FXSB 1986 softail → fx (FXSB "BREAKOUT" dropped), FXEF fxr → fx, FX family 1971–84 vintage → fx, FLH/FLHS 1984 touring → fl; added FXWG 1985, FXSB 1985, FXDG 1983 (Disc Glide). Re-ran 01 → 03 → 04 → 09 → 05 → 06 → 07 → 08 (fitment 769,997 oem_catalog; service 659,122; inferred 12,811). Checked /v1/models 1983–86 and the app's 1985 picker.
 - CLAUDE.md FL/FX rule rewritten (year-dependent); HD_TERMINOLOGY.md updated; vendorterms uses fl/fx platforms; mobile labels for fl/fx/fxr/vintage (fixed v_rod key).
 - Thin: 1985–86 FX bikes have 70–122 fitment rows (1984–86 FX-FXST catalog partly extracted); 1984 FLH/FLHS and 1983 FXDG have 0. Laken has the early PDF catalogs → next: build a PDF reader for them (also settles 1982 FXSB, 1985 FLH frame, Knuckle/Pan vehicles).
+
+### 2026-10-24 (catalog OCR reader, dry run)
+- Added scripts/catalog/{books,ocr,parse}.mjs + scripts/etl/11_catalog_books.mjs (dry run only) and docs/CATALOG_READER.md. OCR cache ~/Developer/catalog-ocr (outside repo). lib/usedon.mjs exports splitUsedOn (01 uses it).
+- OCR'd: 1984-86 FX-FXST, 1984-86 FXR, 1941-84 FL (Laken downloaded), 1950 45ci, 1942 WLA. Clean rows: 92% / 91% / 32% / 56% / 79%. Report reports/11_catalog_books_20261024_141404.txt.
+- Nothing loaded. Decisions: FL-book "Classic" code (1,772 rows), vintage vehicles need a model-year source beyond catalog text ("41 to * - FL, FLH"), FXAT/FXRAT/FXAD/FXRAD codes.
+- Found: lib/usedon.mjs reads "84 & 86" as a range (affects 01 evidence and 03 fitment wherever "&" joins non-consecutive years); catalog parser handles it, shared parser not changed yet.
+- JW Boon vendor PDFs (~/Downloads vl/wl/panhead/bigtwin.pdf, text layer) + Laken's jwboon scrape: next, under the vendor rule (part numbers carry a vendor letter prefix).
+- Decided (Laken): FL-book "Classic" = FLHC 1979–84 (FLH Classic, Shovel Electra Glide Classic), platform fl; FLHC 2018+ stays Softail. books.mjs yearCode; Classic drops out of code lists before 1979. FL book now 63% clean (was 32%). Report reports/11_catalog_books_20261024_143527.txt. Still dry run only.
+- Added books (Downloads): 1954-78 XLH/XLCH (82% clean, 42,493 pairs) and 1966-84 Shovelhead engine 99427-84 (99% clean, new `appl` column layout; "Big Twins" = that year's Shovelhead big twins; 80ci/74ci kept as condition). `printed` year per book for the part-suffix check.
+- Found: Sportster vehicles wrong — `XL` 1957-85 generic, `XLH` only 1976/78/84/85, `XLS` only 1984-85. Needs an 01 rule (XLH/XLCH from 1958, XLS from 1979) with catalog evidence; not changed.
+- Desktop scan: hd_parts_data_final.csv (1.26M rows, 1979-2012 year+model+part; origin unknown, needs DATA_RIGHTS); data:catalog1 48-53/49-60/61-80.pdf ~850 MB each iCloud-only, not downloaded (4.5 GB free); JW Boon CSV (74k rows) and Eastern 2022-24 catalog = vendor.
+
+### 2026-10-24 (Ironhead Sportster vehicles, dry run)
+- Finding: in the 1954-78 XLH/XLCH book "XL" is the 1957 model, then the XLH (1977-78 rows say "XL, XLCH" and "XLH, XLCH" for the same kinds of parts).
+- 01_vehicles: XL_BOOK evidence (XLH/XLCH 1958-78), XL kept for 1957 only (others → review `xl_family_label`, deleted with their fitment on --apply), XLH name empty before 1972; new "Diff vs vehicles table" report section (added / changed / retired). lib/fitment.mjs + books.mjs map the book's XL 1958-78 → XLH. 11_catalog_books takes --vehicles-from.
+- Dry run: 01 +19 XLH (1958-75, 1977), 0 changed, -28 XL 1958-85 (7,557 fitment rows). 03 preview: 445-661 rows per new XLH year. XL book pairs 42,493 → 64,063. Reports reports/01_vehicles_20261024_164932.*, 03_fitment_20261024_164943.txt, out_11.txt.
+- APPLIED (Laken approved): 01 --apply (+19 XLH, -28 XL, 7,557 fitment rows deleted) → 03 → 04 → 09 → 05 → 06 → 07 --max-hole 3 → 08 (refreshes fitment_spans). Live: XLH 1958-78 has 452-678 rows/year, XL 1957 421, XLCH unchanged; fitment 1,442,207 (oem_catalog 770,274; inferred_span 12,811); fitment_spans 407,587. /v1/models?year=1965 shows XLCH + XLH. Note: 07 must get --max-hole 3 (default bridges all holes: 36,855 rows); first run here forgot it, rerun fixed.
+- Apply order when approved: 01 --apply → 03 → 04 → 09 → 05 → 06 → 07 → 08, refresh fitment_spans.
+- Still missing: XLH 1979-83, XLS 1979-82 (need 1979-85 Sportster catalog). Parser artifact seen: "70 - KH, XL, XLH, XLCH" rows (KH can't be 1970; likely misread "54 to *").
+- Laken asked for engine size (ci) and transmission (4/5/6-speed) per bike. Source DB has only engine-era ranges (hd_engine_types). Catalogs document both: transmission sections ("TRANSMISSION HOUSING — 5 SPEED") with used-on codes, Shovel engine book 1340/1200. Not started.
+
+### 2026-10-24 (vehicle specs: engine size + transmission, dry run)
+- Laken shared Drive PDFs (owner lowbrowfiles@gmail.com): Shovelhead-Engine-_-Model-Information.pdf (= 99427-84, same doc as ~/Downloads/99427-84.pdf), FL-FX-1961-1976-Parts-Book (9.6 MB), HD-Parts-Catalog-99455-83C-FX-Models-1971-1984 (8.3 MB). Last two not downloaded yet (need Laken's OK).
+- Transcribed H-D's "Shovelhead Model History" table (99427-84 printed p11-12) from the page images into scripts/catalog/specs/shovelhead_model_history.mjs (model, years, 74/80 ci, 4/5-speed, notes).
+- Added scripts/etl/12_vehicle_specs.mjs (dry run; no target table yet, --apply refused). Result reports/12_vehicle_specs_20261024_172702.txt: 44 vehicles get specs (35 4-speed, 6 5-speed; 4 with two displacements that year: FXE 1981/83/84, FXS 1979½). 60 table code-years have no vehicle (FL/FLH 1966-83, FLHC, FLT, FLHT, FXEF 1978-80, FXE 1982).
+- Table vs vehicles disagreements (not changed): FX 1978-84 in vehicles but table ends FX 1977; FXE 1973 (table starts 1974); FXS 1983-84 (table ends 1982, FXSB takes over 1983); FXSB 1982 (table starts 1983); FXEF 1984. The 99455-83C FX catalog should settle these.
+- Next: migration for a specs table (vehicle_id, displacement ci/cc, transmission speeds, source, note; multiple options per vehicle), then more spec sources (FX-FXST/FXR 1984-86 transmission sections, later service catalogs for 6-speed).
+
+### 2026-10-24 (Drive catalogs: OCR + dry run)
+- Downloaded (Laken's go) to ~/Downloads/hd-drive: FL-FX 1961-76 parts book, 99455-83C FX 1971-84, 99484-69 Sportster 1959-69 service manual, 1970 XR/XLR. Skipped 99451-78A (same book as the 1954-78 XL we have). OCR'd all (~780 pages).
+- books.mjs: 4 new books (`manual` layout skipped by 11). parse.mjs: stray mark before name, wrapped used-on, "t0"→"to" before finding the used-on, "AN Models", "All Models except …" (11 honors `except`). FX book code repairs; XR → XR750 (1970).
+- Dry run reports/11_catalog_books_20261024_174518.txt: FX 1971-84 77% clean, 60,834 pairs (38,617 new); 1961-76 FL-FX 16% (poor scan); XR 393 pairs on XR750 1970; older books all improved.
+- Specs: scripts/catalog/specs/ironhead_1959_69_service.mjs (99484-69 p1A-3: 883 cc / 53.9 ci, 4-speed, XLH/XLCH 55 hp, 9.0:1). 12_vehicle_specs now 66 vehicles (57 4-speed, 6 5-speed), also horsepower + compression. reports/12_vehicle_specs_20261024_174622.txt. Still no specs table (needs migration).
+- Nothing loaded; nothing committed.

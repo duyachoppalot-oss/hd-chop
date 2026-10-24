@@ -47,6 +47,7 @@ Measured 2026-10-24 (`reports/terminology_survey_*.txt`). Ranges are the token's
 | `EL` | 1936–1952 | 61 ci OHV big twin (Knucklehead 1936–47, Panhead 1948–52) | EL vehicles in those years | model |
 | `FL` | start ≤ 1984 | FL big twin family, **includes FLH** | platform `fl`. **Not** FLT/FLTC/FLHT (FLT chassis) | family |
 | `W`, `WL`, `WLA`, `WLD`, `WR`, `UL`, `VL`, `G`, `K`… | flathead years | each is its own model | exact code only | model |
+| `Classic` (H-D FL catalog 1941–84) | 1979–1984 | FLH Classic, the Shovelhead Electra Glide Classic — **not** the Heritage Softail Classic (FLSTC 1988+) | FLHC, platform `fl` (same code as the 2018+ Softail Heritage Classic; year decides) | model |
 | `FL` | start ≥ 1985 | ambiguous (38 rows) | review | — |
 | `FLH` | ≤ 1984 | FLH (high-compression FL) | FLH* vehicles | model-ish |
 | `FLH` | ≥ 1985 | Touring FLH* shorthand | Touring vehicles whose code starts FLH | family |
@@ -58,6 +59,7 @@ Measured 2026-10-24 (`reports/terminology_survey_*.txt`). Ranges are the token's
 | `FLST` | ≥ 1986 | FL Softails | platform `softail` and code starts FL | family |
 | `FXD` | 1991–2017 | Dyna | platform `dyna` | family |
 | `XL` | ≥ 1957 | Sportster | platform `sportster` | family |
+| `XL` (H-D 1954–78 XLH/XLCH catalog) | 1957 / 1958–78 | 1957: the XL model. 1958+: the XLH (book writes "77 to * - XL, XLCH" and "77 to * - XLH, XLCH" for the same kinds of parts) | XL 1957; XLH 1958–78 (`books.mjs` yearCode, `lib/fitment.mjs` yearCode) | model |
 | `XL` | < 1957 | not a Sportster (K model) | review | — |
 | `FL/FX`, `FL FX` (combined) | ≤ 1984 | all pre-Evo big twins (FL + FX families). E.g. "37-84 FL FX" | FL family ∪ FX family | family |
 | `FL/FX`, `FLST/FXST` | ≥ 1984 | Softail | platform `softail` | family |
@@ -89,6 +91,14 @@ Measured 2026-10-24 (`reports/terminology_survey_*.txt`). Ranges are the token's
 | FXDG 1983 (Disc Glide) | missing | added, `fx` / shovelhead | same parser fix |
 | FX family 1971–84 | `vintage` | `fx` | — |
 | FLH, FLHS 1984 | `touring` | `fl` | FL frame until the FLT/FLHT took over |
+
+## Proposed 2026-10-24, dry run only (Ironhead Sportsters, 01_vehicles XL_BOOK)
+
+| Row | Live | Proposed | Evidence |
+|---|---|---|---|
+| XLH 1958–75, 1977 | missing (only 1976, 1978, 1984, 1985) | added, sportster/ironhead; name empty before 1972 (picker's "SPORTSTER 1000" is wrong for the 55 ci bike) | 1954–78 XLH/XLCH catalog: "58 - XLH" rows, "58 to * - XLH, XLCH"; picker has XLH every year |
+| XL 1958–85 ("Sportster") | 28 vehicles, 7,557 fitment rows | retired; XL stays a vehicle for 1957 only | Same book: XL after 1957 = XLH. Its fitment re-lands on XLH via 03 |
+| XLH 1979–83, XLS 1979–82 | missing | still missing | No source yet: needs the 1979–85 Sportster parts catalog |
 
 Still open (needs the PDF catalogs Laken has): 1982 FXSB (Low Rider got the FXSB code in 1983 per secondary sources; one catalog line says "80 to * - FXB, FXSB"); 1985 FLH/FLHS frame; 1979–80 FXEF; all Knucklehead/Panhead vehicles.
 

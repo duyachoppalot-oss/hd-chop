@@ -50,6 +50,13 @@ function parseCodeList(s) {
   return { items, bad, all };
 }
 
+// One cell can hold several ranges ("84 to * - FXST; 85 to * - FXWG") and
+// single years ("85 - FXSB, FXEF", "85 & Early 86 - FXWG"): split on ";" and
+// write a single year as "85 to 85" so parseUsedOn reads each part.
+export const splitUsedOn = (raw) =>
+  raw.split(';').map((p) => p.trim()).filter(Boolean)
+    .map((p) => p.replace(/^((?:EARLY |LATE )?\d{2}) ?- ?/i, (m, y) => `${y} to ${y.replace(/\D/g, '')} - `));
+
 export function parseUsedOn(raw) {
   if (raw == null || !raw.trim()) return { kind: 'unparsed', reason: 'empty' };
   const s = raw.toUpperCase().replace(/[•'’]/g, '*').replace(/\s+/g, ' ').trim();

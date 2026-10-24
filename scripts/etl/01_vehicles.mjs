@@ -52,7 +52,7 @@ import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
-import { parseUsedOn } from './lib/usedon.mjs';
+import { parseUsedOn, splitUsedOn } from './lib/usedon.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -89,6 +89,25 @@ function chassisPlatform(year, code) {
   if (year <= 1984 && FL_CHASSIS.has(code)) return 'fl';
   return null;
 }
+
+// Ironhead Sportsters (added 2026-10-24). The picker and hd_year_model_master
+// carry a generic XL "Sportster" for 1957-85 and XLH only for 1976/78/84/85.
+// H-D's 1954-78 XLH/XLCH parts catalog (Laken's PDF, read by
+// scripts/catalog; docs/CATALOG_READER.md) names XL from 1957 and XLH/XLCH
+// from 1958 ("58 - XLH" rows, "58 to * - XLH, XLCH"), and for 1977-78 writes
+// "XL, XLCH" and "XLH, XLCH" for the same kinds of parts: in that book XL
+// after 1957 is the XLH. So:
+//   - XL_BOOK years count as evidence for XLH and XLCH (the picker has both
+//     codes those years; this never adds a code the picker lacks).
+//   - XL is a model only in 1957; later XL rows are the family label and go to
+//     review as xl_family_label. --apply deletes those vehicles and their
+//     fitment (03 maps the book's "XL" 1958-78 to XLH, lib/fitment.mjs).
+//   - XLH before 1972 is the 55 ci (883 cc) bike; the picker's "SPORTSTER 1000"
+//     name is wrong there, so it's left empty.
+// XLH 1979-83 and XLS 1979-82 (the Roadster) still have no source; they need
+// the 1979-85 Sportster parts catalog.
+const XL_BOOK = { XLH: [1958, 1978], XLCH: [1958, 1978] };
+const XL_MODEL_YEARS = [1957, 1957];
 
 // Bare family abbreviations in catalog text ("FX" = Dyna/FX family, "FL" =
 // Touring) aren't the FL/FX/XL models, so only hd_year_model_master counts.
@@ -186,13 +205,7 @@ async function loadEvidence(codes) {
     `SELECT used_on_raw, year_start, year_end FROM hd_oem_catalog_reference
      WHERE year_start BETWEEN 1903 AND 1984 AND used_on_raw IS NOT NULL`
   );
-  // One cell can hold several ranges ("84 to * - FXST; 85 to * - FXWG") and
-  // single years ("85 - FXSB, FXEF", "85 & Early 86 - FXWG"): parse each part,
-  // a single year as "85 to 85".
-  const segments = (raw) =>
-    raw.split(';').map((p) => p.trim()).filter(Boolean)
-      .map((p) => p.replace(/^((?:EARLY |LATE )?\d{2}) ?- ?/i, (m, y) => `${y} to ${y.replace(/\D/g, '')} - `));
-  for (const r of old.rows.flatMap((r) => segments(r.used_on_raw).map((used_on_raw) => ({ ...r, used_on_raw })))) {
+  for (const r of old.rows.flatMap((r) => splitUsedOn(r.used_on_raw).map((used_on_raw) => ({ ...r, used_on_raw })))) {
     const p = parseUsedOn(r.used_on_raw);
     const end = r.year_end ?? r.year_start;
     if (p.kind === 'range' && p.items)
@@ -296,9 +309,15 @@ async function main() {
       reference: textOk && ev.reference.has(k),
       service_catalog: textOk && ev.service.has(k),
       catalog_range: rangeOk && ev.range.has(k),
+      xl_book: families.includes('Sportster') && !!XL_BOOK[code] && year >= XL_BOOK[code][0] && year <= XL_BOOK[code][1],
     };
     const reject = (reason) =>
       review.push({ reason, year, code, model_name: g[0].model_name, families: families.join('+'), ...evidence });
+
+    if (code === 'XL' && families.includes('Sportster') && (year < XL_MODEL_YEARS[0] || year > XL_MODEL_YEARS[1])) {
+      reject('xl_family_label');
+      continue;
+    }
 
     if (!Object.values(evidence).some(Boolean)) {
       reject(textOk && ev.span.has(k) ? 'catalog_span_only' : 'no_catalog_evidence');
@@ -337,7 +356,8 @@ async function main() {
       g.find((r) => PLATFORM[r.family] === platform) ??
       g[0];
     // Early FXS/FXSB carry the codes' later Softail names (Blackline, Breakout).
-    const modelName = chassis === 'fx' && (code === 'FXS' || code === 'FXSB') ? null : nameRow.model_name;
+    const modelName =
+      (chassis === 'fx' && (code === 'FXS' || code === 'FXSB')) || (code === 'XLH' && year < 1972) ? null : nameRow.model_name;
 
     vehicles.push({
       year,
@@ -357,8 +377,30 @@ async function main() {
   for (const m of masterOnly)
     review.push({ reason: 'master_only', year: m.year, code: m.code, model_name: m.model_name, families: '', master: true, oem_fitment: ev.fitment.has(`${m.year}|${m.code}`), reference: ev.reference.has(`${m.year}|${m.code}`) });
 
+  // Live vehicles vs this run: added, changed, retired (deleted on --apply).
+  // Rows in the DB that this run doesn't propose are otherwise left alone.
+  const live = (
+    await app.query(
+      `SELECT v.vehicle_id, v.year, v.model_code, v.model_name, v.platform, v.engine, v.fuel_system,
+              (SELECT count(*) FROM fitment f WHERE f.vehicle_id = v.vehicle_id)::int AS fitment
+       FROM vehicles v`
+    )
+  ).rows;
+  const liveBy = new Map(live.map((v) => [`${v.year}|${v.model_code}`, v]));
+  const proposed = new Set(vehicles.map((v) => `${v.year}|${v.model_code}`));
+  const added = vehicles.filter((v) => !liveBy.has(`${v.year}|${v.model_code}`));
+  const changed = [];
+  for (const v of vehicles) {
+    const l = liveBy.get(`${v.year}|${v.model_code}`);
+    if (!l) continue;
+    const diffs = ['model_name', 'platform', 'engine', 'fuel_system'].filter((c) => (l[c] ?? null) !== (v[c] ?? null)).map((c) => `${c} ${l[c] ?? 'NULL'} -> ${v[c] ?? 'NULL'}`);
+    if (diffs.length) changed.push(`${v.year} ${v.model_code}: ${diffs.join(', ')}`);
+  }
+  const retireKeys = new Set(review.filter((r) => r.reason === 'xl_family_label').map((r) => `${r.year}|${r.code}`));
+  const retired = live.filter((v) => retireKeys.has(`${v.year}|${v.model_code}`) && !proposed.has(`${v.year}|${v.model_code}`));
+
   // ---- report ----
-  const count = (xs, fn) => xs.reduce((acc, x) => ((acc[fn(x)] = (acc[fn(x)] || 0) + 1), acc), {});
+  const count =(xs, fn) => xs.reduce((acc, x) => ((acc[fn(x)] = (acc[fn(x)] || 0) + 1), acc), {});
   const fmt = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, n]) => `  ${k}: ${n}`);
   const total = vehicles.length;
   const withEngine = vehicles.filter((v) => v.engine).length;
@@ -407,6 +449,30 @@ async function main() {
   lines.push('By engine:');
   lines.push(...fmt(count(vehicles, (v) => v.engine ?? 'NULL')));
   lines.push('');
+  // Runs of consecutive years per code, for a readable diff.
+  const runs = (xs) => {
+    const by = {};
+    for (const x of xs) (by[x.key] ||= []).push(x.year);
+    return Object.entries(by).sort().map(([k, ys]) => {
+      ys.sort((a, b) => a - b);
+      const parts = [];
+      for (let i = 0; i < ys.length; i++) {
+        let j = i;
+        while (j + 1 < ys.length && ys[j + 1] === ys[j] + 1) j++;
+        parts.push(i === j ? `${ys[i]}` : `${ys[i]}-${ys[j]}`);
+        i = j;
+      }
+      return `  ${k.padEnd(52)} ${parts.join(', ')}`;
+    });
+  };
+  lines.push(`Diff vs vehicles table: ${added.length} added, ${changed.length} changed, ${retired.length} retired`);
+  lines.push('Added:');
+  lines.push(...runs(added.map((v) => ({ key: `${v.model_code} (${v.model_name ?? '-'}) ${v.platform}/${v.engine ?? '-'}`, year: v.year }))));
+  lines.push('Changed:');
+  lines.push(...changed.map((s) => `  ${s}`));
+  lines.push(`Retired (deleted on --apply with their ${retired.reduce((n, v) => n + v.fitment, 0)} fitment rows):`);
+  lines.push(...runs(retired.map((v) => ({ key: `${v.model_code} (${v.model_name ?? '-'}) ${v.platform}`, year: v.year }))));
+  lines.push('');
   lines.push('Cross-family conflicts resolved:');
   lines.push(...(resolvedConflicts.length ? resolvedConflicts.map((s) => `  ${s}`) : ['  none']));
   lines.push('');
@@ -426,7 +492,7 @@ async function main() {
     path.join('reports', `01_vehicles_${ts}.json`),
     JSON.stringify(vehicles.map(({ evidence, ...v }) => ({ ...v, evidence: Object.keys(evidence).filter((k) => evidence[k]) })))
   );
-  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog', 'catalog_range'];
+  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog', 'catalog_range', 'xl_book'];
   fs.writeFileSync(
     reviewPath,
     [cols.join(','), ...review.sort((a, b) => a.reason.localeCompare(b.reason) || a.code.localeCompare(b.code) || a.year - b.year).map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n'
@@ -459,8 +525,12 @@ async function main() {
         vehicles.map((v) => v.fuel_system),
       ]
     );
+    const ids = retired.map((v) => v.vehicle_id);
+    const fit = await client.query(`DELETE FROM fitment WHERE vehicle_id = ANY($1)`, [ids]);
+    await client.query(`DELETE FROM fitment_hidden WHERE vehicle_id = ANY($1)`, [ids]);
+    const del = await client.query(`DELETE FROM vehicles WHERE vehicle_id = ANY($1)`, [ids]);
     await client.query('COMMIT');
-    console.log(`Upserted ${res.rowCount} vehicles.`);
+    console.log(`Upserted ${res.rowCount} vehicles. Retired ${del.rowCount} vehicles and ${fit.rowCount} fitment rows.`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

@@ -15,6 +15,11 @@ const DOC_SCOPE_MIN = 2;
 // listed; mirrors, wheels, reflectors differ), so those pairs are low.
 export const POLICE_CODE = /^(FLHP|FLHPI|FLHPE|FLHPEI|FLHTP|FLHTPI|FLTRXP|FXRP|FXDP|FXDBP)$/;
 
+// The 1954-78 XLH/XLCH catalog's "XL" is the 1957 XL, then the XLH (it writes
+// "77 to * - XL, XLCH" and "77 to * - XLH, XLCH" for the same kinds of parts).
+// 01 keeps XL as a vehicle for 1957 only (docs/HD_TERMINOLOGY.md).
+const yearCode = (code, y) => (code === 'XL' && y >= 1958 && y <= 1978 ? 'XLH' : code);
+
 export const span = (a, b) => Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
 
 // rows: hd_oem_catalog_reference { id, part_number, description, used_on_raw, year_start, year_end, doc }
@@ -40,6 +45,7 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
     byPlatform.get(v.platform).push(v);
   }
   const codeOf = (item) => item.alts.find((c) => byCode.has(c)) ?? null;
+  const vehicleOf = (code, y) => byCode.get(yearCode(code, y))?.get(y);
 
   // Document scope for ALL rows: codes listed explicitly in >= DOC_SCOPE_MIN rows of the doc.
   const parsed = rows.map((r) => parseUsedOn(r.used_on_raw));
@@ -75,7 +81,7 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
         const code = codeOf(item);
         if (!code) { out.missing.push(item.code); continue; }
         for (const y of item.year ? [item.year] : years) {
-          const v = byCode.get(code).get(y);
+          const v = vehicleOf(code, y);
           if (v) targets.push([v, false]);
         }
       }
@@ -83,7 +89,7 @@ export function makeTargeter({ rows, fitmentSrc, vehicles, parts }) {
     const fromScope = (years) => {
       const scope = docScope.get(r.doc) || [];
       if (!scope.length) { out.notes.push(['all_without_doc_scope', '']); return; }
-      for (const c of scope) for (const y of years) { const v = byCode.get(c).get(y); if (v) targets.push([v, false]); }
+      for (const c of scope) for (const y of years) { const v = vehicleOf(c, y); if (v) targets.push([v, false]); }
     };
 
     if (p.kind === 'codes') {
