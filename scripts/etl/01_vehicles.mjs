@@ -147,6 +147,15 @@ for (const [y, codes] of Object.entries(EVO_XL_TABLE)) for (const c of codes) DO
 // Sportster codes that table rules out for 1986-90: the master's generic "XL883 Sportster
 // 883" (XL883 as a model starts with the 1991 books) and a 1986 XLX (the XLX-61 ended 1985).
 const NOT_EVO_XL = (year, code) => year >= 1986 && year <= 1990 && /^XL/.test(code) && !EVO_XL_TABLE[year].includes(code) && code !== 'XLH';
+// FX-family years H-D's documents rule out (2026-10-24). The 1971-84 FX catalog (99455-83C)
+// names the kick-start FX on its own through 1978 ("78 - FX", "Late 78 - FX" wiring
+// harness) and in "Early 79 - FX, FXE, ..." rows, then never alone again; the Shovelhead
+// Model History ends it in 1977. FX 1980-84 bikes only exist because "71 to * - FX, FXE"
+// ranges were stretched over every year. FXS 1984 rests on one crankcase row that also
+// lists FXB (ended 1982); the table moves the Low Rider to FXSB in 1983. Kept on the
+// catalog's word: FX 1978-79, FXE 1973 ("73 - FX, FXE"), FXS 1983 ("Late 82 & 83 -
+// FXS-80"), FXSB 1982 ("82 & 83 - FXWG, FXE-80, FXSB"), FXEF 1984 ("84 & 85 - FXSB, FXEF").
+const FX_NOT_BUILT = new Set(['1980|FX', '1981|FX', '1982|FX', '1983|FX', '1984|FX', '1984|FXS']);
 const docFamily = (code) =>
   /^FLT|^FLHT/.test(code) ? 'Touring' : code.startsWith('XL') ? 'Sportster' : code.startsWith('W') ? 'Flathead' : 'Shovelhead';
 const XL_MODEL_YEARS = [1957, 1957];
@@ -384,6 +393,10 @@ async function main() {
       reject('xl_family_label');
       continue;
     }
+    if (FX_NOT_BUILT.has(k)) {
+      reject('fx_not_built');
+      continue;
+    }
     if (families.includes('Sportster') && NOT_EVO_XL(year, code)) {
       reject('not_in_xlh_vin_table');
       continue;
@@ -472,7 +485,7 @@ async function main() {
     const diffs = ['model_name', 'platform', 'engine', 'fuel_system'].filter((c) => (l[c] ?? null) !== (v[c] ?? null)).map((c) => `${c} ${l[c] ?? 'NULL'} -> ${v[c] ?? 'NULL'}`);
     if (diffs.length) changed.push(`${v.year} ${v.model_code}: ${diffs.join(', ')}`);
   }
-  const retireKeys = new Set(review.filter((r) => ['xl_family_label', 'not_in_xlh_vin_table', 'xlh_renamed_to_xl'].includes(r.reason)).map((r) => `${r.year}|${r.code}`));
+  const retireKeys = new Set(review.filter((r) => ['xl_family_label', 'not_in_xlh_vin_table', 'xlh_renamed_to_xl', 'fx_not_built'].includes(r.reason)).map((r) => `${r.year}|${r.code}`));
   const retired = live.filter((v) => retireKeys.has(`${v.year}|${v.model_code}`) && !proposed.has(`${v.year}|${v.model_code}`));
 
   // ---- report ----

@@ -372,3 +372,10 @@ Append one entry per session. Newest at the bottom.
 - Applied wording above (06 --apply, 08): concepts on 11,399 parts. Live 1962 FLH: "gas cap" -> 61103-36, "chain" -> 40007-36A.
 - Section-title concepts (OCR catalog section + bare item name) previewed: only 119 parts, noisy (fender braces/tips, seat plunger, front lamp in tail-lamp section). Not built. The good hits were wording misses instead: fuel_tank += "gas tank|gasoline tank"; tail_lamp += "taillamp|taillamp lens|tail lamp lens"; speedometer += "speedometer head"; headlamp += "sealed beam|sealed beam unit" (excl passing|spot|fog). Dry run: +48 parts, 0 moved. Not applied.
 - Limit: vintage parts are mostly internal engine parts, and many OCR names are missing (1941 WLA 129 of 599 named).
+
+### 2026-10-24 (FX year conflict, dry run)
+- 1971-84 FX catalog single-year rows: FX alone through 1978 ("78 - FX", "Late 78 - FX" harness), "Early 79 - FX, FXE..." rows; nothing for 1980+ but one "Early 81" and one "Early 84" long list. FXE 1973 ("73 - FX, FXE"), FXS 1983 ("Late 82 & 83 - FXS-80"), FXSB 1982 (4 rows "82 & 83 - FXWG, FXE-80, FXSB"), FXEF 1984 (1984-86 book "84 & 85 - FXSB, FXEF") all named by the catalog: kept, against the Shovelhead table.
+- 01 FX_NOT_BUILT: FX 1980-84, FXS 1984 (one crankcase row also listing FXB) -> review `fx_not_built`, retired on --apply. 6,277 fitment rows on them; only 5-6 parts/yr fit no other fx bike, all from the Shovel engine book's "FX".
+- books.mjs: engine book "FX" -> '*FXFAM*' = that year's Shovel fx-platform bikes (11 fxFamily), so those parts move to FXE/FXS/FXWG/FXB/FXSB/FXEF/FXDG.
+- Dry run: 0 added, 0 changed, 6 retired. Not applied. Apply order: 01 → 11 → 05 → 06 → 07 --max-hole 3 → 08.
+- APPLIED (Laken): 01 (-6 bikes, 6,277 rows) → 11 (catalog_ocr 224,628; +189 engine-book rows moved onto real FX-family bikes) → 05 → 06 → 07 --max-hole 3 → 08. Live: 1979 FX/FXE/FXEF/FXS; 1982 FXB/FXE/FXEF/FXS/FXSB/FXWG; 1984 FXE/FXEF/FXSB/FXWG.

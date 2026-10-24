@@ -107,7 +107,7 @@ for (const b of books) {
 
   // Codes the book names per year (for "All Models").
   const named = new Map();
-  for (const r of rows) for (const f of r.fits ?? []) if (f.code !== '*ALL*') for (const y of f.years) (named.get(y) ?? named.set(y, new Set()).get(y)).add(f.code);
+  for (const r of rows) for (const f of r.fits ?? []) if (!/^\*.*\*$/.test(f.code)) for (const y of f.years) (named.get(y) ?? named.set(y, new Set()).get(y)).add(f.code);
   const bookCodes = new Set([...named.values()].flatMap((s) => [...s]));
   const allModels = (y) => {
     const s = new Set(named.get(y) ?? []);
@@ -119,6 +119,9 @@ for (const b of books) {
   // 1984 counts only bikes marked shovelhead; Sportsters and Softails never).
   const shovelModels = (y) =>
     y < 1966 || y > 1984 ? [] : vehicles.filter((v) => v.year === y && ['fl', 'fx', 'fxr', 'touring'].includes(v.platform) && (v.engine === 'shovelhead' || (y < 1984 && v.engine == null))).map((v) => v.model_code);
+
+  // Shovelhead engine book "FX" = that year's FX-frame Shovel bikes (books.mjs yearCode).
+  const fxFamily = (y) => shovelModels(y).filter((c) => vehicleOf.get(`${y}|${c}`)?.platform === 'fx');
 
   // Existing fitment pairs for the book's bikes, to count what's new.
   const ids = vehicles.filter((v) => v.year >= b.from && v.year <= b.to).map((v) => v.vehicle_id);
@@ -149,10 +152,10 @@ for (const b of books) {
     r.missing = [];
     // A code we have in no year and the book doesn't declare ("FAST", "PREF", "FXAT") is OCR
     // noise or a variant we don't model: the row goes to review.
-    for (const f of r.fits ?? []) if (f.code !== '*ALL*' && f.code !== '*SHOVEL*' && !vehicleCodes.has(f.code) && !(b.codes ?? []).includes(f.code)) r.flags.push(`code:unknown:${f.code}`);
+    for (const f of r.fits ?? []) if (!/^\*.*\*$/.test(f.code) && !vehicleCodes.has(f.code) && !(b.codes ?? []).includes(f.code)) r.flags.push(`code:unknown:${f.code}`);
     for (const f of r.fits ?? []) {
       for (const y of f.years) {
-        const codes = (f.code === '*ALL*' ? allModels(y) : f.code === '*SHOVEL*' ? shovelModels(y) : [f.code]).filter((c) => !f.except?.includes(c));
+        const codes = (f.code === '*ALL*' ? allModels(y) : f.code === '*SHOVEL*' ? shovelModels(y) : f.code === '*FXFAM*' ? fxFamily(y) : [f.code]).filter((c) => !f.except?.includes(c));
         for (const c of codes) {
           const v = vehicleOf.get(`${y}|${c}`);
           if (v) r.vehicles.push({ v, low: f.lowYears.includes(y), cond: f.cond ?? null });

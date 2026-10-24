@@ -80,7 +80,9 @@ export const BOOKS = [
     layout: 'appl',
     codes: ['FL', 'FLH', 'FLHS', 'FLHC', 'FX'],
     code: DROP_80,
-    yearCode: (code, year) => (/^CLASS/.test(code) ? (year >= 1979 && year <= 1984 ? 'FLHC' : null) : code),
+    // "FX" here is the FX family's engine ("78 to 84 FX, FL", "69 to 84 FLH-80, Classic, FX"),
+    // not the kick-start FX model (ended 1979): '*FXFAM*' = that year's Shovel FX-frame bikes.
+    yearCode: (code, year) => (/^CLASS/.test(code) ? (year >= 1979 && year <= 1984 ? 'FLHC' : null) : code === 'FX' ? '*FXFAM*' : code),
   },
   {
     slug: '1950-45ci',
