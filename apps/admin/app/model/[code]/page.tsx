@@ -53,6 +53,18 @@ export default async function ModelPage({
      ORDER BY c.category NULLS LAST, c.display_name NULLS LAST, s.year_start, p.oem_display`,
     [code, showAll, q.trim()]
   );
+  // Engine / transmission options per year from H-D documents (vehicle_specs, migration 006).
+  const specRows = await query<{ year: number; ci: string | null; cc: number | null; speeds: number | null; source_ref: string; mid_year_change: boolean }>(
+    `SELECT v.year, s.displacement_ci::text AS ci, s.displacement_cc AS cc, s.transmission_speeds AS speeds, s.source_ref, s.mid_year_change
+     FROM vehicle_specs s JOIN vehicles v USING (vehicle_id) WHERE v.model_code = $1
+     ORDER BY v.year, s.displacement_ci, s.transmission_speeds`,
+    [code]
+  );
+  const specsByYear = new Map<number, typeof specRows>();
+  for (const r of specRows) (specsByYear.get(r.year) ?? specsByYear.set(r.year, []).get(r.year)!).push(r);
+  const specText = (rs: typeof specRows) =>
+    rs.map((r) => [r.ci != null ? `${Number(r.ci)} ci` : null, r.speeds != null ? `${r.speeds}-sp` : null].filter(Boolean).join(' · ')).join(' / ') +
+    (rs.some((r) => r.mid_year_change) ? ' (mid-year)' : '');
   const counts = await query<{ total: number; with_concept: number }>(
     `SELECT count(DISTINCT chain_root)::int AS total, count(DISTINCT chain_root) FILTER (WHERE concept_id IS NOT NULL)::int AS with_concept
      FROM fitment_spans WHERE model_code = $1`,
@@ -139,6 +151,9 @@ export default async function ModelPage({
                     <td>{v.model_name}</td>
                     <td className="muted">{v.engine}</td>
                     <td className="muted">{v.fuel_system}</td>
+                    <td className="mono" title={(specsByYear.get(v.year) ?? []).map((r) => r.source_ref).join('\n')}>
+                      {specsByYear.has(v.year) ? specText(specsByYear.get(v.year)!) : ''}
+                    </td>
                     <td>{v.has_parts ? '' : <span style={{ color: 'var(--red)' }}>no parts</span>}</td>
                   </tr>
                 ))}

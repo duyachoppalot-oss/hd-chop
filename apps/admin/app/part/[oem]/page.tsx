@@ -30,7 +30,9 @@ type Row = {
 };
 
 // Which tone a year cell gets when several rows land on it: the strongest.
-const RANK = ['admin', 'oem_catalog', 'service_catalog', 'inferred_span', 'low', 'hidden'];
+const RANK = ['admin', 'oem_catalog', 'service_catalog', 'catalog_ocr', 'inferred_span', 'low', 'hidden'];
+// 'catalog_ocr:1941-84-fl:p190' -> 'book 1941-84-fl, PDF p190' (scripts/catalog/books.mjs slugs).
+const refText = (ref: string) => ref.replace(/^catalog_ocr:([^:]+):p(\d+)$/, 'book $1, PDF p$2');
 const toneOf = (r: Row) => (r.hidden_by != null ? 'hidden' : r.confidence === 'low' ? 'low' : r.source);
 
 // Every raw fitment row behind one part chain, year by year, colored by
@@ -89,7 +91,7 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
       const rs = l.years.get(y)!;
       const tone = rs.map(toneOf).sort((a, b) => RANK.indexOf(a) - RANK.indexOf(b))[0];
       const detail = rs
-        .map((r) => `${y} ${r.source}/${r.confidence}${r.conditions.length ? ` {${r.conditions.join(', ')}}` : ''}${r.hidden_by ? ` HIDDEN by #${r.hidden_by}` : ''} · ${r.source_ref}`)
+        .map((r) => `${y} ${r.source}/${r.confidence}${r.conditions.length ? ` {${r.conditions.join(', ')}}` : ''}${r.hidden_by ? ` HIDDEN by #${r.hidden_by}` : ''} · ${refText(r.source_ref)}`)
         .join('\n');
       const prev = bars[bars.length - 1];
       if (prev && prev.tone === tone && prev.end === y - 1) {
@@ -140,6 +142,7 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
           <div className="legend">
             <span><i className="t-oem_catalog" />oem catalog</span>
             <span><i className="t-service_catalog" />service catalog</span>
+            <span><i className="t-catalog_ocr" />parts-catalog PDF (OCR)</span>
             <span><i className="t-inferred_span" />inferred (hole bridged)</span>
             <span><i className="t-admin" />added by you</span>
             <span><i className="t-low" />low confidence (not shown in app)</span>

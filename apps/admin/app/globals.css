@@ -83,6 +83,7 @@ a.tl-bar:hover { outline: 2px solid var(--cream); text-decoration: none; z-index
 .t-c4 { background: #d98c5f; } .t-c5 { background: #c9b98f; } .t-c6 { background: #8fa3bf; } .t-c7 { background: #c7a4c9; }
 .t-oem_catalog { background: var(--gold); }
 .t-service_catalog { background: #e8cf8a; }
+.t-catalog_ocr { background: #c98a4b; } /* OCR'd parts-catalog PDFs (11_catalog_books) */
 .t-inferred_span { background: repeating-linear-gradient(135deg, var(--gold) 0 4px, var(--gold-dim) 4px 8px); }
 .t-admin { background: var(--green); }
 .t-low { background: transparent; border: 1px dashed var(--muted); color: var(--muted); }
