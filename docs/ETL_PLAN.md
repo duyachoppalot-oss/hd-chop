@@ -45,6 +45,7 @@ Source: `hd_oem_catalog_reference.part_number`; repair dictionary = full 5-digit
 4. `description_clean`: first column segment that starts with a capitalized word; drop parentheticals, `w/ …`/`with …` notes, part numbers, dimensions, non-ASCII; head + one qualifier, ≤60 chars, sentence case. Per number take the most common; names whose first word heads <3 part numbers are OCR noise → dropped.
 5. `chain_root` = self.
 - Dry run: 225,439 / 239,520 rows resolve (94.1%) → 26,717 parts (25,668 extracted, 1,028 repaired same-year, 21 other-year); description null 5.2%. Review 14,081 rows: junk 10,632, ambiguous same-year 2,316 (mostly color variants, e.g. `73152-96BK`/`-96WE` — parallel options, correctly not picked), no candidate 1,003, ambiguous other-year 128.
+- **2026-10-24:** `cleanDescription` drops OCR junk inside name segments (dot leaders read as "oo"/"eee"/"ceceee"/"0ceeee", dotted zeros "000.0.00", lone 0/c/e/o) and cuts "consists of …" tails: 2,146 of 48,361 distinct source names change (e.g. "Muffler, rear oo ceceee" → "Muffler, rear"); 5 more truncated numbers pass the name check; part count unchanged. Garbled scan lines stay garbled.
 - Known leftovers: a few names keep OCR tails (`… eeeeen`, cut words); `1010` carries a figure heading ("Fuel tank & trim california…") — watch for it in 06 concept matching.
 
 ### 03_fitment.mjs — re-applied 2026-10-23 (751,135 rows)

@@ -126,6 +126,11 @@ export function repair(dict, cls, display, yearStart, yearEnd, name = null) {
 // qualifier, no quantities, notes, colors or part numbers. null if the text
 // is an extraction fragment.
 const PART_NO = /\b\d{4,5}-\d{2}[A-Z]{0,3}\b|\b\d{8}[A-Z]{0,4}\b/;
+// OCR junk inside a name segment (scanned pre-1990 catalogs): dot leaders read
+// as letters ("oo", "eee", "ceceee", "0ceeee", "eees") and dotted zeros
+// ("000.0.00", "00.0"). Real part-name words are never made only of a/c/e/o/0.
+const OCR_JUNK = /^(?:[0aceo]{2,}s?|[0ceo]|[0.]*\.[0.]*|\d*(?:\.\d*){2,})[.,;:]*$/i; // + lone 0/c/e/o
+const dropJunk = (p) => p.split(/\s+/).filter((t) => t && !OCR_JUNK.test(t)).join(' ');
 export function cleanDescription(raw) {
   if (!raw) return null;
   // Columns run together with wide gaps; take the first segment that starts like a part name.
@@ -138,8 +143,8 @@ export function cleanDescription(raw) {
     .replace(/[({[].*$/, ' ')                           // unclosed "(14-16 gau"
     .split(',')
     .map((p) =>
-      p
-        .replace(/(^|\s)(w\/|with\b|used\b|use\b|for\b|incl\b).*$/i, '') // "w/ 72412-97", "with 69202637"
+      dropJunk(p)
+        .replace(/(^|\s)(w\/|with\b|used\b|use\b|for\b|incl\b|consists?\b|consisting\b).*$/i, '') // "w/ 72412-97", "consists of ..."
         .replace(/\s-\s.*\d.*$/, '')                                     // "- 11.21 in. long"
         .trim()
     )

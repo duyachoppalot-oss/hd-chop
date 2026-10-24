@@ -6,7 +6,7 @@ fuel_pump,Fuel Pump,fuel,fuel pump,gas pump,head,
 carburetor,Carburetor,fuel,carburetor,carb|cv carb,head,
 throttle_body,Throttle Body,fuel,throttle body|induction module,tb,head,
 fuel_injector,Fuel Injector,fuel,injector,injectors,head,
-air_cleaner,Air Cleaner,intake,air cleaner|air filter,air filter|intake|breather,contains,
+air_cleaner,Air Cleaner,intake,air cleaner|air filter,air filter|intake|breather,contains,gasket|seal
 front_fender,Front Fender,body,front fender,fender front,head,
 rear_fender,Rear Fender,body,rear fender,fender rear|back fender,head,
 saddlebag,Saddlebag,luggage,saddlebag,bags|saddle bags|hard bags|side bags|saddlebags,contains,support|bracket|mounting|mount|label|decal|medallion|reflector|indicator|tether|isolator|spacer|bushing|panel|guard|insert|carrier|raincoat|warning
