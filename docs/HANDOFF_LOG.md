@@ -186,3 +186,12 @@ Append one entry per session. Newest at the bottom.
 - Security: removed pg_hba `hostssl hdchop hdchop_api 0.0.0.0/0` (was line 110); 0 rule errors, reloaded. Backup ~/hd-chop/pg_hba.conf.bak.20261024_005656 on the server. Remote hdchop_api login now refused ("no pg_hba.conf entry"); hdchop_app remote access unchanged
 - Docs: CLAUDE.md stack + rule 6, apps/api/README.md, ROADMAP, role SQL comments
 - Next: real domain before App Store; Phase 3 mobile (apps/mobile, Expo)
+
+### 2026-10-24 (Phase 3 mobile MVP)
+- Phase: 3
+- Done: apps/mobile (Expo SDK 58, expo-router, React Native 0.88): pick year → pick model (by platform, no-data models greyed) → search (12 quick words) → results (concept chips, part cards with conditions/own-model years/also-fits/replaces, ±10-year toggle, trigram fallback) → part detail (chain + fits by conditions). Black/gold, Oswald + Courier Prime, 56 pt tap targets, not-affiliated footer. API: `Access-Control-Allow-Origin: *` on all responses (apps/api/lib/http.ts) for the web build; deployed.
+- Verified: typecheck; walked in the browser pane (Expo web, 375×812): 2004 FLHR blinkers → 68766-94 detail; "fender" → 2 concept chips + empty state; "gasket" → fallback list; toggle (41 → 42 spans); 68140-99 deep link → replaced by 68140-04; Change bike. No console errors. Not run on a real phone or simulator (no Xcode).
+- Quick words chosen from counts on the 5 gate bikes; dropped "primary cover" and "seat" (0 parts on 2004 FLHR).
+- Data note (Phase 1 follow-up): 2004 FLHR returns 0 for concepts other bikes have — front fender 0 on all 5 gate bikes; mirror, headlamp, seat, brake rotor, muffler 0 on FLHR only. Recall gap in fitment or concept terms.
+- Note: test searches with no concept ("gasket", "spark plug", "bearing", "chrome thing") were logged to search_misses.
+- Next: Laken tries it in Expo Go; TestFlight needs Xcode/EAS + Apple account; investigate the FLHR recall gap.

@@ -36,9 +36,9 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
 - **Deployed 2026-10-24** on the Hetzner server (Docker + nginx + Let's Encrypt; Vercel dropped — only a Hobby team was available): https://hdchop.5.161.100.126.nip.io. Gate re-run over public HTTPS: identical to the run on the server. Before App Store: move to a real domain.
 
 ## Phase 3 — Mobile MVP (free features)
-- [ ] Scaffold `apps/mobile` (Expo Router, TS); black/gold theme
-- [ ] Screens: Pick bike → Search → Results → Part detail
-- [ ] TestFlight build
+- [x] Scaffold `apps/mobile` (Expo SDK 58, Expo Router, TS); black/gold theme (Oswald + Courier Prime)
+- [x] Screens: Pick bike → Search → Results → Part detail (2026-10-24; walked in Expo web at phone size against the deployed API)
+- [ ] TestFlight build — needs Xcode or EAS Build + Apple Developer account
 - **Gate:** 5 riders use it without help.
 
 ## Phase 4 — Monetize
