@@ -77,6 +77,19 @@ const PLATFORM = {
 };
 const VINTAGE = new Set(['Flathead', 'Knucklehead', 'Panhead', 'Shovelhead']);
 
+// Chassis families the picker doesn't have (005, docs/HD_TERMINOLOGY.md). They
+// override whatever family the picker filed the code under: the picker puts
+// 1986 FXWG/FXSB under Softail ("BREAKOUT") and FXEF under FXR, but all three
+// are FX swingarm bikes -- the 1984-86 FX-FXST catalog lists "85 to * - FXWG,
+// FXSB, FXEF" next to, not as, the FXST; 1986 "Late 86 - FXWG" is the last.
+const FX_CHASSIS = new Set(['FX', 'FXE', 'FXS', 'FXEF', 'FXWG', 'FXB', 'FXSB', 'FXDG']); // FXDG = 1983 Disc Glide
+const FL_CHASSIS = new Set(['EL', 'ES', 'FL', 'FLH', 'FLHS', 'FLHF', 'FLHC', 'FLHB', 'FLHFB', 'FLP', 'FLHP', 'FLF', 'FLE', 'FLS', 'FLHX']);
+function chassisPlatform(year, code) {
+  if (year <= 1986 && FX_CHASSIS.has(code)) return 'fx';
+  if (year <= 1984 && FL_CHASSIS.has(code)) return 'fl';
+  return null;
+}
+
 // Bare family abbreviations in catalog text ("FX" = Dyna/FX family, "FL" =
 // Touring) aren't the FL/FX/XL models, so only hd_year_model_master counts.
 const FAMILY_TOKENS = new Set(['FL', 'FX', 'XL']);
@@ -91,6 +104,9 @@ const PLATFORM_ENGINES = {
   dyna: BIG_TWIN,
   trike: BIG_TWIN,
   fxr: ['shovelhead', 'evolution_bigtwin'],
+  fx: ['shovelhead', 'evolution_bigtwin'],
+  // evolution listed so 1984 (Shovel and Evo FLH) stays null rather than guessed
+  fl: ['knucklehead', 'panhead', 'shovelhead', 'evolution_bigtwin'],
   sportster: ['ironhead', 'evolution_sportster'],
   v_rod: ['revolution'],
   revolution_max: ['revolution_max'],
@@ -99,7 +115,9 @@ const PLATFORM_ENGINES = {
 
 // Changeover years where two engine ranges overlap.
 const OVERLAP_ENGINE = {
-  1984: { softail: 'evolution_bigtwin' }, // Softail launched with the Evo
+  // Softail launched with the Evo; 1984 FX-frame bikes were still Shovels (the
+  // 1985 FXEF was "the first and last" Evo FXEF).
+  1984: { softail: 'evolution_bigtwin', fx: 'shovelhead' },
   1999: { touring: 'twin_cam', dyna: 'twin_cam', softail: 'evolution_bigtwin' }, // Softail got the TC88B in 2000
   2017: { touring: 'milwaukee_eight', trike: 'milwaukee_eight', softail: 'twin_cam', dyna: 'twin_cam' },
 };
@@ -168,7 +186,13 @@ async function loadEvidence(codes) {
     `SELECT used_on_raw, year_start, year_end FROM hd_oem_catalog_reference
      WHERE year_start BETWEEN 1903 AND 1984 AND used_on_raw IS NOT NULL`
   );
-  for (const r of old.rows) {
+  // One cell can hold several ranges ("84 to * - FXST; 85 to * - FXWG") and
+  // single years ("85 - FXSB, FXEF", "85 & Early 86 - FXWG"): parse each part,
+  // a single year as "85 to 85".
+  const segments = (raw) =>
+    raw.split(';').map((p) => p.trim()).filter(Boolean)
+      .map((p) => p.replace(/^((?:EARLY |LATE )?\d{2}) ?- ?/i, (m, y) => `${y} to ${y.replace(/\D/g, '')} - `));
+  for (const r of old.rows.flatMap((r) => segments(r.used_on_raw).map((used_on_raw) => ({ ...r, used_on_raw })))) {
     const p = parseUsedOn(r.used_on_raw);
     const end = r.year_end ?? r.year_start;
     if (p.kind === 'range' && p.items)
@@ -288,8 +312,10 @@ async function main() {
     const eraFams = families.filter((f) => VINTAGE.has(f));
     if (eraFams.length > 1) { reject('multiple_engine_era_families'); continue; }
 
+    const chassis = chassisPlatform(year, code);
     let platform;
-    if (platformFams.length === 0) platform = 'vintage';
+    if (chassis) platform = chassis;
+    else if (platformFams.length === 0) platform = 'vintage';
     else if (platformFams.length === 1) platform = PLATFORM[platformFams[0]];
     else {
       platform = resolvePlatformConflict(year, code, new Set(platformFams.map((f) => PLATFORM[f])));
@@ -301,18 +327,22 @@ async function main() {
     // Name: the era family's row when present (platform families reuse one
     // name across eras, e.g. FL "ELECTRA GLIDE" for 1950); else lowest model_id
     // in the chosen platform's family.
+    // FL/FX chassis engines come from the platform's engine list: the picker's
+    // era family (Shovelhead) doesn't cover the 1985-86 Evo FX bikes.
     const eraFamily = eraFams[0] ?? null;
-    const engine = engineFor(platform, year, eraFamily, engines, familyEngine);
-    if (eraFamily && !engine) { reject('outside_engine_era'); continue; }
+    const engine = engineFor(platform, year, chassis ? null : eraFamily, engines, familyEngine);
+    if (eraFamily && !chassis && !engine) { reject('outside_engine_era'); continue; }
     const nameRow =
       g.find((r) => r.family === eraFamily) ??
       g.find((r) => PLATFORM[r.family] === platform) ??
       g[0];
+    // Early FXS/FXSB carry the codes' later Softail names (Blackline, Breakout).
+    const modelName = chassis === 'fx' && (code === 'FXS' || code === 'FXSB') ? null : nameRow.model_name;
 
     vehicles.push({
       year,
       model_code: code,
-      model_name: nameRow.model_name,
+      model_name: modelName,
       platform,
       engine,
       fuel_system: code.endsWith('I') && pickerCodes.has(code.slice(0, -1)) ? 'efi' : 'unknown',

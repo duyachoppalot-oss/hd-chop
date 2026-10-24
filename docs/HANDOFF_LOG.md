@@ -272,3 +272,17 @@ Append one entry per session. Newest at the bottom.
 - Overrides (`004_admin.sql`, applied): hide fitment → moved to `fitment_hidden`; add fitment → `source='admin'`; rename part; set concept. SQL functions `admin_apply_override(s)` / `admin_undo_override`; console applies + refreshes spans on save; `scripts/etl/08_overrides.mjs` re-applies after every rebuild (pipeline now ends 07 → 08). Tested all four kinds apply/re-apply/undo in a rolled-back transaction; no overrides exist yet.
 - 09 now deletes admin rows on service parts before deleting those parts (FK).
 
+
+### 2026-10-24 (vendor data: terminology before inference)
+- Laken granted `hdchop_ro` SELECT on catalog_oem_crossref, catalog_fitment_v2, product_fitment_year_model, vtwin_scrape_data, pu_fitment_expanded (Stinkin' DB). Undo: REVOKE the same five.
+- Measured (read-only): vendor rows link ~1,330 Panhead / 750 Knucklehead / 1,000 Flathead H-D numbers not in hdchop; WPS is almost all 1985+ (adds little for vintage).
+- Found: Stinkin's derived tables (`product_fitment_year_model.family_name`, `catalog_fitment_v2`) mis-expand codes (FL = Touring from 1930, FX from 1941, FXS 1977–84 = Softail, FLT from 1939). Use raw vendor text only.
+- Added (nothing applied): docs/HD_TERMINOLOGY.md (eras, chassis families, vendor family tokens by year, bad mappings, suspect vehicles, open questions); scripts/etl/lib/vendorterms.mjs (resolver: model / family / review / skip / reject; never creates vehicles); scripts/etl/10_vendor_terms_check.mjs (read-only check on vtwin fitment_raw → reports/10_vendor_terms_<ts>.txt). Result: 32,154 segments → 16,687 family, 5,356 model, 3,786 review, 185 skip/reject.
+- Suspect existing vehicles (not changed): FXWG 1986 and FXSB 1986 filed as softail (FXSB named "BREAKOUT"); FXEF filed fxr; FXWG/FXSB 1985 missing. They leak into "FX Softail" expansions.
+- Next: Laken answers HD_TERMINOLOGY open questions → fix suspect vehicles → decide vintage vehicle source (FL 1941–84 PDF catalog or reviewed seed) → DATA_RIGHTS vendor rule → vendor fitment ETL dry run.
+
+### 2026-10-24 (FL/FX chassis families; problem rows fixed)
+- Laken: FL includes FLH; EL = Knucklehead (61 ci); FXR its own family/frame; W/WLA own models; FL/FX get their own families.
+- Applied 005 (platforms `fl`, `fx`); 01 chassisPlatform + range evidence reads ";" cells and single years. Live: FXWG/FXSB 1986 softail → fx (FXSB "BREAKOUT" dropped), FXEF fxr → fx, FX family 1971–84 vintage → fx, FLH/FLHS 1984 touring → fl; added FXWG 1985, FXSB 1985, FXDG 1983 (Disc Glide). Re-ran 01 → 03 → 04 → 09 → 05 → 06 → 07 → 08 (fitment 769,997 oem_catalog; service 659,122; inferred 12,811). Checked /v1/models 1983–86 and the app's 1985 picker.
+- CLAUDE.md FL/FX rule rewritten (year-dependent); HD_TERMINOLOGY.md updated; vendorterms uses fl/fx platforms; mobile labels for fl/fx/fxr/vintage (fixed v_rod key).
+- Thin: 1985–86 FX bikes have 70–122 fitment rows (1984–86 FX-FXST catalog partly extracted); 1984 FLH/FLHS and 1983 FXDG have 0. Laken has the early PDF catalogs → next: build a PDF reader for them (also settles 1982 FXSB, 1985 FLH frame, Knuckle/Pan vehicles).

@@ -32,7 +32,10 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 10. Be terse. Act, then report.
 
 ## Harley domain rules
-- FL/FX combined token = Softail; bare FL = Touring; bare FX = Dyna (mounting is physically incompatible).
+- Code meaning depends on the year — read docs/HD_TERMINOLOGY.md before turning any model text into vehicles/fitment.
+- FL/FX combined token = Softail from 1984; before 1984 it means all FL + FX big twins. Bare FL ≤1984 = FL big twin family incl. FLH (platform `fl`); bare FL in modern vendor text = Touring; bare FX 1971–86 = FX Super Glide family (platform `fx`), later = Dyna (mounting is physically incompatible).
+- FXR is its own family and frame (1982–94), never FX or Softail. EL = 61 ci OHV (Knucklehead 1936–47, Panhead 1948–52). W/WL/WLA etc. are models of their own.
+- Vendor/Stinkin' family labels (`product_fitment_year_model.family_name`, `catalog_fitment_v2`) are wrong for old bikes; resolve from the raw code + year.
 - Twin Cam is an engine generation, not a synonym for Big Twin.
 - EVO 883/1200 = Evolution-era Sportster XL883/XL1200.
 - OEM number year suffix (century-aware): 3–4 digit base = always 19XX; 5+ digit base: 00–26 = 20XX, 27–99 = 19XX.

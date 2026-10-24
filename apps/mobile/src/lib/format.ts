@@ -38,7 +38,11 @@ export const PLATFORM_LABEL: Record<string, string> = {
   dyna: 'Dyna',
   sportster: 'Sportster',
   trike: 'Trike',
-  vrod: 'V-Rod',
+  fxr: 'FXR',
+  fx: 'FX Super Glide',
+  fl: 'FL Big Twin',
+  vintage: 'Vintage',
+  v_rod: 'V-Rod',
   street: 'Street',
   revolution_max: 'Revolution Max',
 };
