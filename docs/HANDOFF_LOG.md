@@ -195,3 +195,18 @@ Append one entry per session. Newest at the bottom.
 - Data note (Phase 1 follow-up): 2004 FLHR returns 0 for concepts other bikes have — front fender 0 on all 5 gate bikes; mirror, headlamp, seat, brake rotor, muffler 0 on FLHR only. Recall gap in fitment or concept terms.
 - Note: test searches with no concept ("gasket", "spark plug", "bearing", "chrome thing") were logged to search_misses.
 - Next: Laken tries it in Expo Go; TestFlight needs Xcode/EAS + Apple account; investigate the FLHR recall gap.
+
+### 2026-10-24 (data gap investigation: 2004 FLHR, front fender)
+- Phase: 1 follow-up (found while testing Phase 3)
+- Cause 1 — partial source catalogs: stinkin_catalog's year-range touring books are partial extracts (2004-touring: 22 of ~244 pages, pages 11-78 missing). Years backed by a single-model book (2001 FLHTCI, 2007 FLHR, 2010 FLHX) have ~2x the fitment. Every 2004 touring model has ~600 fitment rows, not just FLHR.
+- Cause 2 — split part numbers: 21,958 of 239,520 source rows (9%; ~41% of 2004-touring) have the number cut at the hyphen ("91840-"). 02 repairs most; 2,051 rows stay ambiguous_same_year (e.g. 91840-03A vs -03B mirror kits) and are dropped. 1,619 split heads have their suffix in the next row ("03B") and could be stitched exactly.
+- Cause 3 — front fender: pre-2006 books name it bare "Fender" (62 parts, 600 fitment rows unassigned). Source column `category` ("FENDER, FRONT") is not used by 06.
+- Better source found: ~/Developer/catalog-extract/rows/*.tsv (391 books scraped from serviceinfo.harley-davidson.com): full pages, complete numbers, section names. For the 26 books matched by title: 73,749 full numbers vs 18,315 in stinkin_catalog. 2004-touring: 2,793 vs 401.
+- Decision needed (Laken): use the TSVs as a second fitment source? Same kind of data as the HD-catalog row in DATA_RIGHTS, but scraped from the HD dealer portal — check its terms. Not built, nothing applied.
+- Smaller fixes possible on the current source: stitch next-row suffixes; category-aware concept matching (06).
+
+### 2026-10-24 (09_service_catalog dry run)
+- Done: DATA_RIGHTS row for the scraped H-D service-portal catalogs (+ open terms question); lib/concepts.mjs (06 matcher shared; 06 report identical); scripts/etl/09_service_catalog.mjs dry-run only (--apply not implemented). Details + numbers in ETL_PLAN "09_service_catalog.mjs".
+- Numbers: 502,867 new fitment pairs, 15,473 new parts, 57.6% of book pairs already in fitment; 2004 FLHR 583 → 1,230 (mirror 0→2, seat 0→5, rotor 0→3).
+- Not done: apply; headlamp/front fender need section-aware concepts; seat/saddlebag concept precision; CVO/V-Rod/Police codes missing from vehicles.
+- Next: Laken decides on the source → implement --apply → 05-08 → gate.

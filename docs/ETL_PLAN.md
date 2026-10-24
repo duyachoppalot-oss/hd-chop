@@ -84,6 +84,18 @@ Fills year holes inside spans (gate finding). A hole between two listed years of
 `REFRESH MATERIALIZED VIEW CONCURRENTLY fitment_spans`. (Refreshed by hand after 03 for the gate check.)
 
 
+### 09_service_catalog.mjs — dry-run 2026-10-24, NOT applied (`--apply` not implemented)
+Second fitment source: `~/Developer/catalog-extract/rows/*.tsv`, 391 HD parts catalogs (1991–2027) scraped from the H-D service portal (DATA_RIGHTS row + open terms question). Why: stinkin_catalog's year-range books are partial (2004-touring 22 of ~244 pages) and ~9% of its numbers are cut at the hyphen.
+1. Only 7-column lines are fitment (852,048). 5-column lines are the numeric part index at the back of each book (no models; filed under the last section) → skipped; 6-column sidecar cross-refs skipped. Years per book from `manifest.json`.
+2. Models column → same parser/targeter as 03 (`lib/usedon.mjs`, `lib/fitment.mjs`); confidence as 03 (high = oem_fitment corroborates); conditions as 04 (`lib/conditions.mjs`) without the X/XI inference.
+3. Merge: pairs already in `fitment` (any source) count as agreement and are left alone; only new pairs would load as `source='service_catalog'`, `source_ref='catalog_extract:<book>:<line>'`. New numbers → `oem_parts` (`extracted`, `cleanDescription`, chain_root self; `**RESTRICTED SALES PART**` stripped).
+4. Concept preview for new parts uses `lib/concepts.mjs` (06's matcher, moved out; 06 dry-run report verified identical).
+- Dry run (reports/09_service_catalog_20261024_015836.txt): 1,184,717 (part, vehicle) pairs; **681,850 already in fitment (57.6% agreement)**; **502,867 new** (high 52.1%, medium 47.9%); 15,473 new parts (4,450 with a concept); 185 vehicles get their first fitment (2020s Softail/Rev Max/Trike/Street, CVO years).
+- Gate bikes (high+medium pairs): 2004 FLHR 583 → 1,230; 2010 FLHX +50; 2005 FLSTC +14; 2004 FXDL +1; 2004 XL883 +0. 2004 FLHR: mirror 0→2, seat 0→5, brake rotor 0→3, primary cover 0→1, saddlebag 1→11.
+- Not fixed by this source: headlamp/front fender stay 0 — books name them "LENS, less bulb with boot", "BULB", "FENDER" and only the section title says headlamp/front fender → needs section-aware concept matching (06). Concept precision: `seat` catches "SEAT, clutch spring"; `saddlebag` (contains) catches supports/brackets/latches and the decal 90820-93D.
+- Review: 254,796 rows — mostly codes absent from `vehicles` (CVO numbered SE2–SE8, V-Rod VRSC*, Police FLHP*, LiveWire, Buell) → candidates for 01.
+- Before `--apply`: Laken's go-ahead (DATA_RIGHTS terms question), then write the apply path (insert new parts + new pairs in one transaction), re-run 05 → 06 → 07 → 08, gate check.
+
 ### Final gate check — 2026-10-23, after 04 → 07 (`--max-hole 3`) → refresh
 State: 751,135 catalog fitment + 16,653 inferred_span; 292,437 spans over 22,993 parts, 22,555 spans with conditions.
 | # | Check | Result |

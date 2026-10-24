@@ -34,50 +34,19 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readSeed, seedTerms, matchConcept } from './lib/concepts.mjs';
 
 const APPLY = process.argv.includes('--apply');
-const SEED = 'data/seed/concepts_seed.csv';
 
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
-
-const FILLER = /\b(assembly|assy|asy|kit|complete|set)\b/g;
 
 function timestamp() {
   return new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '_');
 }
 
-const clean = (s) => s.toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').replace(/\s+/g, ' ').trim();
-const norm = (s) => clean(s).replace(FILLER, ' ').replace(/\s+/g, ' ').trim();
-
-// Seed CSV: no quoted commas in this file; arrays are pipe-separated.
-function readSeed() {
-  const [header, ...lines] = fs.readFileSync(SEED, 'utf8').trim().split('\n');
-  const cols = header.split(',');
-  return lines.map((l) => {
-    const v = l.split(',');
-    const r = Object.fromEntries(cols.map((c, i) => [c, v[i] ?? '']));
-    const arr = (s) => s.split('|').map((x) => x.trim()).filter(Boolean);
-    return { ...r, match: r.match || 'head', hd_terms: arr(r.hd_terms), user_terms: arr(r.user_terms), exclude: arr(r.exclude_terms ?? '').map(clean) };
-  });
-}
-
-export function phrases(description) {
-  const out = new Set();
-  for (const f of [clean, norm]) {
-    const segs = description.split(/,|\s-\s/).map(f).filter(Boolean); // "Wiring harness - fairing"
-    if (!segs.length) continue;
-    out.add(segs[0]);
-    if (segs[1]) out.add(`${segs[1]} ${segs[0]}`.trim());
-  }
-  return [...out];
-}
-
-const endsWith = (phrase, term) => phrase === term || phrase.endsWith(` ${term}`);
-const contains = (phrase, term) => ` ${phrase} `.includes(` ${term} `);
-
 async function main() {
   const concepts = readSeed();
-  const terms = concepts.flatMap((c) => c.hd_terms.map((t) => ({ slug: c.slug, raw: t, t: clean(t), mode: c.match, exclude: c.exclude })));
+  const terms = seedTerms(concepts);
   const parts = (
     await app.query(`
       SELECT p.oem_number, p.oem_display, p.description_clean, count(f.*)::int AS fit
@@ -92,27 +61,16 @@ async function main() {
   const unmatched = new Map(); // head phrase -> { parts, fit }
   for (const p of parts) {
     if (!p.description_clean) continue;
-    const ph = phrases(p.description_clean);
-    const hits = terms.filter(
-      (x) =>
-        x.t &&
-        ph.some((q) => (x.mode === 'contains' ? contains(q, x.t) : endsWith(q, x.t))) &&
-        !x.exclude.some((e) => ph.some((q) => contains(q, e)))
-    );
-    if (!hits.length) {
-      const h = ph[0];
-      const e = unmatched.get(h) ?? { parts: 0, fit: 0 };
+    const m = matchConcept(terms, p.description_clean);
+    if (m.none !== undefined) {
+      const e = unmatched.get(m.none) ?? { parts: 0, fit: 0 };
       e.parts++; e.fit += p.fit;
-      unmatched.set(h, e);
+      unmatched.set(m.none, e);
       continue;
     }
-    const pool = hits.some((x) => x.mode === 'head') ? hits.filter((x) => x.mode === 'head') : hits;
-    const best = Math.max(...pool.map((x) => x.t.length));
-    const top = pool.filter((x) => x.t.length === best);
-    const slugs = [...new Set(top.map((x) => x.slug))];
-    if (slugs.length > 1) { ties.push(`${p.oem_display} "${p.description_clean}" -> ${slugs.join(' / ')}`); continue; }
-    assigned.set(p.oem_number, slugs[0]);
-    termHits.get(`${top[0].slug}|${top[0].raw}`).push(p);
+    if (m.tie) { ties.push(`${p.oem_display} "${p.description_clean}" -> ${m.tie.join(' / ')}`); continue; }
+    assigned.set(p.oem_number, m.slug);
+    termHits.get(`${m.slug}|${m.term.raw}`).push(p);
   }
 
   // ---- report ----
