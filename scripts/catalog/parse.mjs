@@ -51,7 +51,8 @@ function fixUsedOn(s) {
     .replace(/\bto\s*(?:\.\.|\*+|')/gi, 'to *')
     .replace(/\bto\s*(?=-)/gi, 'to * ') // missing star: 86 to - FXRD
     .replace(/(\d{2})'\s*t[a0o]\b/gi, '$1 to')
-    .replace(/\b(?:A[il1]{2}|AII|AN)\s+M[o0]d[eo][il1l]s\b\.?/gi, 'All Models')
+    .replace(/\b(?:A[il1]{2}|AII|AN)\s+M[o0]d[eo][il1l]s\b(?:\s*[._'a-z]{1,3}(?=\s*(?:;|$)))?\.?/gi, 'All Models') // "All Models ." / "_" / "oo" (dot leader)
+    .replace(/\bto\s*[•·]/g, 'to *')
     .replace(/:\s*(?=(?:early |late )?\d{2}\s*(?:to|&|-))/gi, '; ') // ":" read for ";"
     .replace(/\s*-\s*(?:-\s*)+/g, ' - ')                             // "- -"
     .replace(/\bP(?=X[A-Z]{0,6}\b|L[A-Z]{1,6}\b)/g, 'F')                // "PXRS" = FXRS (no H-D code starts with P)

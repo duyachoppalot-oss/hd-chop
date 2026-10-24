@@ -57,11 +57,16 @@ for (const b of books) {
   await Promise.all(
     Array.from({ length: JOBS }, async () => {
       for (let job = queue.shift(); job; job = queue.shift()) {
-        try { await ocrPage(file, job.p, job.out); } catch (e) { failed++; console.error(`${b.slug} p${job.p}: ${e.message}`); }
+        // Books whose PDF carries a better text layer than our OCR (books.mjs textLayer):
+        // pdftotext -layout, no word boxes.
+        try {
+          if (b.textLayer) fs.writeFileSync(job.out, await run('pdftotext', ['-f', String(job.p), '-l', String(job.p), '-layout', file, '-']));
+          else await ocrPage(file, job.p, job.out);
+        } catch (e) { failed++; console.error(`${b.slug} p${job.p}: ${e.message}`); }
         if (++done % 25 === 0) console.log(`${b.slug}: ${done}/${todo.length}`);
       }
     })
   );
-  fs.writeFileSync(path.join(dir, 'book.json'), JSON.stringify({ slug: b.slug, file: b.file, pages: n, ocr: 'tesseract psm6 300dpi gray' }, null, 2));
+  fs.writeFileSync(path.join(dir, 'book.json'), JSON.stringify({ slug: b.slug, file: b.file, pages: n, ocr: b.textLayer ? 'pdftotext -layout (PDF text layer)' : 'tesseract psm6 300dpi gray' }, null, 2));
   console.log(`${b.slug}: ${n} pages, ${todo.length} OCR'd (${failed} failed) in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }

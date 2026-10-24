@@ -173,6 +173,9 @@ BOOKS.push(
     file: path.join(RATBIKE, '1941-78 FL-FLH FX-FXE-FXS Parts Catalog.pdf'),
     title: '1941-78 FL/FLH - FX/FXE/FXS Parts Catalog',
     from: 1941, to: 1978,
+    // The PDF's own text layer reads clean ("73 to • - FL, FLH, FX, FXS"); our OCR of its
+    // faint page images doesn't. "•" is the asterisk.
+    textLayer: true,
     layout: 'hd',
     codes: ['FL', 'FLH', 'FX', 'FXE', 'FXS', 'FLHS'],
     code: DROP_80,
