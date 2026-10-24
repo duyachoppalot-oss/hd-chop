@@ -75,6 +75,8 @@ const USED_HEAD = /(?<![\d.])(?:early |late )?\d{2}(?:\s*(?:to|&)\s*(?:early |la
 function resolveHd(book, used) {
   const fits = [];
   const flags = [];
+  // Book-specific spellings ("XLH 883/DLX" in the 1986-90 XLH book): books.mjs usedFix.
+  if (book.usedFix) used = book.usedFix(used);
   for (let seg of splitUsedOn(used)) {
     // "71 to * - All Models except FXB & FXSB" (1971-84 FX book): All Models minus the listed codes.
     let except = null;

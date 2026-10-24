@@ -165,6 +165,75 @@ BOOKS.push(
   },
 );
 
-export const bookBySlug =(slug) => BOOKS.find((b) => b.slug === slug);
+// ratbikeservice.com copies (downloaded 2026-10-24 to ~/Downloads/hd-ratbike, Laken's go).
+const RATBIKE = path.join(DOWNLOADS, 'hd-ratbike');
+BOOKS.push(
+  {
+    slug: '1941-78-fl-fx',
+    file: path.join(RATBIKE, '1941-78 FL-FLH FX-FXE-FXS Parts Catalog.pdf'),
+    title: '1941-78 FL/FLH - FX/FXE/FXS Parts Catalog',
+    from: 1941, to: 1978,
+    layout: 'hd',
+    codes: ['FL', 'FLH', 'FX', 'FXE', 'FXS', 'FLHS'],
+    code: DROP_80,
+  },
+  {
+    slug: '1971-80-fx',
+    file: path.join(RATBIKE, '1971-80 FX SuperGlide Parts Catalog.pdf'),
+    title: '1971-80 FX Super Glide Parts Catalog',
+    from: 1971, to: 1980,
+    layout: 'hd',
+    codes: ['FX', 'FXE', 'FXS', 'FXEF', 'FXWG', 'FXB'],
+    code: DROP_80,
+  },
+  {
+    slug: '1980-fxwg-supp',
+    file: path.join(RATBIKE, '1980 FXWG-80 Parts Catalog Supplement.pdf'),
+    title: '1980 FXWG-80 Parts Catalog Supplement',
+    from: 1980, to: 1980,
+    layout: 'hd',
+    codes: ['FXWG'],
+    code: DROP_80,
+  },
+  {
+    slug: '1972-89-xr750',
+    file: path.join(RATBIKE, '1972-89 XR750 Parts Catalog.pdf'),
+    title: '1972-89 XR750 Parts Catalog',
+    from: 1972, to: 1989,
+    layout: 'hd',
+    codes: ['XR750', 'XR'],
+    code: (c) => (c === 'XR' || c === 'XR-750' ? 'XR750' : c),
+  },
+  {
+    slug: '1986-90-xlh',
+    file: path.join(RATBIKE, '1986-90 XLH Parts Catalog.pdf'),
+    title: '1986-90 XLH Parts Catalog',
+    from: 1986, to: 1990,
+    layout: 'hd',
+    codes: ['XLH883', 'XLH1100', 'XLH1200', 'XLH883DLX', 'XLH883HUG'],
+    code: (c) => c,
+    // "XLH 883", "XLH 1100, 1200", "XLH 883/DLX", "XLH HUG": glue the size onto the code.
+    // "883/DLX" lists the 883 and the 883 Deluxe; "XLH 883 A" (unknown) stays as written.
+    usedFix: (s) => {
+      let t = s
+        .replace(/\bXLH\s*883\s*\/\s*DLX\b/g, 'XLH883, XLH883DLX')
+        .replace(/\bXLH\s*HUG\b/g, 'XLH883HUG')
+        .replace(/\bXLH\s*(883|1100|1200)\b(?!\s*A\b)/g, 'XLH$1');
+      for (let i = 0; i < 3; i++) t = t.replace(/(XLH\d{3,4}),\s*(883|1100|1200)\b/g, '$1, XLH$2');
+      return t;
+    },
+  },
+  {
+    slug: '1987-90-1340',
+    file: path.join(RATBIKE, '1987-90 All 1340cc Models Parts Catalog.pdf'),
+    title: '1987-90 All 1340cc Models Parts Catalog',
+    from: 1987, to: 1990,
+    layout: 'hd',
+    codes: [],
+    code: DROP_80,
+  },
+);
+
+export const bookBySlug = (slug) => BOOKS.find((b) => b.slug === slug);
 export const pdfPath = (b) => (path.isAbsolute(b.file) ? b.file : path.join(PDF_DIR, b.file));
 export const ocrDir = (b) => path.join(OCR_DIR, b.slug);

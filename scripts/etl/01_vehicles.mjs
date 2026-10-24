@@ -53,6 +53,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
 import { parseUsedOn, splitUsedOn } from './lib/usedon.mjs';
+import * as shovelHistory from '../catalog/specs/shovelhead_model_history.mjs';
+import { bookBySlug } from '../catalog/books.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -107,6 +109,31 @@ function chassisPlatform(year, code) {
 // XLH 1979-83 and XLS 1979-82 (the Roadster) still have no source; they need
 // the 1979-85 Sportster parts catalog.
 const XL_BOOK = { XLH: [1958, 1978], XLCH: [1958, 1978] };
+
+// H-D documents that state model-years outright (added 2026-10-24, vintage
+// bikes). Unlike catalog code lists ("41 to * - FL, FLH" = whichever existed),
+// these name each model with its own years:
+//   - 99427-84 "Shovelhead Model History" (scripts/catalog/specs): FL 1966-80,
+//     FLH 1966-84, FLHS, FLH Classic (FLHC) 1979-84, FLT, FLTC, FLHT/FLHTC,
+//     FLHF and the FX family. Rows the transcription marks for review still
+//     count when their years are what the table prints.
+//   - TM 10-1482 WLA parts list: quantity columns 1940, 1941, 1942 WLA.
+// A (code, year) here is evidence, and may add a code the picker lacks for that
+// year (e.g. FLHC 1979-84; the picker only has the 2018+ Softail FLHC). Added
+// bikes take no picker name (the app shows the code); their family comes from
+// the chassis rules (FL/FX) or FLT -> Touring, WLA -> Flathead.
+const DOC_YEARS = new Map(); // "year|code" -> source
+for (const r of shovelHistory.ROWS)
+  if (r.code) for (let y = r.from; y <= r.to; y++) DOC_YEARS.set(`${y}|${r.code}`, shovelHistory.SOURCE.key);
+for (const c of bookBySlug('1942-wla').columns) DOC_YEARS.set(`${c.year}|${c.code}`, 'TM 10-1482');
+// Panhead FL/FLH (1948-65, Laken). The 1941-84 FL catalog's rows that name one
+// model alone ("55 to 64 - FLH", "41 to 64 - FL"), counted 2026-10-24: FLH from
+// 1955 (8-11 rows a year), none before; FL every year (5-7 rows 1953-65, one row
+// for 1948-52). EL 1948-52 and FLF/FLHF/FLE/FLP/FLHP have no such rows yet
+// (need the 1948-53 / 1949-60 catalogs).
+for (let y = 1948; y <= 1965; y++) DOC_YEARS.set(`${y}|FL`, '1941-84 FL catalog');
+for (let y = 1955; y <= 1965; y++) DOC_YEARS.set(`${y}|FLH`, '1941-84 FL catalog');
+const docFamily = (code) => (/^FLT|^FLHT/.test(code) ? 'Touring' : code.startsWith('W') ? 'Flathead' : 'Shovelhead');
 const XL_MODEL_YEARS = [1957, 1957];
 
 // Bare family abbreviations in catalog text ("FX" = Dyna/FX family, "FL" =
@@ -136,7 +163,9 @@ const PLATFORM_ENGINES = {
 const OVERLAP_ENGINE = {
   // Softail launched with the Evo; 1984 FX-frame bikes were still Shovels (the
   // 1985 FXEF was "the first and last" Evo FXEF).
-  1984: { softail: 'evolution_bigtwin', fx: 'shovelhead' },
+  // FL-frame 1984 bikes are Shovels: the 99427-84 Shovelhead Model History runs
+  // FLH 80 and FLH 80 Classic to 1984; the Evo came with the 1985 FLT-chassis bikes.
+  1984: { softail: 'evolution_bigtwin', fx: 'shovelhead', fl: 'shovelhead' },
   1999: { touring: 'twin_cam', dyna: 'twin_cam', softail: 'evolution_bigtwin' }, // Softail got the TC88B in 2000
   2017: { touring: 'milwaukee_eight', trike: 'milwaukee_eight', softail: 'twin_cam', dyna: 'twin_cam' },
 };
@@ -280,6 +309,14 @@ async function main() {
   for (const r of rows)
     if ((r.code === 'FXS' || r.code === 'FXSB') && r.year < 1986 && r.family === 'Softail') { r.family = 'Shovelhead'; r.model_name = null; }
 
+  // Documented model-years the picker lacks (DOC_YEARS above).
+  const pickerKeys = new Set(rows.map((r) => `${r.year}|${r.code}`));
+  for (const k of DOC_YEARS.keys())
+    if (!pickerKeys.has(k)) {
+      const [y, code] = k.split('|');
+      rows.push({ year: Number(y), model_id: null, code, model_name: null, family: docFamily(code), filter_group: 'DOC' });
+    }
+
   const inRange = rows.filter((r) => r.year >= VEHICLES_YEAR_MIN && r.year <= VEHICLES_YEAR_MAX);
   const outOfRange = rows.length - inRange.length;
 
@@ -310,6 +347,7 @@ async function main() {
       service_catalog: textOk && ev.service.has(k),
       catalog_range: rangeOk && ev.range.has(k),
       xl_book: families.includes('Sportster') && !!XL_BOOK[code] && year >= XL_BOOK[code][0] && year <= XL_BOOK[code][1],
+      model_table: DOC_YEARS.has(k),
     };
     const reject = (reason) =>
       review.push({ reason, year, code, model_name: g[0].model_name, families: families.join('+'), ...evidence });
@@ -351,8 +389,12 @@ async function main() {
     const eraFamily = eraFams[0] ?? null;
     const engine = engineFor(platform, year, chassis ? null : eraFamily, engines, familyEngine);
     if (eraFamily && !chassis && !engine) { reject('outside_engine_era'); continue; }
+    // Era-family names count only inside that era (the picker files 1978-82 FLH
+    // under Panhead as "PANHEAD HIGH COMPRESSION").
+    const eraEngine = eraFamily && engines.get(familyEngine.get(eraFamily));
+    const inEra = !eraEngine || (year >= eraEngine.year_start && year <= (eraEngine.year_end ?? 9999));
     const nameRow =
-      g.find((r) => r.family === eraFamily) ??
+      (inEra ? g.find((r) => r.family === eraFamily) : null) ??
       g.find((r) => PLATFORM[r.family] === platform) ??
       g[0];
     // Early FXS/FXSB carry the codes' later Softail names (Blackline, Breakout).
@@ -492,7 +534,7 @@ async function main() {
     path.join('reports', `01_vehicles_${ts}.json`),
     JSON.stringify(vehicles.map(({ evidence, ...v }) => ({ ...v, evidence: Object.keys(evidence).filter((k) => evidence[k]) })))
   );
-  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog', 'catalog_range', 'xl_book'];
+  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog', 'catalog_range', 'xl_book', 'model_table'];
   fs.writeFileSync(
     reviewPath,
     [cols.join(','), ...review.sort((a, b) => a.reason.localeCompare(b.reason) || a.code.localeCompare(b.code) || a.year - b.year).map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n'

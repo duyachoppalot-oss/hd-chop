@@ -305,12 +305,16 @@ async function main() {
   const client = await app.connect();
   try {
     await client.query('BEGIN');
-    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'inferred_span')`);
+    // catalog_ocr (11) merges against these pairs and may use service_catalog parts: re-run 11 after.
+    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'catalog_ocr', 'inferred_span')`);
     // Admin rows on service parts would block the part delete; 08 re-adds them.
     await client.query(
       `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'service_catalog')`
     );
-    const delParts = await client.query(`DELETE FROM oem_parts WHERE source = 'service_catalog'`);
+    await client.query(
+      `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'catalog_ocr')`
+    );
+    const delParts = await client.query(`DELETE FROM oem_parts WHERE source IN ('service_catalog', 'catalog_ocr')`);
     console.log(`Deleted ${delFit.rowCount} service_catalog / inferred_span fitment rows and ${delParts.rowCount} service_catalog parts.`);
     const delLow = await client.query(
       `DELETE FROM fitment f USING unnest($1::text[], $2::int[]) AS x(o, v)
@@ -345,7 +349,7 @@ async function main() {
     }
     await client.query('COMMIT');
     console.log(`Inserted ${insParts.rowCount} parts and ${inserted} fitment rows (source = 'service_catalog').`);
-    console.log('Next: 05 --apply, 06 --apply, 07 --max-hole 3 --apply, refresh fitment_spans.');
+    console.log('Next: 11_catalog_books --apply, 05 --apply, 06 --apply, 07 --max-hole 3 --apply, 08 --apply.');
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

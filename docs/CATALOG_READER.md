@@ -56,7 +56,7 @@ Spot checks (sample rows in the report) match the page images: e.g. FX-FXST p32 
 1. ~~"Classic" in the FL book~~ **Decided 2026-10-24:** FLH Classic (book p2–3 VIN tables: 1979 Classic, 1980 Classic, 1981+ "FLH Classic" AD) = **FLHC, 1979–84 only**, platform `fl` (`books.mjs` yearCode). In code lists Classic drops out for years before 1979. FLHC 2018+ stays the Softail Heritage Classic. "CLE" (1980) and "FLH-80 Heritage" (1981) still unmapped.
 2. **New vintage bikes**: the books name FL/FLH/EL, W/WL/WLA/WLC/WLD/WLDR, G/GA/GD/GDT years hdchop lacks (`11_catalog_missing_vehicles_*.csv`). Catalog text like "41 to * - FL, FLH" means "whichever existed that year" (FLH started 1955), so model-years need a second source (H-D model history / `hd_year_model_master`) before 01 creates them.
 3. **`FXAT, FXRAT, FXAD, FXRAD`** in the FXR book: real sub-models or OCR? (Check a page image.)
-4. Load path: new `source = 'catalog_ocr'` fitment rows, high confidence for clean rows, through 01 → 11 --apply → 04 → 05 → 06 → 07 → 08. Not built.
+4. ~~Load path~~ **Built 2026-10-24 (not applied):** `11 --apply` writes `source = 'catalog_ocr'` (migration 007): clean rows only, pairs no other source has, medium (low for early/late years), 80ci/74ci conditions from the Shovelhead engine book, new part numbers with a cleaned short name. 03 and 09 --apply clear catalog_ocr rows, so the order is 01 → 03 → 04 → 09 → 11 → 05 → 06 → 07 --max-hole 3 → 08. Dry run vs the proposed vintage bikes: 175,225 rows (74,729 on new bikes), 5,650 new part numbers (3,880 named).
 
 JW Boon vendor catalogs (VL, WL, Panhead, Big Twin; text PDFs in ~/Downloads) are next, under the vendor-evidence rule (DATA_RIGHTS, pending).
 
