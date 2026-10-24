@@ -149,16 +149,16 @@ async function main() {
 
   // ---- merge against existing fitment + conditions for new pairs ----
   const vById = new Map(vehicles.map((v) => [v.vehicle_id, v]));
-  const merge = { agree: 0, agree_existing_low: 0, new: 0 };
+  const merge = { agree: 0, replace_low: 0, new: 0 };
+  const replaceLow = []; // keys whose 03 row is low and the books say high/medium
   const newFit = new Map(); // key -> { conf, id, kind, conditions, condition_source }
   const conflicts = [];
   for (const [key, e] of fit) {
     const had = existingFit.get(key);
-    if (had) {
-      merge.agree++;
-      if (had === 'low' && e.conf !== 'low') merge.agree_existing_low++;
-      continue;
-    }
+    // A low 03 row (repaired number, boundary year, family row on a police
+    // model) that a book lists outright is replaced by the book's row.
+    if (had === 'low' && e.conf !== 'low') { merge.replace_low++; replaceLow.push(key); }
+    else if (had) { merge.agree++; continue; }
     merge.new++;
     const all = new Set(e.tags);
     const mt = marketTag({ dom: e.dom, cal: e.cal });
@@ -200,7 +200,8 @@ async function main() {
   for (const [k, n] of Object.entries(kindRows).sort((a, b) => b[1] - a[1])) lines.push(`  ${k.padEnd(9)} ${String(n).padStart(8)}`);
   lines.push('');
   lines.push(`(part, vehicle) pairs from the books: ${fit.size}`);
-  lines.push(`  already in 03 fitment (agree, left alone): ${merge.agree} (${pct(merge.agree, fit.size)}); of those, existing row is low and the books say high/medium: ${merge.agree_existing_low}`);
+  lines.push(`  already in 03 fitment (agree, left alone): ${merge.agree} (${pct(merge.agree, fit.size)})`);
+  lines.push(`  03 row is low, the books list it (03 row replaced): ${merge.replace_low}`);
   lines.push(`  NEW pairs: ${merge.new} (03 fitment: ${existingFit.size})`);
   const confCount = { high: 0, medium: 0, low: 0 };
   const srcCount = { catalog_text: 0, none: 0 };
@@ -307,6 +308,12 @@ async function main() {
     const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'inferred_span')`);
     const delParts = await client.query(`DELETE FROM oem_parts WHERE source = 'service_catalog'`);
     console.log(`Deleted ${delFit.rowCount} service_catalog / inferred_span fitment rows and ${delParts.rowCount} service_catalog parts.`);
+    const delLow = await client.query(
+      `DELETE FROM fitment f USING unnest($1::text[], $2::int[]) AS x(o, v)
+       WHERE f.source = 'oem_catalog' AND f.confidence = 'low' AND f.oem_number = x.o AND f.vehicle_id = x.v`,
+      [replaceLow.map((k) => k.split('|')[0]), replaceLow.map((k) => Number(k.split('|')[1]))]
+    );
+    console.log(`Replaced ${delLow.rowCount} low oem_catalog rows the books list outright.`);
     const np = [...newParts];
     const insParts = await client.query(
       `INSERT INTO oem_parts (oem_number, oem_display, description_clean, chain_root, number_source, source)
