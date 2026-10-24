@@ -304,6 +304,19 @@ async function main() {
     )
   );
 
+  // From 1991 the H-D Sportster books (service portal + hd_oem_catalog_reference) code the
+  // bikes XL883, XL883HUG, XL883DLX, XL1200, XL1200C, XL883C; the picker carries XLH-prefixed
+  // twins (XLH883HUG "SPORTSTER 883 HUGGER") that no book names and that have no fitment.
+  // Measured 2026-10-24: every 1991-2004 XLH* vehicle 0 rows, its XL twin 3-770 book
+  // mentions a year. So from 1991 an XLH code becomes its XL twin (picker name kept); the
+  // twin still needs its own evidence, and the old XLH key is retired on --apply. Plain
+  // "XLH" becomes "XL", the family label, which is rejected.
+  const xlhRenamed = [];
+  for (const r of rows)
+    if (r.family === 'Sportster' && r.year >= 1991 && /^XLH/.test(r.code)) {
+      xlhRenamed.push({ year: r.year, code: r.code, model_name: r.model_name });
+      r.code = 'XL' + r.code.slice(3);
+    }
   const pickerCodes = new Set(rows.map((r) => r.code));
   const ev = await loadEvidence([...pickerCodes]);
 
@@ -431,6 +444,8 @@ async function main() {
     });
   }
 
+  for (const x of xlhRenamed) review.push({ reason: 'xlh_renamed_to_xl', year: x.year, code: x.code, model_name: x.model_name, families: 'Sportster' });
+
   // Master rows the picker doesn't have: listed, not loaded.
   const masterOnly = ev.masterRows.filter(
     (m) => m.year >= VEHICLES_YEAR_MIN && m.year <= VEHICLES_YEAR_MAX && !groups.has(`${m.year}|${m.code}`)
@@ -457,7 +472,7 @@ async function main() {
     const diffs = ['model_name', 'platform', 'engine', 'fuel_system'].filter((c) => (l[c] ?? null) !== (v[c] ?? null)).map((c) => `${c} ${l[c] ?? 'NULL'} -> ${v[c] ?? 'NULL'}`);
     if (diffs.length) changed.push(`${v.year} ${v.model_code}: ${diffs.join(', ')}`);
   }
-  const retireKeys = new Set(review.filter((r) => r.reason === 'xl_family_label' || r.reason === 'not_in_xlh_vin_table').map((r) => `${r.year}|${r.code}`));
+  const retireKeys = new Set(review.filter((r) => ['xl_family_label', 'not_in_xlh_vin_table', 'xlh_renamed_to_xl'].includes(r.reason)).map((r) => `${r.year}|${r.code}`));
   const retired = live.filter((v) => retireKeys.has(`${v.year}|${v.model_code}`) && !proposed.has(`${v.year}|${v.model_code}`));
 
   // ---- report ----

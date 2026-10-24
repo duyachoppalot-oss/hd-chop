@@ -357,3 +357,9 @@ Append one entry per session. Newest at the bottom.
 - Dry run: +3 (XLH883DLX 1986-87, XLH883HUG 1987; ~2,946 catalog rows), retire 6 (XL883 1986-90, XLX 1986; 0 fitment each). XL883 1991+ kept (H-D 1991-92 single-year books name it). Not applied.
 - APPLIED (Laken): 01 (+3, -6, 0 fitment lost) → 11 (catalog_ocr 228,383 rows, 6,596 parts) → 05 → 06 → 07 --max-hole 3 → 08. Live picker 1986-90 = the VIN table exactly, all with parts.
 - Found: 1991+ XLH883/XLH1200/XLH883DLX/XLH883HUG have 0 parts (the 1991+ H-D books name XL883 etc.); likely retire or alias like 1986-90. Not changed.
+
+### 2026-10-24 (1991+ Sportster XLH -> XL codes, dry run)
+- Measured 1991-2004: every XLH* Sportster vehicle had 0 fitment and 0 single-year book mentions; the H-D books (service portal + reference) name XL883, XL883HUG, XL883DLX, XL1200, XL1200C, XL883C instead (3-770 mentions/yr).
+- 01: from 1991 an XLH code becomes its XL twin (picker name kept), twin needs its own evidence; old XLH key reviewed `xlh_renamed_to_xl` and retired on --apply; plain XLH -> XL (family label, rejected).
+- Dry run reports/01_vehicles_20261024_203402.*: +32 (XL1200 1991-2003, XL883DLX 1991-96, XL883HUG 1991-2003), -92 (XLH, XLH1200, XLH1200C, XLH883, XLH883C, XLH883DLX, XLH883HUG from 1991; 0 fitment). 03 preview: 150-330 rows/yr on the new bikes before 09 adds the service-catalog rows. Not applied.
+- APPLIED (Laken): 01 (+32, -92, 0 fitment lost) → 03 (782,637) → 04 → 09 (685,202 service rows, 21,009 parts) → 11 (228,402 catalog_ocr) → 05 → 06 (11,077 parts with concepts) → 07 --max-hole 3 (12,811) → 08. Live: 1991/1996/2003 Sportster pickers list only XL codes, all with parts; new XL1200/XL883DLX/XL883HUG 973-1,139 rows per bike.
