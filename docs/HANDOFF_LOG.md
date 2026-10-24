@@ -256,3 +256,8 @@ Append one entry per session. Newest at the bottom.
 - Cause of "only Sportsters for old years": 01 rejected pre-1984 Big Twins (multi-year catalog ranges, bare FX/FL ignored); Panhead/FL/FLT books are PDF-only on the portal and were never downloaded.
 - Done (dry run, not applied): 01 range evidence for pre-1985 Big Twin codes; FXS/FXSB pre-1986 → Shovelhead FX family, no name; 01 writes a proposed-vehicles JSON; 03 --vehicles-from previews fitment. +38 Shovelhead FX-family vehicles, each with ~350–430 parts.
 - Next: apply 01 → 03 → 04 → 09 → 05 → 06 → 07 → refresh (on go-ahead). Panheads need the PDF catalogs.
+
+### 2026-10-24 (Shovelhead FX family applied)
+- Applied: 01 (1,845 vehicles) → 03 (769,865) → 04 → 09 (659,122; 2,644 low rows replaced) → 05 → 06 (10,597 parts) → 07 (12,811) → refresh (407,642 spans).
+- Live: 1978 picker now lists FX, FXE, FXS (no name) beside the Sportsters; /v1/years 71 → 73 (1979, 1981 added). 1980 FXB: carburetor 27472-80A, muffler 65397-81A, jiffy stand 50061-36E, oil tank 62483-81, starter 31570-73, mirror 91878-77A. Gate otherwise identical.
+- Follow-ups: OCR junk in FX-catalog names ("Muffler, rear oo ceceee", "Mirror kit, 5 rectangular 000.0.00 consists of besides") — tighten cleanDescription; air_cleaner matches "Gasket, air cleaner to carburetor" (add gasket exclude). Panheads need the PDF catalogs.
