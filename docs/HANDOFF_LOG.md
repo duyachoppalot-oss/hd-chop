@@ -351,3 +351,9 @@ Append one entry per session. Newest at the bottom.
 - Clean: 1986-90 XLH 81% (15,765 rows on Evo Sportsters, 0 parts today), 1941-78 FL/FX 76% (35,868 new after the other books), 1980 FXWG supp 81%. Not usable yet: 1987-90 All 1340cc (three model columns FLT/FXR/Softail with VIN-code cells "87*-BJ/M": needs its own layout + 1987-90 VIN table), 1971-80 FX (poor scan), 1972-89 XR750 (rows print no used-on).
 - Full dry run (reports/11_catalog_books_* latest): no book got worse; catalog_ocr would go 173,895 -> 225,437 rows, 5,650 -> 6,596 parts. Not applied (Laken's item 2).
 - APPLIED (Laken): 11 --apply (catalog_ocr 225,437 rows, 6,596 parts) → 05 → 06 (concepts on 11,060 parts) → 07 --max-hole 3 (12,811) → 08 (fitment_spans refreshed). Live: 1987-90 XLH883/1100/1200/883DLX/883HUG have parts (1988 XLH883 "brake pads" → 44063-83A). Generic XL883 1986-90 still 0 parts (same family-label issue as Ironhead XL; not changed).
+
+### 2026-10-24 (Evo Sportster vehicles, dry run)
+- 1986-90 XLH catalog p2 V.I.N. table (H-D, (c) 1989): 1986 XLH883, 883 Deluxe, 1100; 1987 + 883 Hugger; 1988-90 XLH883, 1200, 883 Hugger, 883 Deluxe. 01: EVO_XL_TABLE as DOC_YEARS; Sportster codes outside it for 1986-90 -> review `not_in_xlh_vin_table`, retired on --apply (generic XLH kept: 1990 XLH has 912 oem_catalog rows). docFamily: XL* -> Sportster.
+- Dry run: +3 (XLH883DLX 1986-87, XLH883HUG 1987; ~2,946 catalog rows), retire 6 (XL883 1986-90, XLX 1986; 0 fitment each). XL883 1991+ kept (H-D 1991-92 single-year books name it). Not applied.
+- APPLIED (Laken): 01 (+3, -6, 0 fitment lost) → 11 (catalog_ocr 228,383 rows, 6,596 parts) → 05 → 06 → 07 --max-hole 3 → 08. Live picker 1986-90 = the VIN table exactly, all with parts.
+- Found: 1991+ XLH883/XLH1200/XLH883DLX/XLH883HUG have 0 parts (the 1991+ H-D books name XL883 etc.); likely retire or alias like 1986-90. Not changed.

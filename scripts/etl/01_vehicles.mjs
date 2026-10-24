@@ -133,7 +133,22 @@ for (const c of bookBySlug('1942-wla').columns) DOC_YEARS.set(`${c.year}|${c.cod
 // (need the 1948-53 / 1949-60 catalogs).
 for (let y = 1948; y <= 1965; y++) DOC_YEARS.set(`${y}|FL`, '1941-84 FL catalog');
 for (let y = 1955; y <= 1965; y++) DOC_YEARS.set(`${y}|FLH`, '1941-84 FL catalog');
-const docFamily = (code) => (/^FLT|^FLHT/.test(code) ? 'Touring' : code.startsWith('W') ? 'Flathead' : 'Shovelhead');
+// 1986-90 XLH Evolution Sportster catalog (99451-90 era, (c) 1989), page 2 V.I.N. table:
+// 1986 XLH 883, 883 Deluxe, 1100; 1987 adds the 883 Hugger; 1988-90 XLH 883, 1200,
+// 883 Hugger, 883 Deluxe.
+const EVO_XL_TABLE = {
+  1986: ['XLH883', 'XLH883DLX', 'XLH1100'],
+  1987: ['XLH883', 'XLH883DLX', 'XLH1100', 'XLH883HUG'],
+  1988: ['XLH883', 'XLH1200', 'XLH883HUG', 'XLH883DLX'],
+  1989: ['XLH883', 'XLH1200', 'XLH883HUG', 'XLH883DLX'],
+  1990: ['XLH883', 'XLH1200', 'XLH883HUG', 'XLH883DLX'],
+};
+for (const [y, codes] of Object.entries(EVO_XL_TABLE)) for (const c of codes) DOC_YEARS.set(`${y}|${c}`, '1986-90 XLH catalog VIN table');
+// Sportster codes that table rules out for 1986-90: the master's generic "XL883 Sportster
+// 883" (XL883 as a model starts with the 1991 books) and a 1986 XLX (the XLX-61 ended 1985).
+const NOT_EVO_XL = (year, code) => year >= 1986 && year <= 1990 && /^XL/.test(code) && !EVO_XL_TABLE[year].includes(code) && code !== 'XLH';
+const docFamily = (code) =>
+  /^FLT|^FLHT/.test(code) ? 'Touring' : code.startsWith('XL') ? 'Sportster' : code.startsWith('W') ? 'Flathead' : 'Shovelhead';
 const XL_MODEL_YEARS = [1957, 1957];
 
 // Bare family abbreviations in catalog text ("FX" = Dyna/FX family, "FL" =
@@ -356,6 +371,10 @@ async function main() {
       reject('xl_family_label');
       continue;
     }
+    if (families.includes('Sportster') && NOT_EVO_XL(year, code)) {
+      reject('not_in_xlh_vin_table');
+      continue;
+    }
 
     if (!Object.values(evidence).some(Boolean)) {
       reject(textOk && ev.span.has(k) ? 'catalog_span_only' : 'no_catalog_evidence');
@@ -438,7 +457,7 @@ async function main() {
     const diffs = ['model_name', 'platform', 'engine', 'fuel_system'].filter((c) => (l[c] ?? null) !== (v[c] ?? null)).map((c) => `${c} ${l[c] ?? 'NULL'} -> ${v[c] ?? 'NULL'}`);
     if (diffs.length) changed.push(`${v.year} ${v.model_code}: ${diffs.join(', ')}`);
   }
-  const retireKeys = new Set(review.filter((r) => r.reason === 'xl_family_label').map((r) => `${r.year}|${r.code}`));
+  const retireKeys = new Set(review.filter((r) => r.reason === 'xl_family_label' || r.reason === 'not_in_xlh_vin_table').map((r) => `${r.year}|${r.code}`));
   const retired = live.filter((v) => retireKeys.has(`${v.year}|${v.model_code}`) && !proposed.has(`${v.year}|${v.model_code}`));
 
   // ---- report ----
