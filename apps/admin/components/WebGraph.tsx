@@ -19,6 +19,7 @@ export function WebGraph({ seed }: { seed: string }) {
   const box = useRef<HTMLDivElement>(null);
   const cy = useRef<Core | null>(null);
   const expanded = useRef(new Set<string>());
+  const layout = useRef<cytoscape.Layouts | null>(null);
   const router = useRouter();
   const [selected, setSelected] = useState<Node | null>(null);
   const [links, setLinks] = useState<{ other: string; label?: string; kind: string }[]>([]);
@@ -33,6 +34,9 @@ export function WebGraph({ seed }: { seed: string }) {
     const models = g.nodes('[type = "model"]').map((n) => n.data('label')).join(',');
     const res = await fetch(`/api/graph?${new URLSearchParams({ node: id, models })}`);
     const { nodes, edges } = (await res.json()) as { nodes: Node[]; edges: Edge[] };
+    // The graph may have been torn down while the fetch ran (dev StrictMode
+    // mounts twice; navigating away); adding to a destroyed instance throws.
+    if (g.destroyed() || cy.current !== g) return setBusy(false);
     const origin = g.getElementById(id);
     const at = origin.nonempty() ? origin.position() : { x: 0, y: 0 };
     const els: ElementDefinition[] = [];
@@ -50,13 +54,14 @@ export function WebGraph({ seed }: { seed: string }) {
     }
     g.add(els);
     g.getElementById(id).addClass('expanded');
-    g.layout({ name: 'cose', animate: true, animationDuration: 500, randomize: false, fit: true, padding: 40, nodeRepulsion: () => 400000, idealEdgeLength: () => 120, nodeOverlap: 20, gravity: 1 } as cytoscape.LayoutOptions).run();
+    layout.current?.stop();
+    layout.current = g.layout({ name: 'cose', animate: true, animationDuration: 500, randomize: false, fit: true, padding: 40, nodeRepulsion: () => 400000, idealEdgeLength: () => 120, nodeOverlap: 20, gravity: 1 } as cytoscape.LayoutOptions).run();
     setBusy(false);
   }
 
   function select(id: string) {
     const g = cy.current;
-    if (!g) return;
+    if (!g || g.destroyed()) return;
     const n = g.getElementById(id);
     setSelected(n.data() as Node);
     setLinks(
@@ -70,6 +75,7 @@ export function WebGraph({ seed }: { seed: string }) {
 
   useEffect(() => {
     if (!box.current) return;
+    expanded.current.clear();
     const g = cytoscape({
       container: box.current,
       wheelSensitivity: 0.3,
@@ -111,7 +117,12 @@ export function WebGraph({ seed }: { seed: string }) {
     });
     g.on('dbltap', 'node', (e) => router.push(hrefOf(e.target.id())));
     expand(seed).then(() => select(seed));
-    return () => g.destroy();
+    return () => {
+      layout.current?.stop();
+      layout.current = null;
+      if (cy.current === g) cy.current = null;
+      g.destroy();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seed]);
 
