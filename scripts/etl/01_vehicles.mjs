@@ -18,6 +18,17 @@
 // "1952-66" row listing XLH doesn't mean XLH existed in 1952. Rows backed only
 // by multi-year spans are reviewed as catalog_span_only.
 //
+// Exception, pre-1985 catalogs (added 2026-10-24): their rows name models with
+// explicit year ranges ("74 to 77 - FX, FXE", "80 to * - FXWG", "71 & 72 - FX")
+// in multi-year books such as the 1971-84 FX catalog. A range that names a
+// code is evidence for each year it states ("*" = to the book's last year).
+// "All Models" ranges name nothing and don't count. In these books bare FL/FX/XL
+// are the models themselves (1971 FX = Super Glide), so FAMILY_TOKENS don't
+// apply to this evidence.
+//
+// Every run also writes the proposed vehicles to reports/01_vehicles_<ts>.json
+// so 03 can preview their fitment before 01 is applied (03 --vehicles-from).
+//
 // platform: lowercase, from the family (002 CHECK). Flathead/Knucklehead/
 // Panhead/Shovelhead families are engine eras, so their models get platform
 // 'vintage' -- unless the same (year, code) is also listed under a platform
@@ -41,6 +52,7 @@ import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
+import { parseUsedOn } from './lib/usedon.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -149,6 +161,23 @@ async function loadEvidence(codes) {
       }
     }
   }
+  // Pre-1985 catalogs: explicit "YY to YY - CODES" ranges (see header).
+  const range = new Set();
+  const want = new Set(codes);
+  const old = await source.query(
+    `SELECT used_on_raw, year_start, year_end FROM hd_oem_catalog_reference
+     WHERE year_start BETWEEN 1903 AND 1984 AND used_on_raw IS NOT NULL`
+  );
+  for (const r of old.rows) {
+    const p = parseUsedOn(r.used_on_raw);
+    const end = r.year_end ?? r.year_start;
+    if (p.kind === 'range' && p.items)
+      for (const item of p.items)
+        for (const c of item.alts)
+          if (want.has(c)) for (let y = p.from; y <= (p.to ?? end); y++) if (y >= r.year_start && y <= end) range.add(`${y}|${c}`);
+    if (p.kind === 'codes')
+      for (const item of p.items) for (const c of item.alts) if (item.year && want.has(c)) range.add(`${item.year}|${c}`);
+  }
   return {
     masterRows: master.rows,
     master: new Set(master.rows.map(key)),
@@ -156,6 +185,7 @@ async function loadEvidence(codes) {
     reference: new Set(reference.rows.filter((r) => r.single_year).map(key)),
     span: new Set([...fitment.rows, ...reference.rows].map(key)),
     service,
+    range,
   };
 }
 
@@ -204,6 +234,14 @@ async function main() {
   // Softail catalog lists FXDRS with FXBRS/FXFB. (Low Rider S is FXLRS.)
   for (const r of rows)
     if (r.code === 'FXDRS' && r.family === 'Dyna') { r.family = 'Softail'; r.model_name = 'FXDR 114'; }
+  // Before 1986, FXS and FXSB are Shovelhead FX-family bikes: the 1971-84 FX
+  // Parts Catalog lists them with FX, FXE, FXEF ("72 to 79 - FX, FXE, FXS, FXEF;
+  // 80 to * - FXB, FXSB"); the Softail chassis came in 1984. The picker files
+  // them under Softail with the codes' later names (2011 "Blackline", 2013
+  // "Breakout"). No source names the early bikes, so the name is left empty
+  // and the app shows the code.
+  for (const r of rows)
+    if ((r.code === 'FXS' || r.code === 'FXSB') && r.year < 1986 && r.family === 'Softail') { r.family = 'Shovelhead'; r.model_name = null; }
 
   const inRange = rows.filter((r) => r.year >= VEHICLES_YEAR_MIN && r.year <= VEHICLES_YEAR_MAX);
   const outOfRange = rows.length - inRange.length;
@@ -223,17 +261,22 @@ async function main() {
   for (const [k, g] of groups) {
     const { year, code } = g[0];
     const textOk = !FAMILY_TOKENS.has(code);
+    const families = [...new Set(g.map((r) => r.family))];
+    // Range evidence is for Big Twins only: the picker pads Sportster/K years
+    // (XLH back to 1936) and the 1954-78 XL books' "54 to *" ranges would
+    // confirm XLH in 1954-56, before the Sportster existed.
+    const rangeOk = !families.some((f) => f === 'Sportster' || f === 'Flathead');
     const evidence = {
       master: ev.master.has(k),
       oem_fitment: textOk && ev.fitment.has(k),
       reference: textOk && ev.reference.has(k),
       service_catalog: textOk && ev.service.has(k),
+      catalog_range: rangeOk && ev.range.has(k),
     };
-    const families = [...new Set(g.map((r) => r.family))];
     const reject = (reason) =>
       review.push({ reason, year, code, model_name: g[0].model_name, families: families.join('+'), ...evidence });
 
-    if (!evidence.master && !evidence.oem_fitment && !evidence.reference && !evidence.service_catalog) {
+    if (!Object.values(evidence).some(Boolean)) {
       reject(textOk && ev.span.has(k) ? 'catalog_span_only' : 'no_catalog_evidence');
       continue;
     }
@@ -314,6 +357,13 @@ async function main() {
   for (const v of svcOnly) (svcBy[v.platform] ||= []).push(`${v.model_code} ${v.year}`);
   for (const [pl, xs] of Object.entries(svcBy).sort((a, b) => b[1].length - a[1].length))
     lines.push(`    ${pl.padEnd(15)} ${String(xs.length).padStart(4)}  ${xs.slice(0, 10).join(', ')}${xs.length > 10 ? ' …' : ''}`);
+  lines.push(`  pre-1985 catalog ranges: ${vehicles.filter((v) => v.evidence.catalog_range).length}`);
+  const rangeOnly = vehicles.filter((v) => Object.entries(v.evidence).every(([k, b]) => k === 'catalog_range' || !b));
+  lines.push(`  pre-1985 catalog ranges ONLY (new because of that rule): ${rangeOnly.length}`);
+  const rangeBy = {};
+  for (const v of rangeOnly) (rangeBy[`${v.model_code} (${v.model_name}) ${v.platform}/${v.engine ?? '-'}`] ||= []).push(v.year);
+  for (const [k, ys] of Object.entries(rangeBy).sort())
+    lines.push(`    ${k.padEnd(48)} ${Math.min(...ys)}-${Math.max(...ys)} (${ys.length})`);
   lines.push(`  catalog only (not in master): ${vehicles.filter((v) => !v.evidence.master).length}`);
   lines.push('');
   lines.push(`Engine resolved: ${withEngine} (${pct(withEngine, total)}); null: ${total - withEngine}`);
@@ -342,7 +392,11 @@ async function main() {
   const reviewPath = path.join('reports', `01_vehicles_review_${ts}.csv`);
   fs.mkdirSync('reports', { recursive: true });
   fs.writeFileSync(reportPath, lines.join('\n') + '\n');
-  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog'];
+  fs.writeFileSync(
+    path.join('reports', `01_vehicles_${ts}.json`),
+    JSON.stringify(vehicles.map(({ evidence, ...v }) => ({ ...v, evidence: Object.keys(evidence).filter((k) => evidence[k]) })))
+  );
+  const cols = ['reason', 'year', 'code', 'model_name', 'families', 'master', 'oem_fitment', 'reference', 'service_catalog', 'catalog_range'];
   fs.writeFileSync(
     reviewPath,
     [cols.join(','), ...review.sort((a, b) => a.reason.localeCompare(b.reason) || a.code.localeCompare(b.code) || a.year - b.year).map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n'
@@ -350,6 +404,7 @@ async function main() {
   console.log(lines.join('\n'));
   console.log(`\nReport written to ${reportPath}`);
   console.log(`Review rows written to ${reviewPath}`);
+  console.log(`Proposed vehicles written to reports/01_vehicles_${ts}.json (03 --vehicles-from previews their fitment)`);
 
   if (!APPLY) {
     console.log('\nDry run only. Re-run with --apply to write to APP_DATABASE_URL.');

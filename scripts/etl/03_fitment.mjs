@@ -26,8 +26,13 @@
 // pairs; inferred_span from 07 bridges their holes). Re-run 04 -> 09 -> 05 ->
 // 06 -> 07 and refresh fitment_spans afterwards.
 //
+// --vehicles-from reports/01_vehicles_<ts>.json (dry-run only): target 01's
+// proposed vehicles as well as the ones in the DB, and report what the new ones
+// would get, before 01 is applied.
+//
 // Usage:
 //   node scripts/etl/03_fitment.mjs            (dry-run, prints + writes report only)
+//   node scripts/etl/03_fitment.mjs --vehicles-from reports/01_vehicles_<ts>.json
 //   node scripts/etl/03_fitment.mjs --apply    (writes to APP_DATABASE_URL)
 
 import 'dotenv/config';
@@ -37,6 +42,12 @@ import path from 'node:path';
 import { makeTargeter } from './lib/fitment.mjs';
 
 const APPLY = process.argv.includes('--apply');
+const vfArg = process.argv.indexOf('--vehicles-from');
+const VEHICLES_FROM = vfArg > -1 ? process.argv[vfArg + 1] : null;
+if (APPLY && VEHICLES_FROM) {
+  console.error('--vehicles-from is a dry-run preview; apply 01 first, then run 03 --apply without it.');
+  process.exit(1);
+}
 
 const source = new pg.Pool({ connectionString: process.env.SOURCE_DATABASE_URL });
 const app = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
@@ -67,6 +78,18 @@ async function main() {
     `)
   ).rows;
   const vehicles = (await app.query(`SELECT vehicle_id, year, model_code, platform FROM vehicles`)).rows;
+  // Preview: add 01's proposed vehicles that aren't in the DB yet, with negative ids.
+  const proposed = new Map(); // vehicle_id -> proposed vehicle
+  if (VEHICLES_FROM) {
+    const have = new Set(vehicles.map((v) => `${v.year}|${v.model_code}`));
+    let id = -1;
+    for (const v of JSON.parse(fs.readFileSync(VEHICLES_FROM, 'utf8'))) {
+      if (have.has(`${v.year}|${v.model_code}`)) continue;
+      const nv = { vehicle_id: id--, year: v.year, model_code: v.model_code, platform: v.platform, model_name: v.model_name };
+      vehicles.push(nv);
+      proposed.set(nv.vehicle_id, nv);
+    }
+  }
   const parts = new Set((await app.query(`SELECT oem_number FROM oem_parts`)).rows.map((r) => r.oem_number));
 
   const { target, confidence, parsed, docScope, byCode } = makeTargeter({ rows, fitmentSrc, vehicles, parts });
@@ -167,6 +190,39 @@ async function main() {
     const plats = {};
     for (const c of scope) for (const v of byCode.get(c).values()) { plats[v.platform] = 1; break; }
     lines.push(`  ${doc.slice(0, 45).padEnd(46)} ${String(scope.length).padStart(3)} codes  [${Object.keys(plats).join(',')}]  ${scope.slice(0, 12).join(' ')}${scope.length > 12 ? ' …' : ''}`);
+  }
+  if (VEHICLES_FROM) {
+    lines.push('');
+    lines.push(`Proposed vehicles from ${VEHICLES_FROM} not in the DB: ${proposed.size}`);
+    const names = new Map(
+      (await app.query(`SELECT p.oem_number, p.oem_display, p.description_clean, c.display_name FROM oem_parts p LEFT JOIN part_concepts c USING (concept_id)`)).rows.map((r) => [r.oem_number, r])
+    );
+    const byVehicle = new Map(); // vehicle_id -> [{oem, conf}]
+    for (const [key, e] of fit) {
+      const vid = Number(key.split('|')[1]);
+      if (!proposed.has(vid)) continue;
+      if (!byVehicle.has(vid)) byVehicle.set(vid, []);
+      byVehicle.get(vid).push({ oem: key.split('|')[0], conf: e.conf });
+    }
+    const models = new Map();
+    for (const v of proposed.values()) {
+      if (!models.has(v.model_code)) models.set(v.model_code, []);
+      models.get(v.model_code).push(v);
+    }
+    for (const [code, vs] of [...models].sort()) {
+      const per = vs.sort((a, b) => a.year - b.year).map((v) => `${v.year}:${(byVehicle.get(v.vehicle_id) || []).filter((x) => x.conf !== 'low').length}`);
+      lines.push(`  ${code.padEnd(7)} ${String(vs[0].model_name ?? '(no name)').padEnd(28)} high+medium rows by year: ${per.join(' ')}`);
+    }
+    // One sample year per model: parts by concept.
+    lines.push('  Parts by concept, one year per model (newest number shown, up to 3):');
+    for (const [code, vs] of [...models].sort()) {
+      const v = vs.find((x) => (byVehicle.get(x.vehicle_id) || []).length) ?? vs[0];
+      const parts = (byVehicle.get(v.vehicle_id) || []).filter((x) => x.conf !== 'low').map((x) => names.get(x.oem)).filter((n) => n?.display_name);
+      const byC = {};
+      for (const n of parts) (byC[n.display_name] ||= []).push(n.oem_display);
+      const cells = Object.entries(byC).sort().map(([c, xs]) => `${c}: ${xs.slice(0, 3).join(', ')}`);
+      lines.push(`    ${v.year} ${code}: ${cells.length ? cells.slice(0, 14).join(' | ') : 'no concept parts'}${cells.length > 14 ? ` | +${cells.length - 14} more concepts` : ''}`);
+    }
   }
   lines.push('');
   lines.push('Sample (20 fitment rows, evenly spaced):');
