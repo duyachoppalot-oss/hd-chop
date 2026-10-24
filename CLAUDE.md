@@ -11,6 +11,7 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 ## Stack
 - `apps/mobile` — Expo (Expo Router, TypeScript)
 - `apps/api` — Next.js 15 route handlers (TypeScript), Docker container on the Hetzner DB server behind nginx: https://hdchop.5.161.100.126.nip.io
+- `apps/admin` — local-only admin console (Next.js 15, `npm --prefix apps/admin run dev` → http://127.0.0.1:3002): model/concept/part timelines, data web, notes, overrides. Uses the owner role from the root .env. Never deploy it.
 - `packages/db/migrations` — numbered plain `.sql` files
 - `scripts/etl`, `scripts/discovery` — Node ESM `.mjs`, `pg` Pool
 - DB: dedicated Postgres database `hdchop` (`APP_DATABASE_URL`)

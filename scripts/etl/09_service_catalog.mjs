@@ -306,6 +306,10 @@ async function main() {
   try {
     await client.query('BEGIN');
     const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'inferred_span')`);
+    // Admin rows on service parts would block the part delete; 08 re-adds them.
+    await client.query(
+      `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'service_catalog')`
+    );
     const delParts = await client.query(`DELETE FROM oem_parts WHERE source = 'service_catalog'`);
     console.log(`Deleted ${delFit.rowCount} service_catalog / inferred_span fitment rows and ${delParts.rowCount} service_catalog parts.`);
     const delLow = await client.query(

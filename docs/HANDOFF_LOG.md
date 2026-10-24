@@ -266,3 +266,9 @@ Append one entry per session. Newest at the bottom.
 - Done: lib/parts.mjs cleanDescription OCR-junk filter (2,146 distinct names cleaner); air_cleaner excludes gasket|seal. Applied 02 → 03 → 04 → 09 → 05 → 06 → 07 → refresh (oem_catalog 767,297; service 659,122; inferred 12,811; spans 407,660).
 - Live: 1980 FXB muffler "Muffler, rear", mirror "Mirror kit, 5 rectangular"; "air cleaner" now empty for FXB (its only hit was the gasket). Gate identical.
 - Open: air_cleaner still matches screws/trim ("Screw, air cleaner") — contains mode.
+
+### 2026-10-24 (admin console)
+- Added: `apps/admin` (local only, 127.0.0.1:3002). Counter dashboard (stats, models by platform, concepts, search misses); model timeline (every part chain by concept across the model's years, built years shaded); concept timeline (one concept across all models, colored by chain); part page (raw fitment year by year colored by source: catalog / service / inferred / admin / low / hidden; supersession chain); Web (Cytoscape graph: parts ↔ models ↔ concepts, click to expand); notes on parts/models/concepts/general.
+- Overrides (`004_admin.sql`, applied): hide fitment → moved to `fitment_hidden`; add fitment → `source='admin'`; rename part; set concept. SQL functions `admin_apply_override(s)` / `admin_undo_override`; console applies + refreshes spans on save; `scripts/etl/08_overrides.mjs` re-applies after every rebuild (pipeline now ends 07 → 08). Tested all four kinds apply/re-apply/undo in a rolled-back transaction; no overrides exist yet.
+- 09 now deletes admin rows on service parts before deleting those parts (FK).
+
