@@ -306,10 +306,11 @@ BOOKS.push(
     from: 1980, to: 1983,
     layout: 'hd',
     textLayer: true,
-    // "80 to 83-FLT, Classic": in the FLT book "Classic" is the FLT Classic (FLTC).
+    // "80 to 83-FLT, Classic": in the FLT book "Classic" is the FLT Classic (FLTC); a wrapped
+    // cell leaves "CLAS-". TLE = the sidecar rig: not a bike we list.
     codes: ['FLT', 'FLTC', 'FLHT', 'FLHTC'],
     code: (c) => c,
-    yearCode: (code, year) => (/^CLASS/.test(code) ? 'FLTC' : code),
+    yearCode: (code, year) => (/^CLAS/.test(code) ? 'FLTC' : code === 'TLE' ? null : code),
   },
   {
     slug: '1984-90-police',
@@ -319,17 +320,9 @@ BOOKS.push(
     layout: 'hd',
     textLayer: true,
     codes: ['FXRP', 'FLHTP'],
-    code: (c) => c,
-  },
-  {
-    // Portal reissue of the 1984-86 FXR book we OCR'd (1984-86-fxr); clean text layer.
-    slug: '1984-86-fxr-portal',
-    file: path.join(PORTAL_PDF, '1984-1986-fxr-models.pdf'),
-    title: '1984-1986 FXR Models Parts Catalog (99439-86A, portal)',
-    from: 1984, to: 1986,
-    layout: 'hd',
-    textLayer: true,
-    code: DROP_80,
+    // Typesetting slips for FLHTP ("FLHPT", "FLTHP"); CLE / TLE / RLE are sidecar rigs.
+    code: (c) => (c === 'FLHPT' || c === 'FLTHP' ? 'FLHTP' : c),
+    yearCode: (code, year) => (['CLE', 'TLE', 'RLE'].includes(code) ? null : code),
   },
 );
 
