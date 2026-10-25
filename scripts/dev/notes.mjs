@@ -1,6 +1,6 @@
 // scripts/dev/notes.mjs — read-only: what Laken left in the admin console.
 // Lists open admin notes (newest first) with the current state of their target,
-// and overrides created or changed in the last 14 days.
+// tasks Laken changed in /tasks (waiting for review), and overrides created or changed in the last 14 days.
 //   node scripts/dev/notes.mjs
 //   node scripts/dev/notes.mjs --all     include done notes
 
@@ -27,6 +27,17 @@ for (const n of notes) {
   console.log(`  #${n.note_id} ${n.day} ${n.status} ${n.target_kind} ${target}\n      ${n.body.replace(/\n/g, '\n      ')}`);
 }
 
+// Tasks Laken changed in the admin console (/tasks) since Claude last reviewed them.
+const tasks = (
+  await c.query(
+    `SELECT task_id, owner, area, status, title, note, to_char(updated_at, 'YYYY-MM-DD HH24:MI') AS at FROM admin_tasks
+     WHERE review = 'pending' ORDER BY updated_at`
+  )
+).rows;
+console.log(`\n${tasks.length} task(s) waiting for review (admin /tasks; answer with reply, set review = 'reviewed')`);
+for (const t of tasks)
+  console.log(`  #${t.task_id} ${t.at} [${t.owner}/${t.area}] ${t.status} ${t.title}${t.note ? `\n      note: ${t.note.replace(/\n/g, '\n      ')}` : ''}`);
+
 const ov = (
   await c.query(
     `SELECT override_id, kind, oem_number, model_code, year_start, year_end, value, active, last_result, to_char(created_at, 'YYYY-MM-DD') AS day
@@ -34,6 +45,7 @@ const ov = (
   )
 ).rows;
 console.log(`\n${ov.length} override(s) created or applied in the last 14 days`);
-for (const o of ov)
+for (const o of ov.slice(0, 20))
   console.log(`  #${o.override_id} ${o.day} ${o.kind} ${o.oem_number}${o.model_code ? ` ${o.model_code}` : ''}${o.year_start ? ` ${o.year_start}-${o.year_end}` : ''}${o.value != null ? ` -> "${o.value}"` : ''} ${o.active ? 'active' : 'inactive'} (${o.last_result ?? 'not applied'})`);
+if (ov.length > 20) console.log(`  … ${ov.length - 20} more (admin /overrides)`);
 await c.end();

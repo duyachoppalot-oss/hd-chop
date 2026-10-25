@@ -98,3 +98,20 @@ a.tl-bar:hover { outline: 2px solid var(--cream); text-decoration: none; z-index
 @media (max-width: 1200px) {
   .cols, .web { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* tasks */
+.tasks { display: grid; gap: 22px; }
+.task-area h2 { margin: 0 0 8px; }
+.task { border-left: 3px solid var(--gold-dim); background: var(--panel); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 14px; margin: 8px 0; display: grid; gap: 6px; }
+.task.pending { border-left-color: var(--red); }
+.task.done, .task.parked { opacity: 0.6; }
+.task .t-title { font-size: 15px; font-weight: 600; color: var(--cream); }
+.task.done .t-title { text-decoration: line-through; }
+.task p { margin: 0; white-space: pre-wrap; }
+.task .t-note { border: 1px dashed var(--gold-dim); padding: 6px 8px; }
+.task .t-reply { color: var(--muted); }
+.pill { display: inline-block; border: 1px solid currentColor; border-radius: 10px; padding: 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pill.open { color: var(--cream); } .pill.doing { color: #e39a52; } .pill.done { color: var(--green); } .pill.parked { color: var(--muted); }
+.pill.pending { color: var(--red); } .pill.claude { color: #8fa3bf; }
+.task details summary { cursor: pointer; color: var(--gold); font-size: 12px; }
+.task details .form-grid { margin-top: 8px; }

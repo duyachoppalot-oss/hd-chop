@@ -15,6 +15,7 @@ export default async function Counter() {
            (SELECT count(*) FROM fitment_spans)::int AS spans,
            (SELECT count(*) FROM admin_overrides WHERE active)::int AS overrides,
            (SELECT count(*) FROM admin_notes WHERE status = 'open')::int AS open_notes,
+           (SELECT count(*) FROM admin_tasks WHERE owner = 'laken' AND status NOT IN ('done', 'parked'))::int AS my_tasks,
            (SELECT count(*) FROM fitment_hidden)::int AS hidden`);
   const sources = await query<{ source: string; confidence: string; n: number }>(
     `SELECT source, confidence, count(*)::int AS n FROM fitment GROUP BY 1, 2 ORDER BY 1, 2`
@@ -48,6 +49,7 @@ export default async function Counter() {
           ['Active overrides', stats.overrides],
           ['Hidden fitment rows', stats.hidden],
           ['Open notes', stats.open_notes],
+          ['Your tasks', stats.my_tasks],
         ].map(([k, v]) => (
           <div key={k} className="panel stat">
             <b>{Number(v).toLocaleString()}</b>

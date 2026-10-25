@@ -41,6 +41,55 @@ export async function deleteNote(f: FormData) {
   revalidatePath(str(f, 'back') || '/');
 }
 
+// ---------- tasks ----------
+// Any change saved here sets review = 'pending' so Claude picks it up (scripts/dev/notes.mjs).
+
+const TASK_STATUS = ['open', 'doing', 'done', 'parked'];
+const TASK_AREAS = ['Data', 'Specs', 'Search', 'Sources', 'App', 'Server'];
+
+function taskFields(f: FormData) {
+  const status = str(f, 'status');
+  const area = str(f, 'area');
+  const pri = Number(str(f, 'priority'));
+  return {
+    title: str(f, 'title').slice(0, 200),
+    detail: str(f, 'detail').slice(0, 4000),
+    note: str(f, 'note').slice(0, 4000),
+    status: TASK_STATUS.includes(status) ? status : 'open',
+    area: TASK_AREAS.includes(area) ? area : 'Data',
+    priority: [1, 2, 3].includes(pri) ? pri : 2,
+    owner: str(f, 'owner') === 'claude' ? 'claude' : 'laken',
+  };
+}
+
+export async function saveTask(f: FormData) {
+  const t = taskFields(f);
+  if (!t.title) return;
+  await query(
+    `UPDATE admin_tasks SET title = $2, detail = $3, note = $4, status = $5, area = $6, priority = $7, owner = $8,
+            review = 'pending', updated_at = now() WHERE task_id = $1`,
+    [Number(str(f, 'id')), t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner]
+  );
+  revalidatePath(str(f, 'back') || '/tasks');
+}
+
+export async function setTaskStatus(f: FormData) {
+  const status = str(f, 'status');
+  if (!TASK_STATUS.includes(status)) return;
+  await query(`UPDATE admin_tasks SET status = $2, review = 'pending', updated_at = now() WHERE task_id = $1`, [Number(str(f, 'id')), status]);
+  revalidatePath(str(f, 'back') || '/tasks');
+}
+
+export async function addTask(f: FormData) {
+  const t = taskFields(f);
+  if (!t.title) return;
+  await query(
+    `INSERT INTO admin_tasks (title, detail, note, status, area, priority, owner, review) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')`,
+    [t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner]
+  );
+  revalidatePath('/tasks');
+}
+
 // ---------- overrides ----------
 
 export type ActionState = { ok?: string; error?: string };
