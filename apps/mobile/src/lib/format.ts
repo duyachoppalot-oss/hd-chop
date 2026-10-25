@@ -1,4 +1,5 @@
 import type { Span, Spec } from './api';
+import { titleCase } from './bike';
 
 // Condition tags (docs/SPEC.md "Conditions") as a rider would say them.
 const CONDITION_LABEL: Record<string, string> = {
@@ -30,6 +31,39 @@ export function byModel(spans: Span[]): { model: string; years: string }[] {
     out.get(s.model_code)!.push(yearRange(s.year_start, s.year_end));
   }
   return [...out].map(([model, ys]) => ({ model, years: ys.join(', ') }));
+}
+
+// Year spans -> "1991–2006, 2010" with overlapping and touching spans joined.
+function envelope(spans: Span[]): string {
+  const sorted = [...spans].sort((a, b) => a.year_start - b.year_start);
+  const out: [number, number][] = [];
+  for (const s of sorted) {
+    const last = out[out.length - 1];
+    if (last && s.year_start <= last[1] + 1) last[1] = Math.max(last[1], s.year_end);
+    else out.push([s.year_start, s.year_end]);
+  }
+  return out.map(([a, b]) => yearRange(a, b)).join(', ');
+}
+
+export type ModelRow = { model: string; years: string };
+export type FitRow =
+  | ({ kind: 'model' } & ModelRow)
+  | { kind: 'family'; key: string; name: string; years: string; models: ModelRow[] };
+
+// byModel, with codes of the same named bike (span.family_key) folded into one
+// family row when two or more of them are listed. First-appearance order kept.
+export function byFamily(spans: Span[]): FitRow[] {
+  const groups = new Map<string, Span[]>();
+  for (const s of spans) {
+    const k = s.family_key ?? `code:${s.model_code}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push(s);
+  }
+  return [...groups].flatMap(([key, ss]): FitRow[] => {
+    const models = byModel(ss);
+    if (models.length < 2) return models.map((m) => ({ kind: 'model', ...m }));
+    return [{ kind: 'family', key, name: titleCase(ss[0].family ?? models[0].model), years: envelope(ss), models }];
+  });
 }
 
 export const PLATFORM_LABEL: Record<string, string> = {

@@ -1,9 +1,10 @@
 import { query } from '@/lib/db';
+import { withFamilies } from '@/lib/families';
 import { fail, handle, ok } from '@/lib/http';
 
 // GET /v1/part/:oem — part detail, full supersession chain, all spans.
 // Accepts any number in a chain ("61268-03", "6126803"); answers for the
-// chain's newest number.
+// chain's newest number. Spans carry family / family_key (lib/families.ts).
 export async function GET(_req: Request, ctx: { params: Promise<{ oem: string }> }) {
   return handle(async () => {
     const { oem } = await ctx.params;
@@ -41,6 +42,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ oem: string }>
        GROUP BY conditions ORDER BY conditions`,
       [root]
     );
+    for (const f of fits) f.spans = await withFamilies(f.spans);
     return ok({ requested: chain.find((c) => c.oem.toUpperCase().replace(/[\s-]/g, '') === key)?.oem ?? oem, ...detail, chain, supersession, fits });
   });
 }

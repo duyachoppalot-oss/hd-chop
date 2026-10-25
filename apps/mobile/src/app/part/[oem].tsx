@@ -1,17 +1,18 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/lib/api';
 import { useBike } from '@/lib/bike';
-import { byModel, conditionLabel } from '@/lib/format';
+import { byFamily, conditionLabel, FitRow, ModelRow } from '@/lib/format';
 import { useApi } from '@/lib/useApi';
-import { font, Palette, space, useStyles, useTheme } from '@/lib/theme';
+import { font, Palette, space, TAP, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Badge, ErrorBox, Footer, Heading, Loading, Section } from '@/components/ui';
 
 // Part detail: newest number, the numbers it replaces, every model and year
-// span it fits, split by conditions.
+// span it fits, split by conditions. Codes of the same named bike fold into
+// one family row (Road King: FLHR, FLHRC, FLHRCI...) that opens to each code.
 export default function PartDetail() {
-  const { color } = useTheme();
   const s = useStyles(styles);
   const { oem } = useLocalSearchParams<{ oem: string }>();
   const { bike } = useBike();
@@ -62,12 +63,13 @@ export default function PartDetail() {
                   ) : undefined
                 }
               />
-              {byModel(f.spans).map((r) => (
-                <View key={r.model} style={[s.row, r.model === bike?.model_code && s.rowMine]}>
-                  <Text style={[s.model, r.model === bike?.model_code && { color: color.accent }]}>{r.model}</Text>
-                  <Text style={s.years}>{r.years}</Text>
-                </View>
-              ))}
+              {byFamily(f.spans).map((r) =>
+                r.kind === 'family' ? (
+                  <FamilyRow key={r.key} row={r} mine={bike?.model_code} />
+                ) : (
+                  <CodeRow key={r.model} row={r} mine={bike?.model_code} />
+                )
+              )}
             </View>
           ))}
           {!data.fits.length ? <Text style={s.note}>No confirmed fitment on file for this number.</Text> : null}
@@ -75,6 +77,46 @@ export default function PartDetail() {
       ) : null}
       <Footer />
     </Screen>
+  );
+}
+
+function CodeRow({ row, mine, inset }: { row: ModelRow; mine?: string; inset?: boolean }) {
+  const { color } = useTheme();
+  const s = useStyles(styles);
+  const isMine = row.model === mine;
+  return (
+    <View style={[s.row, inset && s.rowInset, isMine && s.rowMine]}>
+      <Text style={[s.model, isMine && { color: color.accent }]}>{row.model}</Text>
+      <Text style={s.years}>{row.years}</Text>
+    </View>
+  );
+}
+
+// Collapsed: family name, code count, year envelope. Starts open when the
+// rider's own model is inside.
+function FamilyRow({ row, mine }: { row: Extract<FitRow, { kind: 'family' }>; mine?: string }) {
+  const s = useStyles(styles);
+  const hasMine = row.models.some((m) => m.model === mine);
+  const [open, setOpen] = useState(hasMine);
+  return (
+    <View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={`${row.name}, ${row.models.length} models, ${row.years}`}
+        onPress={() => setOpen(!open)}
+        style={({ pressed }) => [s.row, s.famRow, hasMine && s.rowMine, pressed && s.famPressed]}
+      >
+        <Text style={s.chev}>{open ? '▾' : '▸'}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.famName}>{row.name}</Text>
+          <Text style={s.famSub}>
+            {row.models.length} models · {row.years}
+          </Text>
+        </View>
+      </Pressable>
+      {open ? row.models.map((m) => <CodeRow key={m.model} row={m} mine={mine} inset />) : null}
+    </View>
   );
 }
 
@@ -93,6 +135,12 @@ const styles = (color: Palette) => StyleSheet.create({
     borderBottomColor: color.rule,
   },
   rowMine: { backgroundColor: color.panel },
+  rowInset: { paddingLeft: space.sm + 28 },
+  famRow: { alignItems: 'center', minHeight: TAP, gap: space.sm },
+  famPressed: { backgroundColor: color.panelHi },
+  chev: { fontFamily: font.typeBold, fontSize: 20, color: color.accent, width: 20, textAlign: 'center' },
+  famName: { fontFamily: font.sign, fontSize: 24, color: color.text, letterSpacing: 0.5 },
+  famSub: { fontFamily: font.type, fontSize: 15, color: color.muted },
   model: { fontFamily: font.typeBold, fontSize: 17, color: color.text, width: 96 },
   years: { fontFamily: font.type, fontSize: 17, color: color.muted, flex: 1 },
 });

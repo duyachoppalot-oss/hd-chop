@@ -1,19 +1,20 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import type { Part } from '@/lib/api';
-import { byModel, conditionLabel } from '@/lib/format';
+import { byFamily, byModel, conditionLabel } from '@/lib/format';
 import { font, inked, Palette, pushed, space, useStyles } from '@/lib/theme';
 import { Badge } from './ui';
 
 const OTHER_SHOWN = 6;
 
 // One part: newest number, conditions, years on the rider's model, other
-// models that take the same part, and the numbers it replaces.
+// models that take the same part (codes of one named bike folded to
+// "Road King ×7 1994–2006"), and the numbers it replaces.
 export function PartCard({ part, model }: { part: Part; model: string }) {
   const s = useStyles(styles);
   const rows = byModel(part.spans);
   const own = rows.find((r) => r.model === model);
-  const others = rows.filter((r) => r.model !== model);
+  const others = byFamily(part.spans.filter((sp) => sp.model_code !== model));
   const inferred = part.condition_source === 'inferred';
   return (
     <Pressable
@@ -48,7 +49,7 @@ export function PartCard({ part, model }: { part: Part; model: string }) {
           Also fits{' '}
           {others
             .slice(0, OTHER_SHOWN)
-            .map((r) => `${r.model} ${r.years}`)
+            .map((r) => (r.kind === 'family' ? `${r.name} ×${r.models.length} ${r.years}` : `${r.model} ${r.years}`))
             .join(' · ')}
           {others.length > OTHER_SHOWN ? ` · +${others.length - OTHER_SHOWN} more` : ''}
         </Text>

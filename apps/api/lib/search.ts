@@ -10,12 +10,13 @@
 //   5. no concept -> trigram on description_clean for that vehicle, and the
 //      query is logged to search_misses
 import { query } from './db';
+import { withFamilies } from './families';
 
 const YEAR_WINDOW = 10;
 const MAX_CONCEPTS = 3;
 const FALLBACK_LIMIT = 20;
 
-export type Span = { model_code: string; year_start: number; year_end: number };
+export type Span = { model_code: string; year_start: number; year_end: number; family?: string | null; family_key?: string | null };
 export type PartResult = {
   oem: string;
   replaces: string[];
@@ -135,6 +136,7 @@ export async function search(v: Vehicle, rawQ: string, all: boolean) {
     fallback = await fallbackParts(v, q, all);
     await logMiss(q, v.vehicle_id);
   }
+  for (const p of [...results.flatMap((r) => r.parts), ...(fallback ?? [])]) p.spans = await withFamilies(p.spans);
   return {
     query: q,
     vehicle: { year: v.year, model_code: v.model_code, model_name: v.model_name, platform: v.platform },

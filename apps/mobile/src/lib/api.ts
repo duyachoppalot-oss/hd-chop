@@ -2,7 +2,9 @@
 // EXPO_PUBLIC_API_URL (e.g. http://<mac-ip>:3001 against the local dev server).
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://hdchop.5.161.100.126.nip.io').replace(/\/$/, '');
 
-export type Span = { model_code: string; year_start: number; year_end: number };
+// family / family_key: the named bike the code belongs to (FLHRCI -> "ROAD KING",
+// key "touring:FLHR"), from apps/api/lib/familyRule.ts. Null when unknown.
+export type Span = { model_code: string; year_start: number; year_end: number; family?: string | null; family_key?: string | null };
 export type ConditionSource = 'catalog_text' | 'inferred' | 'none';
 export type Part = {
   chain_root: string;

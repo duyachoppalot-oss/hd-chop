@@ -16,7 +16,7 @@ export const useBike = () => useContext(Ctx);
 export const bikeLabel = (b: Bike) => `${b.year} ${b.model_name ? titleCase(b.model_name) : b.model_code}`;
 
 // Model-name tokens that stay uppercase (seen in vehicles.model_name).
-const KEEP_UPPER = new Set(['CVO', 'CH', 'KH', 'KHK', 'KR', 'ST', 'C', 'S', 'I', 'II', 'III', '883R']);
+const KEEP_UPPER = new Set(['CVO', 'CH', 'KH', 'KHK', 'KR', 'ST', 'C', 'S', 'I', 'II', 'III', '883R', 'FXR', 'FXDR']);
 
 export function titleCase(s: string) {
   return s
