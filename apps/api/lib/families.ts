@@ -35,3 +35,8 @@ export async function withFamilies<T extends Span>(spans: T[]): Promise<(T & { f
     return { ...s, family: fam?.name ?? null, family_key: fam?.key ?? null };
   });
 }
+
+// Family of a model code on a known platform (the models list has the platform).
+export async function familyOf(platform: string, code: string): Promise<Family | null> {
+  return (await load()).byCode.get(`${platform}:${code}`) ?? null;
+}

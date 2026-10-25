@@ -25,7 +25,15 @@ export type Spec = {
   mid_year_change: boolean;
   source_ref: string;
 };
-export type Model = { model_code: string; model_name: string | null; platform: string; has_parts: boolean; specs: Spec[] };
+export type Model = {
+  model_code: string;
+  model_name: string | null;
+  platform: string;
+  has_parts: boolean;
+  specs: Spec[];
+  family?: string | null;
+  family_key?: string | null;
+};
 export type SearchResponse = {
   query: string;
   vehicle: { year: number; model_code: string; model_name: string | null; platform: string };

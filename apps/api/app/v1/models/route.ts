@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { familyOf } from '@/lib/families';
 import { fail, handle, intParam, ok } from '@/lib/http';
 
 // Engine / transmission option from an H-D document (vehicle_specs, migration
@@ -15,7 +16,9 @@ type Spec = {
 
 // Models for a year. has_parts = false for bikes no catalog covers, so the
 // picker can show them greyed out instead of returning empty searches.
-// specs = [] when no document covers the bike yet.
+// specs = [] when no document covers the bike yet. family / family_key: the named
+// bike the code belongs to (FLHRC -> "ROAD KING", key "touring:FLHR"), so the
+// picker can fold one bike's codes into one row (lib/familyRule.ts).
 export async function GET(req: Request) {
   return handle(async () => {
     const year = intParam(new URL(req.url).searchParams.get('year'), 1936, 2030);
@@ -33,6 +36,12 @@ export async function GET(req: Request) {
        ORDER BY v.platform, v.model_code`,
       [year]
     );
-    return ok({ year, models });
+    const withFamily = await Promise.all(
+      models.map(async (m) => {
+        const f = await familyOf(m.platform, m.model_code);
+        return { ...m, family: f?.name ?? null, family_key: f?.key ?? null };
+      })
+    );
+    return ok({ year, models: withFamily });
   });
 }

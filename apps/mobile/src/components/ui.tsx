@@ -24,23 +24,28 @@ export function Big({
   onPress,
   disabled,
   style,
+  expanded,
 }: {
   label: string;
   sub?: string;
   onPress?: () => void;
   disabled?: boolean;
   style?: ViewStyle;
+  // Set for a row that opens a group: shows ▸ / ▾ and reports the state.
+  expanded?: boolean;
 }) {
   const { color } = useTheme();
   const s = useStyles(styles);
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={expanded == null ? undefined : { expanded }}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [s.big, pressed && s.bigPressed, disabled && s.bigDisabled, style]}
     >
       <Text style={[s.bigLabel, disabled && { color: color.faint }]} numberOfLines={1}>
+        {expanded == null ? '' : expanded ? '▾ ' : '▸ '}
         {label}
       </Text>
       {sub ? (
