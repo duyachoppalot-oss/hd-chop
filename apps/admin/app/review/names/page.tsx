@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import path from 'node:path';
 import { reviewName } from '@/app/actions';
+import { CopyOem } from '@/components/CopyOem';
 import { query } from '@/lib/db';
 import { readCsv, REPORTS, reportPath } from '@/lib/reports';
 
@@ -52,7 +53,8 @@ export default async function NameReview({ searchParams }: { searchParams: Promi
           return (
             <div key={r.oem} className="review-row">
               <div className="row">
-                <Link href={`/part/${p.oem_number}`} className="mono">{r.oem}</Link>
+                <CopyOem oem={r.oem} />
+                <Link href={`/part/${p.oem_number}`} className="small">Open part →</Link>
                 <span className="muted small">{r.bikes} bikes · {r.years} · {r.models}</span>
                 {r.concept ? <span className="chip">{r.concept}</span> : null}
               </div>

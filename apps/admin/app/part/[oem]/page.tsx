@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { normOem, query } from '@/lib/db';
 import { Notes } from '@/components/Notes';
+import { CopyOem } from '@/components/CopyOem';
 import { OverrideForms } from '@/components/OverrideForms';
 import { OVERRIDE_SELECT, OverrideList, type Override } from '@/components/OverrideList';
 import { Timeline, type Bar, type Group, type Lane } from '@/components/Timeline';
@@ -120,7 +121,7 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
   return (
     <>
       <h1 className="mono" style={{ fontFamily: 'var(--font-sign)' }}>
-        {head.oem_display} <span className="muted" style={{ fontSize: 18 }}>{head.description_clean}</span>
+        <CopyOem oem={head.oem_display} className="big" /> <span className="muted" style={{ fontSize: 18 }}>{head.description_clean}</span>
       </h1>
       <p className="muted">
         Concept: {head.slug ? <Link href={`/concept/${head.slug}`}>{head.display_name}</Link> : 'none'} · number {head.number_source} · source {head.source}
