@@ -3,7 +3,7 @@ import { Redirect, router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { bikeLabel, useBike } from '@/lib/bike';
 import { specLines } from '@/lib/format';
-import { color, font, space, TAP } from '@/lib/theme';
+import { font, inked, LINE, Palette, pushed, space, TAP, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Chip, Footer, Heading, Section } from '@/components/ui';
 
@@ -12,6 +12,8 @@ import { Chip, Footer, Heading, Section } from '@/components/ui';
 const QUICK = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo', 'tail light', 'brake pads', 'air cleaner', 'handlebar', 'fuel cap', 'shocks', 'battery'];
 
 export default function Search() {
+  const { color } = useTheme();
+  const s = useStyles(styles);
   const { bike } = useBike();
   const [q, setQ] = useState('');
   if (!bike) return <Redirect href="/" />;
@@ -62,7 +64,7 @@ export default function Search() {
         accessibilityRole="button"
         onPress={() => go(q)}
         disabled={!q.trim()}
-        style={({ pressed }) => [s.button, !q.trim() && s.buttonOff, pressed && { opacity: 0.85 }]}
+        style={({ pressed }) => [s.button, !q.trim() && s.buttonOff, pressed && pushed(color)]}
       >
         <Text style={s.buttonText}>Look it up</Text>
       </Pressable>
@@ -78,28 +80,28 @@ export default function Search() {
   );
 }
 
-const s = StyleSheet.create({
+const styles = (color: Palette) => StyleSheet.create({
   bikeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
-  kicker: { fontFamily: font.sign, fontSize: 13, color: color.gold, letterSpacing: 2 },
+  kicker: { fontFamily: font.banner, fontSize: 14, color: color.accent, letterSpacing: 1 },
   code: { fontFamily: font.type, fontSize: 16, color: color.muted, marginTop: 2 },
-  specs: { marginTop: space.sm, paddingLeft: space.sm, borderLeftWidth: 2, borderLeftColor: color.goldDim, gap: 2 },
-  specLine: { fontFamily: font.type, fontSize: 17, color: color.cream },
+  specs: { marginTop: space.sm, paddingLeft: space.sm, borderLeftWidth: LINE, borderLeftColor: color.fill, gap: 2 },
+  specLine: { fontFamily: font.type, fontSize: 17, color: color.text },
   specNote: { fontFamily: font.type, fontSize: 14, color: color.muted, fontStyle: 'italic' },
-  change: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.md, borderWidth: 1, borderColor: color.goldDim, borderRadius: 4 },
-  changeText: { fontFamily: font.sign, fontSize: 16, color: color.gold },
+  change: { ...inked(color), minHeight: 48, justifyContent: 'center', paddingHorizontal: space.md, backgroundColor: color.panel },
+  changeText: { fontFamily: font.sign, fontSize: 20, color: color.accent },
   input: {
     minHeight: TAP + 8,
     backgroundColor: color.panel,
-    borderWidth: 2,
-    borderColor: color.goldDim,
-    borderRadius: 4,
+    borderWidth: LINE,
+    borderColor: color.line,
+    borderRadius: 10,
     paddingHorizontal: space.lg,
     fontFamily: font.type,
     fontSize: 22,
-    color: color.cream,
+    color: color.text,
   },
-  button: { minHeight: TAP, marginTop: space.md, backgroundColor: color.gold, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
-  buttonOff: { backgroundColor: color.goldDim },
-  buttonText: { fontFamily: font.signBold, fontSize: 22, color: color.bg, letterSpacing: 1, textTransform: 'uppercase' },
+  button: { ...inked(color), minHeight: TAP, marginTop: space.md, marginRight: 4, backgroundColor: color.fill, alignItems: 'center', justifyContent: 'center' },
+  buttonOff: { backgroundColor: color.accentDim, borderColor: color.accentDim, boxShadow: 'none' },
+  buttonText: { fontFamily: font.sign, fontSize: 28, color: color.onFill, letterSpacing: 1.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
 });

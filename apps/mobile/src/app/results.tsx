@@ -4,7 +4,7 @@ import { StyleSheet, Switch, Text, View } from 'react-native';
 import { api } from '@/lib/api';
 import { bikeLabel, useBike } from '@/lib/bike';
 import { useApi } from '@/lib/useApi';
-import { color, font, space } from '@/lib/theme';
+import { font, Palette, space, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { PartCard } from '@/components/PartCard';
 import { Chip, Empty, ErrorBox, Footer, Heading, Loading, Section } from '@/components/ui';
@@ -12,6 +12,8 @@ import { Chip, Empty, ErrorBox, Footer, Heading, Loading, Section } from '@/comp
 // Search results (docs/SPEC.md "Search pipeline"): up to 3 concepts as chips,
 // parts per concept, trigram fallback when no concept matched.
 export default function Results() {
+  const { color } = useTheme();
+  const s = useStyles(styles);
   const { q = '' } = useLocalSearchParams<{ q: string }>();
   const { bike } = useBike();
   const [all, setAll] = useState(false);
@@ -51,8 +53,8 @@ export default function Results() {
               <Switch
                 value={all}
                 onValueChange={setAll}
-                trackColor={{ true: color.gold, false: color.rule }}
-                thumbColor={color.cream}
+                trackColor={{ true: color.fill, false: color.rule }}
+                thumbColor={color.text}
                 accessibilityLabel="Show other bikes beyond 10 years"
               />
             </View>
@@ -85,10 +87,10 @@ export default function Results() {
   );
 }
 
-const s = StyleSheet.create({
+const styles = (color: Palette) => StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.lg },
   fits: { fontFamily: font.body, fontSize: 17, color: color.muted, marginTop: space.xs },
   note: { fontFamily: font.type, fontSize: 14, color: color.muted, marginTop: space.xs },
   toggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.md, minHeight: 44, gap: space.md },
-  toggleText: { fontFamily: font.body, fontSize: 15, color: color.cream, flex: 1 },
+  toggleText: { fontFamily: font.body, fontSize: 15, color: color.text, flex: 1 },
 });

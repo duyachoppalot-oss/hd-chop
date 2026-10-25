@@ -4,13 +4,15 @@ import { api } from '@/lib/api';
 import { useBike } from '@/lib/bike';
 import { byModel, conditionLabel } from '@/lib/format';
 import { useApi } from '@/lib/useApi';
-import { color, font, space } from '@/lib/theme';
+import { font, Palette, space, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Badge, ErrorBox, Footer, Heading, Loading, Section } from '@/components/ui';
 
 // Part detail: newest number, the numbers it replaces, every model and year
 // span it fits, split by conditions.
 export default function PartDetail() {
+  const { color } = useTheme();
+  const s = useStyles(styles);
   const { oem } = useLocalSearchParams<{ oem: string }>();
   const { bike } = useBike();
   const { data, error, loading, retry } = useApi((sig) => api.part(oem, sig), [oem]);
@@ -62,7 +64,7 @@ export default function PartDetail() {
               />
               {byModel(f.spans).map((r) => (
                 <View key={r.model} style={[s.row, r.model === bike?.model_code && s.rowMine]}>
-                  <Text style={[s.model, r.model === bike?.model_code && { color: color.gold }]}>{r.model}</Text>
+                  <Text style={[s.model, r.model === bike?.model_code && { color: color.accent }]}>{r.model}</Text>
                   <Text style={s.years}>{r.years}</Text>
                 </View>
               ))}
@@ -76,11 +78,11 @@ export default function PartDetail() {
   );
 }
 
-const s = StyleSheet.create({
-  kicker: { fontFamily: font.sign, fontSize: 14, color: color.gold, letterSpacing: 2 },
-  oem: { fontFamily: font.typeBold, fontSize: 40, color: color.gold, letterSpacing: 1, marginVertical: space.xs },
+const styles = (color: Palette) => StyleSheet.create({
+  kicker: { fontFamily: font.banner, fontSize: 15, color: color.accent, letterSpacing: 1 },
+  oem: { fontFamily: font.typeBold, fontSize: 40, color: color.accent, letterSpacing: 1, marginVertical: space.xs },
   note: { fontFamily: font.type, fontSize: 15, color: color.muted, marginTop: space.sm },
-  line: { fontFamily: font.type, fontSize: 17, color: color.cream, paddingVertical: space.xs },
+  line: { fontFamily: font.type, fontSize: 17, color: color.text, paddingVertical: space.xs },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, justifyContent: 'flex-end', flexShrink: 1 },
   row: {
     flexDirection: 'row',
@@ -91,6 +93,6 @@ const s = StyleSheet.create({
     borderBottomColor: color.rule,
   },
   rowMine: { backgroundColor: color.panel },
-  model: { fontFamily: font.typeBold, fontSize: 17, color: color.cream, width: 96 },
+  model: { fontFamily: font.typeBold, fontSize: 17, color: color.text, width: 96 },
   years: { fontFamily: font.type, fontSize: 17, color: color.muted, flex: 1 },
 });

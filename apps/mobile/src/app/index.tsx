@@ -4,20 +4,22 @@ import { router } from 'expo-router';
 import { api } from '@/lib/api';
 import { bikeLabel, useBike } from '@/lib/bike';
 import { useApi } from '@/lib/useApi';
-import { color, font, space, TAP } from '@/lib/theme';
+import { font, inked, Palette, pushed, space, TAP, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { YearWheel } from '@/components/YearWheel';
-import { Big, ErrorBox, Footer, Heading, Loading } from '@/components/ui';
+import { AppearancePicker, Big, ErrorBox, Footer, Heading, Loading } from '@/components/ui';
 
 // Step 1: spin the tire to the year, then open it. Years come from
 // /v1/years (only years with fitment), newest first.
 export default function PickYear() {
+  const { color } = useTheme();
+  const s = useStyles(styles);
   const { bike } = useBike();
   const { data: years, error, loading, retry } = useApi((sig) => api.years(sig), []);
   const [picked, setPicked] = useState<number | null>(null);
   // The page doesn't scroll (a scrolling page fights the wheel's drag), so the
   // wheel takes what's left of the screen: 380 on a big phone, less on an SE.
-  const wheelHeight = Math.max(240, Math.min(380, useWindowDimensions().height - 440));
+  const wheelHeight = Math.max(240, Math.min(380, useWindowDimensions().height - 510));
 
   const year = picked ?? (bike && years?.includes(bike.year) ? bike.year : years?.[0] ?? null);
 
@@ -40,18 +42,19 @@ export default function PickYear() {
             accessibilityRole="button"
             accessibilityLabel={`Open ${year} models`}
             onPress={open}
-            style={({ pressed }) => [s.open, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [s.open, pressed && pushed(color)]}
           >
             <Text style={s.openText}>Open {year}</Text>
           </Pressable>
         </>
       ) : null}
+      <AppearancePicker />
       <Footer />
     </Screen>
   );
 }
 
-const s = StyleSheet.create({
+const styles = (color: Palette) => StyleSheet.create({
   lede: { fontFamily: font.body, fontSize: 17, color: color.muted, marginTop: space.sm, marginBottom: space.lg, lineHeight: 24 },
   open: {
     minHeight: TAP + 4,
@@ -59,10 +62,10 @@ const s = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: 320,
-    backgroundColor: color.gold,
-    borderRadius: 4,
+    ...inked(color),
+    backgroundColor: color.fill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  openText: { fontFamily: font.signBold, fontSize: 24, color: color.bg, letterSpacing: 2, textTransform: 'uppercase' },
+  openText: { fontFamily: font.sign, fontSize: 30, color: color.onFill, letterSpacing: 2 },
 });

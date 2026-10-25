@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import type { Part } from '@/lib/api';
 import { byModel, conditionLabel } from '@/lib/format';
-import { color, font, space } from '@/lib/theme';
+import { font, inked, Palette, pushed, space, useStyles } from '@/lib/theme';
 import { Badge } from './ui';
 
 const OTHER_SHOWN = 6;
@@ -10,6 +10,7 @@ const OTHER_SHOWN = 6;
 // One part: newest number, conditions, years on the rider's model, other
 // models that take the same part, and the numbers it replaces.
 export function PartCard({ part, model }: { part: Part; model: string }) {
+  const s = useStyles(styles);
   const rows = byModel(part.spans);
   const own = rows.find((r) => r.model === model);
   const others = rows.filter((r) => r.model !== model);
@@ -57,25 +58,24 @@ export function PartCard({ part, model }: { part: Part; model: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const styles = (color: Palette) => StyleSheet.create({
   card: {
+    ...inked(color),
     backgroundColor: color.panel,
-    borderLeftWidth: 4,
-    borderLeftColor: color.gold,
-    borderRadius: 4,
     padding: space.lg,
-    marginBottom: space.md,
+    marginBottom: space.lg,
+    marginRight: 4,
     gap: space.sm,
   },
-  pressed: { backgroundColor: color.panelHi },
+  pressed: { ...pushed(color), backgroundColor: color.panelHi },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  oem: { fontFamily: font.typeBold, fontSize: 26, color: color.gold, letterSpacing: 1 },
-  chev: { fontFamily: font.sign, fontSize: 30, color: color.goldDim },
-  desc: { fontFamily: font.body, fontSize: 17, color: color.cream },
+  oem: { fontFamily: font.typeBold, fontSize: 26, color: color.accent, letterSpacing: 1 },
+  chev: { fontFamily: font.sign, fontSize: 34, color: color.accent },
+  desc: { fontFamily: font.body, fontSize: 18, color: color.text },
   badges: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm },
   inferred: { fontFamily: font.type, fontSize: 13, color: color.muted },
-  own: { fontFamily: font.type, fontSize: 17, color: color.cream },
-  ownModel: { fontFamily: font.typeBold, color: color.cream },
+  own: { fontFamily: font.type, fontSize: 17, color: color.text },
+  ownModel: { fontFamily: font.typeBold, color: color.accent },
   others: { fontFamily: font.type, fontSize: 14, color: color.muted, lineHeight: 20 },
   replaces: { fontFamily: font.type, fontSize: 14, color: color.muted },
 });

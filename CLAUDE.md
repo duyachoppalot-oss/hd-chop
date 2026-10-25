@@ -44,4 +44,4 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 - Model names get reused across platforms (Fat Bob: Dyna FXDF vs Softail FXFB). Model aliases must be year-bounded.
 
 ## Design
-Mobile-first. Black and gold. Nostalgic: old dealer counter / shop-manual feel. Big tap targets, readable in a garage.
+Mobile-first. Black and gold, drawn like a kustom-kulture flash sheet: flat fills, firm outlines, hard offset shadows (no blur), Bangers comic caps for headings, Rye banner lettering for section heads, Courier Prime for part numbers. Two pages, rider's choice (Dark / Light / Phone, saved on device): dark = black page with gold lines; light = white page with black lines and gold fills/shadows (gold text darkened to stay readable). The year wheel is a refined custom tire (gold rim, pinstripes, raised lettering), not a gag drawing. All colors come from `apps/mobile/src/lib/theme.tsx` (`useTheme` / `useStyles`); never hard-code a page color in a screen. Big tap targets, readable in a garage.

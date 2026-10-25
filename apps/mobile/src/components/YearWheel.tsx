@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, LayoutChangeEvent, PanResponder, Platform, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { color, font } from '@/lib/theme';
+import { font, LINE, useTheme } from '@/lib/theme';
 
-// Year picker drawn as a spinning tire seen side-on. The tire sits mostly off
-// the left edge; its right side sweeps past a gold pointer. Years are printed
-// on the sidewall like raised white letters, tread blocks ring the outside and
-// a gold laced wheel turns inside. Drag up/down to spin (it coasts, then settles
+// Year picker drawn as a custom tire seen side-on, in flat cel-shaded fills.
+// The tire sits mostly off the left edge; its right side sweeps past a gold
+// pointer and frame. Years are raised lettering on the sidewall between a gold
+// pinstripe and the bead, grooved tread blocks ring the outside and a gold
+// laced wheel (cel highlight and shadow on the rim) turns inside. Drag up/down to spin (it coasts, then settles
 // on a year with a haptic click per year); tap above/below the pointer to nudge
 // one year. Years are listed top to bottom in the order given.
 
@@ -21,13 +22,15 @@ const RIM = 18; // rim width
 const SPOKES = 40; // two flanges x 20, laced crossing
 const HUB = 70; // spoke flange radius
 const CROSS = 24; // degrees a spoke runs round from flange to rim (crossed lacing)
-const TREAD = 72; // tread blocks around the tire
+const TREAD = 96; // grooves cutting the tread into blocks
+const TREAD_W = 22; // tread depth seen from the side
 const DEG_PER_PX = 180 / Math.PI / R_YEAR; // finger moves the lettering 1:1
 const nativeDriver = Platform.OS !== 'web';
 
 type Props = { years: number[]; value: number | null; onChange: (year: number) => void; height?: number };
 
 export function YearWheel({ years, value, onChange, height = H_DEFAULT }: Props) {
+  const { color } = useTheme();
   const H = height;
   const half = useRef(H / 2);
   half.current = H / 2;
@@ -135,7 +138,7 @@ export function YearWheel({ years, value, onChange, height = H_DEFAULT }: Props)
       onAccessibilityAction={(e) => settle(index.current + (e.nativeEvent.actionName === 'increment' ? -1 : 1))}
       {...pan.panHandlers}
     >
-      {/* Wheel: spokes, gold rim, rubber band and tread turn together. */}
+      {/* Wheel: spokes, gold rim, rubber, tread and pinstripes turn together. */}
       <Animated.View pointerEvents="none" style={[box, { transform: [{ rotate: spin }] }]}>
         {decor.spokes.map((sp) => (
           <View
@@ -146,19 +149,35 @@ export function YearWheel({ years, value, onChange, height = H_DEFAULT }: Props)
         {decor.spokes.map((sp) => (
           <View key={`n${sp.k}`} style={[s.nipple, { left: sp.nx - 3, top: sp.ny - 3 }]} />
         ))}
-        <View style={[s.circle, { margin: BAND, borderRadius: R - BAND, borderWidth: RIM, borderColor: color.gold }]} />
-        <View style={[s.circle, { margin: BAND + RIM, borderRadius: R - BAND - RIM, borderWidth: 3, borderColor: '#8C6D1F' }]} />
-        <View style={[s.circle, { borderWidth: BAND, borderColor: '#161412' }]} />
-        <View style={[s.circle, { margin: 18, borderRadius: R - 18, borderWidth: BAND - 36, borderColor: '#1E1B17' }]} />
+        {/* Rubber: sidewall, then the darker tread band cut into blocks by grooves. */}
+        <View style={[s.circle, { borderWidth: BAND, borderColor: RUBBER }]} />
+        <View style={[s.circle, { borderWidth: TREAD_W, borderColor: TREAD_FILL }]} />
         {decor.tread.map((d) => (
           <View key={`t${d}`} style={[s.spokeWrap, { transform: [{ rotate: `${d}deg` }] }]}>
-            <View style={s.tread} />
+            <View style={s.groove} />
           </View>
         ))}
-        {/* White outline: outer edge of the tire and the bead where it meets the rim. */}
+        <View style={[s.circle, s.shoulder, { margin: TREAD_W, borderRadius: R - TREAD_W }]} />
+        {/* Gold pinstripe inside the tread, a thinner one by the bead. */}
+        <View style={[s.circle, s.pinstripe, { margin: TREAD_W + 8, borderRadius: R - TREAD_W - 8 }]} />
+        <View style={[s.circle, s.pinstripeThin, { margin: BAND - 12, borderRadius: R - BAND + 12 }]} />
+        {/* Rim: flat gold, a light band along the outer edge and a dark one inside. */}
+        <View style={[s.circle, { margin: BAND, borderRadius: R - BAND, borderWidth: RIM, borderColor: GOLD }]} />
+        <View style={[s.circle, { margin: BAND + 3, borderRadius: R - BAND - 3, borderWidth: 3, borderColor: GOLD_LIGHT }]} />
+        <View style={[s.circle, { margin: BAND + RIM - 5, borderRadius: R - BAND - RIM + 5, borderWidth: 5, borderColor: GOLD_DIM }]} />
+        <View style={[s.circle, s.edge, { margin: BAND - 1, borderRadius: R - BAND + 1 }]} />
+        <View style={[s.circle, s.edge, { margin: BAND + RIM - 1, borderRadius: R - BAND - RIM + 1 }]} />
+        {/* Outer contour catches the light. */}
         <View style={[s.circle, s.outline]} />
-        <View style={[s.circle, s.outline, { margin: BAND - 2, borderRadius: R - BAND + 2 }]} />
       </Animated.View>
+
+      {/* The tire curves away top and bottom. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={[color.bg, color.bgClear, color.bgClear, color.bg]}
+        locations={[0, 0.24, 0.76, 1]}
+        style={StyleSheet.absoluteFill}
+      />
 
       {/* Sidewall lettering: each year sits at its own angle relative to the pointer. */}
       {shown.map((i) => {
@@ -176,42 +195,47 @@ export function YearWheel({ years, value, onChange, height = H_DEFAULT }: Props)
         );
       })}
 
-      {/* The tire curves away top and bottom. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={[color.bg, 'rgba(11,10,8,0)', 'rgba(11,10,8,0)', color.bg]}
-        locations={[0, 0.28, 0.72, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Gold pointer and window brackets at the reading position. */}
-      <View pointerEvents="none" style={[s.window, { top: H / 2 - 34, left: cx + R_YEAR - 92, width: 184 }]} />
-      <View pointerEvents="none" style={[s.pointer, { top: H / 2 - 14 }]} />
+      {/* Gold frame and pointer at the reading position. */}
+      <View pointerEvents="none" style={[s.window, { top: H / 2 - 36, left: cx + R_YEAR - 78, width: 138 }]} />
+      <View pointerEvents="none" style={[s.pointer, { top: H / 2 - 14, borderRightColor: color.line }]} />
     </View>
   );
 }
+
+// The tire looks the same on the dark and light page: black rubber, gold metal.
+const RUBBER = '#1F1B17';
+const TREAD_FILL = '#15120F';
+const GOLD = '#D4A52C';
+const GOLD_DIM = '#8C6D1F';
+const GOLD_LIGHT = '#F2D27A'; // cel highlight on the rim
+const CREAM = '#F2E8D0';
 
 const s = StyleSheet.create({
   view: { width: '100%', overflow: 'hidden' },
   circle: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: R },
   spokeWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'flex-end', justifyContent: 'center' },
   spoke: { position: 'absolute', height: 2, borderRadius: 1 },
-  spokeNear: { backgroundColor: 'rgba(222,225,230,0.9)' }, // chrome, outer flange
-  spokeFar: { backgroundColor: 'rgba(150,154,162,0.75)' }, // inner flange, a shade back
-  nipple: { position: 'absolute', width: 6, height: 6, borderRadius: 1, backgroundColor: '#C9CCD1' },
-  outline: { borderWidth: 2, borderColor: 'rgba(242,236,222,0.9)' },
-  tread: { width: 16, height: 18, marginRight: 2, backgroundColor: '#0A0908', borderRadius: 2 },
+  spokeNear: { backgroundColor: 'rgba(236,230,216,0.92)' }, // chrome, outer flange
+  spokeFar: { backgroundColor: 'rgba(150,142,124,0.7)' }, // inner flange, a shade back
+  nipple: { position: 'absolute', width: 6, height: 6, borderRadius: 1, backgroundColor: GOLD },
+  groove: { width: TREAD_W, height: 4, backgroundColor: '#030302' },
+  shoulder: { borderWidth: 1.5, borderColor: 'rgba(242,232,208,0.16)' },
+  pinstripe: { borderWidth: 2, borderColor: GOLD },
+  pinstripeThin: { borderWidth: 1, borderColor: GOLD_DIM },
+  edge: { borderWidth: 2, borderColor: '#000' },
+  outline: { borderWidth: 2, borderColor: 'rgba(242,232,208,0.85)' },
   labelSlot: { position: 'absolute', left: R + R_YEAR - 92, top: R - 28, width: 184, height: 56, alignItems: 'center', justifyContent: 'center' },
   year: {
-    fontFamily: font.signBold,
+    fontFamily: font.sign,
     fontSize: 40,
-    letterSpacing: 5,
-    color: '#CFC6B0',
-    textShadowColor: 'rgba(0,0,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 2,
+    letterSpacing: 4,
+    color: '#8F8570',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 3 },
+    textShadowRadius: 0,
   },
-  yearOn: { color: color.cream },
-  window: { position: 'absolute', height: 68, borderTopWidth: 2, borderBottomWidth: 2, borderColor: color.gold },
+  yearOn: { fontSize: 48, color: CREAM },
+  window: { position: 'absolute', height: 72, borderWidth: LINE, borderColor: GOLD, borderRadius: 12 },
   pointer: {
     position: 'absolute',
     right: 0,
@@ -222,6 +246,5 @@ const s = StyleSheet.create({
     borderRightWidth: 22,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderRightColor: color.gold,
   },
 });
