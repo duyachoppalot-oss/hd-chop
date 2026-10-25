@@ -1,5 +1,5 @@
 slug,display_name,category,hd_terms,user_terms,match,exclude_terms
-fuel_tank,Fuel Tank,fuel,fuel tank|gas tank|gasoline tank,gas tank|tank|gas,head,
+fuel_tank,Fuel Tank,fuel,fuel tank|gas tank|gasoline tank|left tank|right tank|tank assembly,gas tank|tank|gas,head,oil|coolant|overflow|reservoir|surge|vacuum|vent
 fuel_cap,Fuel Cap,fuel,fuel cap|fuel filler cap|tank cap,gas cap|tank cap|fuel tank cap,head,
 fuel_petcock,Fuel Valve,fuel,fuel valve,petcock|fuel shutoff|gas valve,head,
 fuel_pump,Fuel Pump,fuel,fuel pump,gas pump,head,
@@ -14,7 +14,7 @@ tour_pak,Tour-Pak,luggage,tour-pak,trunk|top case|top box|tour pack,contains,
 fairing_outer,Outer Fairing,body,outer fairing|fairing,batwing|front fairing,head,seat fairing|lower
 fairing_inner,Inner Fairing,body,inner fairing,inner fairing|dash,head,
 windshield,Windshield,body,windshield,windscreen|shield,head,
-seat,Seat,seating,seat,saddle,head,spring|damper-spring|clutch|valve|intake-valve|exhaust-valve|fairing|hose|spring-upper|spring-lower|bearing|ball|cone|cup|plunger|pad seat
+seat,Seat,seating,seat|seat pillion|pillion,saddle,head,spring|damper-spring|clutch|valve|intake-valve|exhaust-valve|fairing|hose|spring-upper|spring-lower|bearing|ball|cone|cup|plunger|pad seat
 sissy_bar,Sissy Bar,seating,sissy bar|backrest,backrest|sissy,head,
 luggage_rack,Luggage Rack,luggage,luggage rack,rack,head,
 handlebar,Handlebar,controls,handlebar|handlebar side,bars|apes|ape hangers,head,
@@ -32,9 +32,9 @@ floorboard,Floorboard,controls,footboard,boards|floor boards,head,
 jiffy_stand,Jiffy Stand,frame,jiffy stand,kickstand|kick stand|side stand,contains,
 clutch_cable,Clutch Cable,controls,clutch cable,clutch line,head,
 throttle_cable,Throttle Cable,controls,throttle cable|idle cable|control wire assembly|controlwireassembly,throttle cables|throttle wire|idle cable|control wire,head,choke
-headlamp,Headlamp,lighting,headlamp|headlamp lens|sealed beam|sealed beam unit,headlight|head light,head,passing|spot|fog
-tail_lamp,Tail Lamp,lighting,tail lamp|tail lamp light|tail light|taillamp|taillamp lens|tail lamp lens|talllamp|tail lamp housing|tail lamp outlook lens|rear lamp lens|rearlamp lens,taillight|tail light|brake light,head,
-turn_signal,Turn Signal,lighting,turn signal,blinkers|blinker|signals|turn signals,head,
+headlamp,Headlamp,lighting,headlamp|headlamp lens|sealed beam|sealed beam unit|headlight|headlight lens,headlight|head light,head,passing|spot|fog
+tail_lamp,Tail Lamp,lighting,tail lamp|tail lamp light|tail light|taillamp|taillamp lens|tail lamp lens|talllamp|tail lamp housing|tail lamp outlook lens|rear lamp lens|rearlamp lens|taillight|taillight lens|talllamp lens,taillight|tail light|brake light,head,
+turn_signal,Turn Signal,lighting,turn signal|turn signal lens|turnsignal|turnsignal lens|directional lamp,blinkers|blinker|signals|turn signals,head,
 speedometer,Speedometer,instruments,speedometer|speedometer head,speedo|gauge|speed gauge,head,
 tachometer,Tachometer,instruments,tachometer,tach|rpm gauge,head,
 ignition_switch,Ignition Switch,electrical,ignition switch,key switch|ignition,head,
@@ -54,7 +54,7 @@ oil_filter,Oil Filter,engine,oil filter,filter,head,
 oil_pump,Oil Pump,engine,oil pump,oil pump,head,
 oil_cooler,Oil Cooler,engine,oil cooler,cooler,head,
 oil_tank,Oil Tank,engine,oil tank,oil bag,head,
-exhaust_muffler,Muffler,exhaust,muffler,pipes|slip ons|exhaust,head,
+exhaust_muffler,Muffler,exhaust,muffler|muffler rear end|muffler rear end cpt|muffler front|muffler all fittings|exhaust pipe and muffler,pipes|slip ons|exhaust,head,
 exhaust_header,Exhaust Header,exhaust,header pipe|exhaust pipe,headers|head pipe,head,
 transmission_cover,Transmission Side Cover,drivetrain,transmission side cover,trans cover|tranny cover,head,
 belt_drive,Final Drive Belt,drivetrain,drive belt|belt,belt|final belt,head,
