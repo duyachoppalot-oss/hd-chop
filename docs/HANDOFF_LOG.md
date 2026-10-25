@@ -399,3 +399,5 @@ Append one entry per session. Newest at the bottom.
 - Admin part page shows H-D type + intro year (part_component_types).
 - 05_supersession also reads "(use/replaces ...)" notes from the service-portal catalogs: dry run 162 -> 359 accepted pairs (279 pairs only the portal gives), 283 chain_root changes, review 401 (name_mismatch 190). NOT applied: next 05 --apply will include them.
 - parse.mjs 'vin' layout + books.mjs 1984-86-flt (dry run 99.2%). Fetch progress: 7 of 14 PDFs down incl. 1979-85 Sportster.
+- 1979-85 XL (99451-85A) book: layout hd + textLayer, XL/XLHA -> XLH, XLSA -> XLS, "XR-1000" -> XR1000, parser reads "79 and 80" as "&". Dry run 96.9% clean, 16,987 new rows (9,059 on new bikes). 01 DOC_YEARS: XLH 1979-83, XLS 1979-82 (single-year rows every year; XLCH stays 1979: "79 and 80-XL, XLCH, XLS" lists only). 01 dry run +9 bikes. Not applied.
+- Fetch: 9 of 14 down (also 1980-83 FLT, 1984-86 FLT 2nd edition, 1986-90 XLH, 1941-84 FL, 1984.5-90 FXRP/FLHTP).

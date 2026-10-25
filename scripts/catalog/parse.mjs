@@ -48,6 +48,7 @@ function fixUsedOn(s) {
   return s
     .replace(/\b(\d{2})(?:t[o0aec]|10)\s*(\*|\d{2})\b/gi, '$1 to $2')
     .replace(/\b(\d{2})\s+(?:t[o0aec]|1[0o])\s*(\*|\d{2}|\.\.|')/gi, '$1 to $2')
+    .replace(/\b(\d{2}) and ((?:early |late )?\d{2})\b/gi, '$1 & $2') // "79 and 80" (1979-85 XL book)
     .replace(/\bto\s*(?:\.\.|\*+|')/gi, 'to *')
     .replace(/\bto\s*(?=-)/gi, 'to * ') // missing star: 86 to - FXRD
     .replace(/(\d{2})'\s*t[a0o]\b/gi, '$1 to')

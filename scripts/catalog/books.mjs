@@ -262,6 +262,20 @@ BOOKS.push(
     codes: ['FLTC', 'FLHTC', 'FLHT'],
     code: (c) => c,
   },
+  {
+    slug: '1979-85-xl',
+    file: path.join(PORTAL_PDF, '1979-1985-sportster.pdf'),
+    title: '1979-1985 XL Models Parts Catalog (99451-85A)',
+    from: 1979, to: 1985,
+    // Classic "79 to 85-XL, XLCH, XLS, XLX" used-on text in the reissue's clean columns.
+    layout: 'hd',
+    textLayer: true,
+    codes: ['XL', 'XLH', 'XLCH', 'XLS', 'XLX', 'XLHA', 'XLSA', 'XR1000'],
+    code: (c) => (c === 'XR-1000' || c === 'XR-' ? 'XR1000' : c), // the book writes "XR-1000"; a wrapped cell leaves "XR-"
+    // As in the 1954-78 book, "XL" is the XLH. XLHA / XLSA = the 1982 25th Anniversary
+    // XLH / XLS (their own rows only in 1982).
+    yearCode: (code, year) => (code === 'XL' || code === 'XLHA' ? 'XLH' : code === 'XLSA' ? 'XLS' : code),
+  },
 );
 
 export const bookBySlug = (slug) => BOOKS.find((b) => b.slug === slug);

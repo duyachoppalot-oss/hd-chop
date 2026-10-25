@@ -133,6 +133,12 @@ for (const c of bookBySlug('1942-wla').columns) DOC_YEARS.set(`${c.year}|${c.cod
 // (need the 1948-53 / 1949-60 catalogs).
 for (let y = 1948; y <= 1965; y++) DOC_YEARS.set(`${y}|FL`, '1941-84 FL catalog');
 for (let y = 1955; y <= 1965; y++) DOC_YEARS.set(`${y}|FLH`, '1941-84 FL catalog');
+// 1979-1985 XL Models Parts Catalog (99451-85A, portal reissue): single-year rows
+// ("82-XL, XLS") name XL (= XLH) and XLS every year 1979-85 (XL 216/180/69/92/49 rows
+// 1979-83, XLS 223/192/77/139/44). XLCH: 1979 only ("79 and 80-XL, XLCH, XLS" lists name
+// whichever existed; no row names a 1980 XLCH alone).
+for (let y = 1979; y <= 1983; y++) DOC_YEARS.set(`${y}|XLH`, '1979-85 XL catalog');
+for (let y = 1979; y <= 1982; y++) DOC_YEARS.set(`${y}|XLS`, '1979-85 XL catalog');
 // 1986-90 XLH Evolution Sportster catalog (99451-90 era, (c) 1989), page 2 V.I.N. table:
 // 1986 XLH 883, 883 Deluxe, 1100; 1987 adds the 883 Hugger; 1988-90 XLH 883, 1200,
 // 883 Hugger, 883 Deluxe.
