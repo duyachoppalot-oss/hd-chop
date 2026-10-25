@@ -115,3 +115,7 @@ a.tl-bar:hover { outline: 2px solid var(--cream); text-decoration: none; z-index
 .pill.pending { color: var(--red); } .pill.claude { color: #8fa3bf; }
 .task details summary { cursor: pointer; color: var(--gold); font-size: 12px; }
 .task details .form-grid { margin-top: 8px; }
+.review-row { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mono { font-family: ui-monospace, 'Courier New', monospace; }
+.task .t-title a { color: var(--cream); }
+.task .t-title a:hover { color: var(--gold); text-decoration: underline; }

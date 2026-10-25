@@ -59,6 +59,7 @@ function taskFields(f: FormData) {
     area: TASK_AREAS.includes(area) ? area : 'Data',
     priority: [1, 2, 3].includes(pri) ? pri : 2,
     owner: str(f, 'owner') === 'claude' ? 'claude' : 'laken',
+    link: (() => { const l = str(f, 'link').slice(0, 300); return l.startsWith('/') || l.startsWith('reports/') ? l : null; })(),
   };
 }
 
@@ -66,9 +67,9 @@ export async function saveTask(f: FormData) {
   const t = taskFields(f);
   if (!t.title) return;
   await query(
-    `UPDATE admin_tasks SET title = $2, detail = $3, note = $4, status = $5, area = $6, priority = $7, owner = $8,
+    `UPDATE admin_tasks SET title = $2, detail = $3, note = $4, status = $5, area = $6, priority = $7, owner = $8, link = $9,
             review = 'pending', updated_at = now() WHERE task_id = $1`,
-    [Number(str(f, 'id')), t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner]
+    [Number(str(f, 'id')), t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner, t.link]
   );
   revalidatePath(str(f, 'back') || '/tasks');
 }
@@ -84,10 +85,28 @@ export async function addTask(f: FormData) {
   const t = taskFields(f);
   if (!t.title) return;
   await query(
-    `INSERT INTO admin_tasks (title, detail, note, status, area, priority, owner, review) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')`,
-    [t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner]
+    `INSERT INTO admin_tasks (title, detail, note, status, area, priority, owner, link, review) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
+    [t.title, t.detail, t.note, t.status, t.area, t.priority, t.owner, t.link]
   );
   revalidatePath('/tasks');
+}
+
+// ---------- name review (/review/names) ----------
+// Rename (or keep) one part straight from the review list: a rename_part override
+// with reason 'name_review', applied at once. Keeping the name records the same
+// value so the part leaves the list.
+
+export async function reviewName(f: FormData) {
+  const oem = normOem(str(f, 'oem'));
+  const keep = str(f, 'keep') === '1';
+  const value = (keep ? str(f, 'current') : str(f, 'value')).slice(0, 160);
+  if (!oem || !value) return;
+  const [{ override_id }] = await query<{ override_id: number }>(
+    `INSERT INTO admin_overrides (kind, oem_number, value, reason) VALUES ('rename_part', $1, $2, $3) RETURNING override_id`,
+    [oem, value, keep ? 'name_review: kept' : 'name_review']
+  );
+  await query(`SELECT admin_apply_override($1)`, [override_id]);
+  revalidatePath(str(f, 'back') || '/review/names');
 }
 
 // ---------- overrides ----------

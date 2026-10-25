@@ -20,11 +20,9 @@ const SHOW: Record<string, { label: string; where: string }> = {
   all: { label: 'All', where: 'true' },
 };
 
-// A link is an admin path ("/part/6808655") or a repo file ("reports/name_review.csv").
-function TaskLink({ link }: { link: string | null }) {
-  if (!link) return null;
-  return link.startsWith('/') ? <Link href={link}>{link}</Link> : <code>{link}</code>;
-}
+// A link is an admin path ("/review/names") or a file in reports/ ("reports/expo-go-qr.svg",
+// served by /files). The task title opens it.
+const taskHref = (link: string | null) => (!link ? null : link.startsWith('/') ? link : link.startsWith('reports/') ? `/files/${link}` : null);
 
 function TaskForm({ t }: { t?: Task }) {
   return (
@@ -38,6 +36,7 @@ function TaskForm({ t }: { t?: Task }) {
         <label>Status<select name="status" defaultValue={t?.status ?? 'open'}>{Object.entries(STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
         <label>Area<select name="area" defaultValue={t?.area ?? 'Data'}>{AREAS.map((a) => <option key={a}>{a}</option>)}</select></label>
         <label>Priority<select name="priority" defaultValue={String(t?.priority ?? 2)}>{Object.entries(PRI).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label>Page<input name="link" defaultValue={t?.link ?? ''} placeholder="/part/6808655" size={18} /></label>
         <label>Who<select name="owner" defaultValue={t?.owner ?? 'laken'}><option value="laken">Laken</option><option value="claude">Claude</option></select></label>
       </div>
       <div><button type="submit">{t ? 'Save for review' : 'Add task'}</button></div>
@@ -49,14 +48,14 @@ function TaskCard({ t }: { t: Task }) {
   return (
     <div className={`task ${t.status}${t.review === 'pending' ? ' pending' : ''}`}>
       <div className="row">
-        <span className="t-title">{t.title}</span>
+        <span className="t-title">{taskHref(t.link) ? <Link href={taskHref(t.link)!}>{t.title} →</Link> : t.title}</span>
         <span className={`pill ${t.status}`}>{STATUS[t.status]}</span>
         {t.owner === 'claude' ? <span className="pill claude">Claude</span> : null}
         {t.review === 'pending' ? <span className="pill pending">Waiting for review</span> : null}
         <span className="muted small">{PRI[t.priority]} priority</span>
       </div>
       {t.detail ? <p className="muted">{t.detail}</p> : null}
-      {t.link ? <div className="small"><TaskLink link={t.link} /></div> : null}
+      {!taskHref(t.link) && t.owner === 'laken' && t.status !== 'done' ? <div className="small muted">No page for this one: add what you find in Edit below.</div> : null}
       {t.note ? <p className="t-note">You: {t.note}</p> : null}
       {t.reply ? <p className="t-reply small">Claude: {t.reply}</p> : null}
       <div className="row small">
