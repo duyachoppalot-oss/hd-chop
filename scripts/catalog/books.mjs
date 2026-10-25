@@ -239,6 +239,31 @@ BOOKS.push(
   },
 );
 
+// H-D Service Information Portal reissues (2021) of pre-1991 catalogs, saved by
+// ~/Developer/catalog-extract/fetch_pdfs.mjs (sections joined into one PDF, clean text layer).
+// Layout 'vin': MODEL(S) column of model-identification code + year, decoded by `legend`
+// (read off the page images; null = not a bike we list, e.g. sidecar rigs).
+const PORTAL_PDF = path.join(os.homedir(), 'Developer/catalog-extract/pdf');
+BOOKS.push(
+  {
+    slug: '1984-86-flt',
+    file: path.join(PORTAL_PDF, '1984-1986-flt-models.pdf'),
+    title: '1984-1986 FLT Models Parts Catalog (99438-86B)',
+    from: 1984, to: 1986,
+    layout: 'vin',
+    textLayer: true,
+    // Page-foot legend: DB = FLTC Classic (84-86); DD = FLHTC Classic 84-85 but FLHT in 86;
+    // DJ86 = FLHTC Classic; DE = FLHTC Classic Sidecar, DH = FLTC Classic Sidecar (rigs: skipped).
+    legend: {
+      DB84: 'FLTC', DB85: 'FLTC', DB86: 'FLTC',
+      DD84: 'FLHTC', DD85: 'FLHTC', DD86: 'FLHT', DJ86: 'FLHTC',
+      DE84: null, DE85: null, DE86: null, DH84: null, DH85: null, DH86: null,
+    },
+    codes: ['FLTC', 'FLHTC', 'FLHT'],
+    code: (c) => c,
+  },
+);
+
 export const bookBySlug = (slug) => BOOKS.find((b) => b.slug === slug);
 export const pdfPath = (b) => (path.isAbsolute(b.file) ? b.file : path.join(PDF_DIR, b.file));
 export const ocrDir = (b) => path.join(OCR_DIR, b.slug);

@@ -10,6 +10,9 @@
 //     "(replaces 42303-00 & 42305-00)"  each listed number -> line number
 //   "use w/ …" and "also order …" are not supersession. The line number
 //   resolves exactly as in 02 (lib/parts.mjs).
+// - The same notes in the H-D service-portal catalogs (lib/servicecatalog.mjs,
+//   descriptions like "BRACKET, engine mounting (replaces 16216-91)"), added
+//   2026-10-24. Their part numbers are whole, so no resolving.
 // - oem_fitment notes (qty_note / description) only corroborate: its rows are
 //   misaligned (DISCOVERY.md), so pairs seen only there go to review.
 // - A pair goes to review if both part names are known and their head words
@@ -33,6 +36,7 @@ import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeResolver, classify, normalize, suffixYear } from './lib/parts.mjs';
+import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -104,6 +108,24 @@ async function main() {
       pairs.set(k, e);
     }
   }
+  // Service-portal catalogs: same notes, whole part numbers.
+  let svcLines = 0, svcNew = 0;
+  if (serviceCatalogAvailable())
+    for (const r of readBooks().rows) {
+      if (!/\b(use|replaces)\s+\d/i.test(r.description || '')) continue;
+      const line = classify(r.part_number);
+      if (line.cls !== 'std' && line.cls !== 'modern') continue;
+      svcLines++;
+      for (const [a, b] of notePairs(r.description, line.display)) {
+        const from = normalize(classify(a).display);
+        const to = normalize(classify(b).display);
+        if (from === to) continue;
+        const k = `${from}|${to}`;
+        if (!pairs.has(k)) { svcNew++; pairs.set(k, { from, to, fromDisplay: classify(a).display, toDisplay: classify(b).display, ref: new Set(), fit: 0 }); }
+        pairs.get(k).ref.add(`catalog_extract:${r.id}`);
+      }
+    }
+
   const fitOnly = new Map();
   for (const r of fitmentSrc) {
     const line = classify(r.display);
@@ -182,6 +204,7 @@ async function main() {
   lines.push(`05_supersession.mjs — ${APPLY ? 'APPLY' : 'DRY RUN'} — ${new Date().toISOString()}`);
   lines.push(`Source oem_supersession rows skipped (all inferred letter bumps): 283`);
   lines.push(`Reference lines with use/replaces notes: ${refLines} (line number unresolved: ${unresolvedLines})`);
+  lines.push(`Service-portal catalog lines with use/replaces notes: ${svcLines}; pairs only they give: ${svcNew}`);
   lines.push(`Distinct pairs from reference: ${pairs.size}; also in oem_fitment notes: ${[...pairs.values()].filter((e) => e.fit).length}`);
   lines.push(`Pairs only in oem_fitment (review, not loaded): ${fitOnly.size}`);
   lines.push(`Accepted pairs: ${accepted.length} (newer number has an older -YY suffix: ${olderTarget})`);

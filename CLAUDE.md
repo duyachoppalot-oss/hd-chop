@@ -7,6 +7,7 @@ Harley-Davidson OEM part fitment lookup app. User picks year + model, types plai
 2. docs/DATA_RIGHTS.md — what source data may be copied into this app
 3. docs/ROADMAP.md — current phase and gates
 4. docs/HANDOFF_LOG.md — append an entry at the end of every session
+5. `node scripts/dev/notes.mjs` — Laken's open admin-console notes (and recent overrides). Propose a fix for each open note; mark it done only after the fix is applied.
 
 ## Stack
 - `apps/mobile` — Expo (Expo Router, TypeScript)

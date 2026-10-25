@@ -470,11 +470,74 @@ function parseAppl(book, page, tsv) {
   return rows;
 }
 
+// ---------- vin layout (2021 portal reissues of pre-1991 catalogs: INDEX | PART | DESCRIPTION | MODEL(S)) ----------
+// MODEL(S) holds H-D model-identification codes with the year ("DB84 DB85 (early) DD84"),
+// decoded by the book's own legend (books.mjs `legend`: "DB84" -> 'FLTC', null = skip, e.g.
+// sidecar rigs). "ALL" = every legend code the book maps to a bike. "(early)"/"(late)" mark
+// that year as a boundary year (low confidence). The model cell can wrap onto the next line.
+const VIN_ROW = /^\s*(\d{1,3}[A-Z]?)?\s+(\d{3,5}(?:-\d{2})?[A-Z]{0,3})\s{2,}(.+?)\s{2,}(\S.*)$/;
+const VIN_CODE = /^([A-Z]{2})(\d{2})$/;
+
+function vinFits(book, models) {
+  const flags = [];
+  const byCode = new Map(); // our code -> { years:Set, low:Set }
+  const add = (key, low) => {
+    if (!(key in book.legend)) { flags.push(`code:unknown:${key}`); return; }
+    const code = book.legend[key];
+    if (code == null) return; // e.g. sidecar rig
+    const y = 1900 + Number(key.slice(2));
+    const e = byCode.get(code) ?? byCode.set(code, { years: new Set(), low: new Set() }).get(code);
+    e.years.add(y);
+    if (low) e.low.add(y);
+  };
+  const toks = models.replace(/[,;]/g, ' ').split(/\s+/).filter(Boolean);
+  if (!toks.length) flags.push('used_on:missing');
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i].toUpperCase();
+    const low = /^\((EARLY|LATE)\)$/i.test(toks[i + 1] ?? '');
+    if (t === 'ALL') { for (const k of Object.keys(book.legend)) add(k, false); continue; }
+    if (/^\((EARLY|LATE)\)$/.test(t)) continue;
+    if (VIN_CODE.test(t)) { add(t, low); continue; }
+    flags.push(`used_on:word:${t}`);
+  }
+  const fits = [...byCode].map(([code, e]) => ({ code, years: [...e.years].sort(), lowYears: [...e.low] }));
+  return { fits, flags };
+}
+
+function parseVin(book, page, lines) {
+  const rows = [];
+  const header = lines.findIndex((l) => /^\s*INDEX\s+PART/.test(l));
+  // Section title: the line after the book number ("99438-86B_01"), before the column header.
+  const section = (lines.slice(0, Math.max(header, 0)).map((l) => l.trim()).filter((l) => l && !/_\d{2}$/.test(l)).pop() ?? '').slice(0, 80);
+  let last = null;
+  for (const raw of lines) {
+    if (/MODEL IDENTIFICATION CODES/.test(raw)) break; // legend at the page foot
+    const m = VIN_ROW.exec(raw);
+    if (m) {
+      const pr = readPart(m[2]);
+      if (!pr) { last = null; continue; }
+      last = { page, section, index: m[1] ?? null, part_raw: m[2], part: pr.part, name: m[3].trim(), used_raw: m[4].trim(), flags: pr.flag ? [pr.flag] : [] };
+      rows.push(last);
+      continue;
+    }
+    // Wrapped model cell: a line that is only codes / (early) / (late), far right.
+    const t = raw.trim();
+    if (last && /^((?:[A-Z]{2}\d{2}|\((?:early|late)\)|ALL)\s*)+$/i.test(t) && raw.search(/\S/) > 60) last.used_raw += ' ' + t;
+  }
+  for (const r of rows) {
+    const { fits, flags } = vinFits(book, r.used_raw);
+    r.fits = fits;
+    r.flags.push(...flags);
+  }
+  return rows;
+}
+
 export function parsePage(book, page, text, tsv) {
   const lines = text.split('\n');
   if (book.layout === 'hd') return parseHd(book, page, lines);
   if (book.layout === 'hd1950') return parse1950(book, page, lines);
   if (book.layout === 'wla') return tsv ? parseWlaTsv(book, page, tsv) : parseWla(book, page, lines);
   if (book.layout === 'appl') return parseAppl(book, page, tsv);
+  if (book.layout === 'vin') return parseVin(book, page, lines);
   throw new Error(`unknown layout ${book.layout}`);
 }

@@ -390,3 +390,12 @@ Append one entry per session. Newest at the bottom.
 - APPLIED (Laken): migration 008; 13 --apply (49,162 rows; fixed null other_types); 06 --apply (concepts on 15,544 parts, +4,097 from types; 131 name matches kept over a different type); 08. Live: 1995 FLHTC "speedometer" 10 parts, 1999 FLSTF "ignition switch" 71313-96A.
 - Found (Laken's 1984-86 FLT link): the portal list (catalog-extract/catalogs.json) has 14 pre-1991 catalogs the scraper skipped as PDF-only, incl. 1979-1985 XL (99781-85, the missing Sportster book), 1980-83 FLT, 1984-86 FLT (2 editions), 1977 XLCR, 1984.5-90 FXRP/FLHTP, 1972-2008 XR750, 1987-90 1340cc. Not downloaded.
 - Also: the service-portal books' "(replaces NNNNN-YY)" notes (catalog-extract/out/replaces_notes.csv, 620 lines) aren't read by 05 (it only reads hd_oem_catalog_reference). Possible supersession follow-up.
+
+### 2026-10-24 (portal pre-1991 PDFs: fetcher + 'vin' layout)
+- ~/Developer/catalog-extract/fetch_pdfs.mjs (outside repo, next to the scraper): opens each pre-1991 catalog on the portal, fetches every table-of-contents section PDF from inside the viewer (viewToken), joins with pdfunite -> catalog-extract/pdf/<slug>.pdf. Uses installed Chrome (Playwright browser build was missing). Polite pauses. 14 books running in the background (fetch_pdfs.log).
+- 2021 reissues have a clean text layer; MODEL(S) = model-identification code + year ("DB85 (late) DD86 DJ86") with a legend at each page foot. parse.mjs layout 'vin' + books.mjs `legend` per code-year (read off the page image; DD = FLHTC 84-85 but FLHT 86; sidecar rigs null).
+- 1984-86 FLT (99438-86B): 99.2% clean, 12,686 new pairs for FLTC/FLHTC/FLHT 1984-86, 550 new numbers. Dry run only.
+- scripts/dev/notes.mjs (open admin notes + recent overrides) and CLAUDE.md read-first step 5. Laken's note #2 (45946-71 "lider") was already fixed by Laken (rename override #1, note done).
+- Admin part page shows H-D type + intro year (part_component_types).
+- 05_supersession also reads "(use/replaces ...)" notes from the service-portal catalogs: dry run 162 -> 359 accepted pairs (279 pairs only the portal gives), 283 chain_root changes, review 401 (name_mismatch 190). NOT applied: next 05 --apply will include them.
+- parse.mjs 'vin' layout + books.mjs 1984-86-flt (dry run 99.2%). Fetch progress: 7 of 14 PDFs down incl. 1979-85 Sportster.

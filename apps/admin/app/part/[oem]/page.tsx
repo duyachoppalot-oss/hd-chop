@@ -63,6 +63,13 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
      ORDER BY 3, 2, 4`,
     [nums]
   );
+  // H-D component type + introduction year (part_component_types, migration 008).
+  const ctype = (
+    await query<{ type_code: string; type_name: string; intro_year: number | null; books: number }>(
+      `SELECT type_code, type_name, intro_year, books FROM part_component_types WHERE oem_number = $1`,
+      [key]
+    ).catch(() => [])
+  )[0];
   const overrides = await query<Override>(`${OVERRIDE_SELECT} WHERE o.oem_number = ANY($1) ORDER BY o.override_id DESC`, [nums]);
   const concepts = await query<{ slug: string; display_name: string }>(`SELECT slug, display_name FROM part_concepts ORDER BY display_name`);
   const tags = await query<{ tag: string; label: string }>(`SELECT tag, label FROM condition_tags ORDER BY label`);
@@ -117,6 +124,7 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
       </h1>
       <p className="muted">
         Concept: {head.slug ? <Link href={`/concept/${head.slug}`}>{head.display_name}</Link> : 'none'} · number {head.number_source} · source {head.source}
+        {ctype ? <> · H-D type <span className="mono">{ctype.type_code}</span> {ctype.type_name} · introduced {ctype.intro_year ?? 'unknown'} <span className="small">({ctype.books} books)</span></> : null}
         {root !== key ? <> · chain root <Link href={`/part/${root}`} className="mono">{display.get(root)}</Link></> : null}
         {' · '}
         <Link href={`/web?seed=part:${key}`}>Open in web →</Link>
