@@ -306,15 +306,15 @@ async function main() {
   try {
     await client.query('BEGIN');
     // catalog_ocr (11) merges against these pairs and may use service_catalog parts: re-run 11 after.
-    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'catalog_ocr', 'inferred_span')`);
+    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'catalog_ocr', 'hydra_glide', 'inferred_span')`);
     // Admin rows on service parts would block the part delete; 08 re-adds them.
     await client.query(
       `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'service_catalog')`
     );
     await client.query(
-      `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'catalog_ocr')`
+      `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source IN ('catalog_ocr', 'hydra_glide'))`
     );
-    const delParts = await client.query(`DELETE FROM oem_parts WHERE source IN ('service_catalog', 'catalog_ocr')`);
+    const delParts = await client.query(`DELETE FROM oem_parts WHERE source IN ('service_catalog', 'catalog_ocr', 'hydra_glide')`);
     console.log(`Deleted ${delFit.rowCount} service_catalog / inferred_span fitment rows and ${delParts.rowCount} service_catalog parts.`);
     const delLow = await client.query(
       `DELETE FROM fitment f USING unnest($1::text[], $2::int[]) AS x(o, v)

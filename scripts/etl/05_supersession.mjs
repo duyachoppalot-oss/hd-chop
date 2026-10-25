@@ -13,6 +13,9 @@
 // - The same notes in the H-D service-portal catalogs (lib/servicecatalog.mjs,
 //   descriptions like "BRACKET, engine mounting (replaces 16216-91)"), added
 //   2026-10-24. Their part numbers are whole, so no resolving.
+// - hydra-glide.net OEM lists (DATA_RIGHTS, approved 2026-10-25; CSV at
+//   HYDRA_CSV): each row's old (pre-renumbering) number -> its new number, and
+//   number -> replaced_by. Same checks as the notes.
 // - oem_fitment notes (qty_note / description) only corroborate: its rows are
 //   misaligned (DISCOVERY.md), so pairs seen only there go to review.
 // - A pair goes to review if both part names are known and their head words
@@ -37,6 +40,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeResolver, classify, normalize, suffixYear } from './lib/parts.mjs';
 import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
+import os from 'node:os';
+
+const HYDRA_CSV = process.env.HYDRA_CSV || path.join(os.homedir(), 'Developer/catalog-extract/hydra/hydra_glide_oem_parts.csv');
+
+import { readCsv } from './lib/csv.mjs';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -126,6 +134,30 @@ async function main() {
       }
     }
 
+  // hydra-glide.net: old number -> new number, number -> replaced_by.
+  let hydraPairs = 0, hydraNew = 0;
+  if (fs.existsSync(HYDRA_CSV))
+    for (const r of readCsv(HYDRA_CSV)) {
+      const links = [];
+      if (r.old_pn && r.oem_pn) links.push([r.old_pn, r.oem_pn]);
+      if (r.replaced_by) links.push([r.oem_pn || r.old_pn, r.replaced_by]);
+      // Pre-1972 numbers have a short base ("682-49", "2472-41B": classify 'short_base');
+      // the 5-digit post-1972 number replaces it. The export's two columns don't always
+      // keep that order ("36150-31" / "2366-31"), so a short_base side is always the older one.
+      const OK = ['std', 'modern', 'hardware', 'short_base'];
+      for (let [a, b] of links) {
+        let ca = classify(a.trim()), cb = classify(b.trim());
+        if (!OK.includes(ca.cls) || !OK.includes(cb.cls)) continue;
+        if (cb.cls === 'short_base' && ca.cls === 'std') [ca, cb] = [cb, ca];
+        const from = normalize(ca.display), to = normalize(cb.display);
+        if (from === to) continue;
+        hydraPairs++;
+        const k = `${from}|${to}`;
+        if (!pairs.has(k)) { hydraNew++; pairs.set(k, { from, to, fromDisplay: ca.display, toDisplay: cb.display, ref: new Set(), fit: 0 }); }
+        pairs.get(k).ref.add(`hydra_glide:${r.source_row}`);
+      }
+    }
+
   const fitOnly = new Map();
   for (const r of fitmentSrc) {
     const line = classify(r.display);
@@ -205,6 +237,7 @@ async function main() {
   lines.push(`Source oem_supersession rows skipped (all inferred letter bumps): 283`);
   lines.push(`Reference lines with use/replaces notes: ${refLines} (line number unresolved: ${unresolvedLines})`);
   lines.push(`Service-portal catalog lines with use/replaces notes: ${svcLines}; pairs only they give: ${svcNew}`);
+  lines.push(`hydra-glide.net links (old -> new number, replaced_by): ${hydraPairs}; pairs only they give: ${hydraNew}`);
   lines.push(`Distinct pairs from reference: ${pairs.size}; also in oem_fitment notes: ${[...pairs.values()].filter((e) => e.fit).length}`);
   lines.push(`Pairs only in oem_fitment (review, not loaded): ${fitOnly.size}`);
   lines.push(`Accepted pairs: ${accepted.length} (newer number has an older -YY suffix: ${olderTarget})`);

@@ -258,7 +258,7 @@ async function main() {
   const client = await app.connect();
   try {
     await client.query('BEGIN');
-    const del = await client.query(`DELETE FROM fitment WHERE source IN ('oem_catalog', 'service_catalog', 'catalog_ocr', 'inferred_span')`);
+    const del = await client.query(`DELETE FROM fitment WHERE source IN ('oem_catalog', 'service_catalog', 'catalog_ocr', 'hydra_glide', 'inferred_span')`);
     console.log(`Deleted ${del.rowCount} previous oem_catalog / service_catalog / catalog_ocr / inferred_span fitment rows.`);
     const entries = [...fit];
     let inserted = 0;
@@ -279,7 +279,7 @@ async function main() {
     }
     await client.query('COMMIT');
     console.log(`Inserted ${inserted} fitment rows.`);
-    console.log('Next: 04_conditions --apply, 09_service_catalog --apply, 11_catalog_books --apply, 05, 06, 07 --max-hole 3, 08.');
+    console.log('Next: 04_conditions --apply, 09_service_catalog --apply, 11_catalog_books --apply, 14_hydra_glide --apply, 05, 06, 07 --max-hole 3, 08.');
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
