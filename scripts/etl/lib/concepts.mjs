@@ -15,7 +15,7 @@ export function readTypeMap(file = TYPE_SEED) {
   return new Map(lines.map((l) => l.split(',')).filter(([c, s]) => c && s).map(([c, s]) => [c.trim(), s.trim()]));
 }
 
-const FILLER = /\b(assembly|assy|asy|kit|complete|set)\b/g;
+const FILLER = /\b(assembly|assy|asy|kit|complete|set|only)\b/g;
 
 const clean = (s) => s.toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const norm = (s) => clean(s).replace(FILLER, ' ').replace(/\s+/g, ' ').trim();
@@ -32,9 +32,15 @@ export function readSeed(file = SEED) {
   });
 }
 
+// OCR'd old catalogs: a trailing stray digit or letter ("Lens, tail lamp 5") is noise.
+const trimJunk = (s) => clean(s).replace(/(\s+(\d{1,2}|[a-z]))+$/, '');
+// Words glued by OCR ("Handlebarside", "Taillampassembly", "Controlwireassembly"):
+// compare with spaces and filler removed, glued filler at the end included.
+const glued = (s) => norm(s).replace(/[\s-]+/g, '').replace(/(assembly|assy|complete|only|kit)+$/, '');
+
 export function phrases(description) {
   const out = new Set();
-  for (const f of [clean, norm]) {
+  for (const f of [clean, norm, trimJunk]) {
     const segs = description.split(/,|\s-\s/).map(f).filter(Boolean); // "Wiring harness - fairing"
     if (!segs.length) continue;
     out.add(segs[0]);
@@ -67,6 +73,16 @@ export function matchConcept(terms, description) {
   const slugs = [...new Set(top.map((x) => x.slug))];
   if (slugs.length > 1) return { tie: slugs };
   return { slug: slugs[0], term: top[0] };
+}
+
+// Second pass for names no term matched: the whole first phrase, glued, equals a glued term.
+export function matchGlued(terms, description) {
+  const g = glued(description.split(/,|\s-\s/)[0] ?? '');
+  if (g.length < 5) return null;
+  const ph = phrases(description);
+  const hits = terms.filter((x) => x.t && glued(x.raw) === g && !x.exclude.some((e) => ph.some((q) => contains(q, e))));
+  const slugs = [...new Set(hits.map((x) => x.slug))];
+  return slugs.length === 1 ? { slug: slugs[0], term: hits[0] } : null;
 }
 
 // Names that say nothing on their own ("FENDER", "LENS ASSEMBLY") get a concept

@@ -40,7 +40,7 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readSeed, seedTerms, matchConcept, matchBySection, SECTION_RULES, readTypeMap } from './lib/concepts.mjs';
+import { readSeed, seedTerms, matchConcept, matchGlued, matchBySection, SECTION_RULES, readTypeMap } from './lib/concepts.mjs';
 import { classify, normalize } from './lib/parts.mjs';
 
 const APPLY = process.argv.includes('--apply');
@@ -86,7 +86,8 @@ async function main() {
   const unmatched = new Map(); // head phrase -> { parts, fit }
   for (const p of parts) {
     if (!p.description_clean) continue;
-    const m = matchConcept(terms, p.description_clean);
+    let m = matchConcept(terms, p.description_clean);
+    if (m.none !== undefined) m = matchGlued(terms, p.description_clean) ?? m;
     if (m.none !== undefined) {
       const sec = matchBySection(p.description_clean, sectionsOf.get(p.oem_number) ?? new Map());
       if (sec) { assigned.set(p.oem_number, sec); bySection.push([p, sec]); continue; }
