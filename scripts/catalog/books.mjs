@@ -276,6 +276,61 @@ BOOKS.push(
     // XLH / XLS (their own rows only in 1982).
     yearCode: (code, year) => (code === 'XL' || code === 'XLHA' ? 'XLH' : code === 'XLSA' ? 'XLS' : code),
   },
+  {
+    slug: '1982-83-fxr',
+    // Saved under the portal slug "1984-1986-touring", but the book is 99439-83B.
+    file: path.join(PORTAL_PDF, '1984-1986-touring.pdf'),
+    title: '1982-1983 FXR Models Parts Catalog (99439-83B)',
+    from: 1982, to: 1983,
+    layout: 'vin',
+    textLayer: true,
+    legend: { EA82: 'FXR', EB82: 'FXRS', EA83: 'FXR', EB83: 'FXRS', EC83: 'FXRT' },
+    codes: ['FXR', 'FXRS', 'FXRT'],
+    code: (c) => c,
+  },
+  {
+    slug: '1977-78-xlcr',
+    file: path.join(PORTAL_PDF, '1977-xlcr-1000-cafe-racer.pdf'),
+    title: '1977-1978 XLCR-1000 Cafe Racer Parts Catalog (99426-77)',
+    from: 1977, to: 1978,
+    layout: 'vin',
+    textLayer: true,
+    legend: { FH77: 'XLCR', FH78: 'XLCR' },
+    codes: ['XLCR'],
+    code: (c) => c,
+  },
+  {
+    slug: '1980-83-flt',
+    file: path.join(PORTAL_PDF, '1980-1983-touring.pdf'),
+    title: '1980-1983 FLT Models Parts Catalog (99438-83B)',
+    from: 1980, to: 1983,
+    layout: 'hd',
+    textLayer: true,
+    // "80 to 83-FLT, Classic": in the FLT book "Classic" is the FLT Classic (FLTC).
+    codes: ['FLT', 'FLTC', 'FLHT', 'FLHTC'],
+    code: (c) => c,
+    yearCode: (code, year) => (/^CLASS/.test(code) ? 'FLTC' : code),
+  },
+  {
+    slug: '1984-90-police',
+    file: path.join(PORTAL_PDF, '1984-5-1990-fxrp-flhtp-models.pdf'),
+    title: '1984.5-1990 FXRP/FLHTP Models Parts Catalog (99545-90)',
+    from: 1984, to: 1990,
+    layout: 'hd',
+    textLayer: true,
+    codes: ['FXRP', 'FLHTP'],
+    code: (c) => c,
+  },
+  {
+    // Portal reissue of the 1984-86 FXR book we OCR'd (1984-86-fxr); clean text layer.
+    slug: '1984-86-fxr-portal',
+    file: path.join(PORTAL_PDF, '1984-1986-fxr-models.pdf'),
+    title: '1984-1986 FXR Models Parts Catalog (99439-86A, portal)',
+    from: 1984, to: 1986,
+    layout: 'hd',
+    textLayer: true,
+    code: DROP_80,
+  },
 );
 
 export const bookBySlug = (slug) => BOOKS.find((b) => b.slug === slug);
