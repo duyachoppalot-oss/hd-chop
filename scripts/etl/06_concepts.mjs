@@ -20,6 +20,12 @@
 // A head match beats a contains match; then the longest term wins; equal ties
 // go to review.
 //
+// Gap fill (added 2026-10-24): a part the name and section rules leave without a
+// concept takes the concept of its H-D component type (part_component_types from
+// 13_component_types, mapped by data/seed/component_type_concepts.csv), named
+// or not. The type never overrides a name match; where they disagree the part
+// keeps its name match and the report lists it.
+//
 // The report counts parts per term; 0-match terms are fixed in the seed file
 // from real wording before --apply (SPEC "Seeds").
 //
@@ -34,7 +40,7 @@ import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
-import { readSeed, seedTerms, matchConcept, matchBySection, SECTION_RULES } from './lib/concepts.mjs';
+import { readSeed, seedTerms, matchConcept, matchBySection, SECTION_RULES, readTypeMap } from './lib/concepts.mjs';
 import { classify, normalize } from './lib/parts.mjs';
 
 const APPLY = process.argv.includes('--apply');
@@ -94,6 +100,23 @@ async function main() {
     termHits.get(`${m.slug}|${m.term.raw}`).push(p);
   }
 
+  // H-D component types fill what names and sections left empty.
+  const typeMap = readTypeMap();
+  const hasTypes = (await app.query(`SELECT to_regclass('part_component_types') IS NOT NULL AS ok`)).rows[0].ok;
+  const byType = []; // [part, slug]
+  const typeDisagree = new Map(); // "name slug -> type slug" -> count
+  if (hasTypes) {
+    const partOf = new Map(parts.map((p) => [p.oem_number, p]));
+    for (const r of (await app.query(`SELECT oem_number, type_code FROM part_component_types`)).rows) {
+      const slug = typeMap.get(r.type_code);
+      const p = partOf.get(r.oem_number);
+      if (!slug || !p) continue;
+      const cur = assigned.get(r.oem_number);
+      if (cur == null) { assigned.set(r.oem_number, slug); byType.push([p, slug]); }
+      else if (cur !== slug) typeDisagree.set(`${cur} -> ${slug}`, (typeDisagree.get(`${cur} -> ${slug}`) ?? 0) + 1);
+    }
+  }
+
   // ---- report ----
   const lines = [];
   const fitOf = (slug) => parts.filter((p) => assigned.get(p.oem_number) === slug).reduce((n, p) => n + p.fit, 0);
@@ -106,6 +129,11 @@ async function main() {
   lines.push(`hd_terms with 0 matches (${zero.length}): ${zero.map((x) => `${x.slug}:"${x.raw}"`).join(', ')}`);
   const emptyConcepts = concepts.filter((c) => !assigned.size || ![...assigned.values()].includes(c.slug));
   lines.push(`Concepts with 0 parts (${emptyConcepts.length}): ${emptyConcepts.map((c) => c.slug).join(', ')}`);
+  lines.push(
+    hasTypes
+      ? `Assigned from H-D component types (gap fill): ${byType.length} parts, ${byType.reduce((n, [p]) => n + p.fit, 0)} fitment rows; name match kept over a different type: ${[...typeDisagree.values()].reduce((a, b) => a + b, 0)} (${[...typeDisagree].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join('; ')})`
+      : 'H-D component types: part_component_types not loaded (migration 008 + 13_component_types --apply); no gap fill'
+  );
   lines.push(`Assigned from catalog sections (generic names, SECTION_RULES): ${bySection.length}`);
   for (const slug of [...new Set(SECTION_RULES.map((r) => r.slug))]) {
     const xs = bySection.filter(([, s]) => s === slug);

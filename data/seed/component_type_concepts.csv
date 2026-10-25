@@ -1,0 +1,75 @@
+type_code,slug,type_name
+610A1,fuel_tank,Fuel Tank
+611B1,fuel_cap,Fuel Cap
+612B2,fuel_petcock,Fuel Valve / Petcock
+612F1,fuel_pump,Fuel Pump
+270A1,carburetor,Carburetor
+273G1,throttle_body,Throttle Body
+274C1,fuel_injector,Fuel Injector
+294A1,air_cleaner,Air Filter Element
+613K1,air_cleaner,Airbox Cover
+589A1,front_fender,Front Fender
+595D1,rear_fender,Rear Fender
+595S2,rear_fender,Rear Fender (sub-assembly)
+902A1,saddlebag,Saddlebag
+530A1,tour_pak,Tour Pak
+570A1,fairing_outer,Front Fairing
+570C1,fairing_inner,Inner Fairing
+574B1,windshield,Windscreen / Windshield
+520A1,seat,Rider Seat or Full Seat
+524B1,seat,Passenger Seat
+503A1,luggage_rack,Tail Rack
+530E1,luggage_rack,Tour-Pak Luggage Rack
+558A1,handlebar,Handlebar
+559D2,riser,Lower Handlebar Riser
+561B1,grip,Left Hand Grip
+561E1,grip,Throttle Grip
+561F1,grip,Grip Kit
+560A1,mirror,Mirror
+413A1,brake_caliper,Brake Caliper
+415B1,brake_rotor,Brake Rotor
+413D1,brake_pads,Brake Pad
+506A1,brake_pedal,Brake Pedal
+336D1,shift_lever,Shift Pedal
+505G1,footpeg,Rider or Common Footpeg
+505D1,footpeg,Passenger Footpeg
+505A1,floorboard,Footboard
+500A1,jiffy_stand,Sidestand Assembly
+372D1,clutch_cable,Clutch Cable
+561A1,throttle_cable,Throttle Cable
+677A1,headlamp,Headlight
+678A1,tail_lamp,Taillight
+678D1,turn_signal,Turnsignal
+709B1,speedometer,Instrument Cluster or Speedometer
+670A1,tachometer,Tachometer
+714A1,ignition_switch,Ignition Switch
+314F1,starter,Starter Motor
+299F1,stator,Stator Assembly
+747A1,regulator,Voltage Regulator
+660A1,battery,Battery
+690C1,horn,Horn
+692F1,wiring_harness,Wire Harness
+257L1,primary_cover,Primary Cover
+256A1,timing_cover,Timer Cover
+257N1,rocker_cover,Rocker-Arm / Valve Cover
+165A1,cylinder_head,Cylinder Head
+257M1,pushrod_tube,Push Rod Cover
+627F1,oil_filter,Oil Filter
+624A1,oil_pump,Oil Pump Assembly
+627A1,oil_cooler,Oil Cooler
+625B1,oil_tank,Oil Tank
+649A1,exhaust_muffler,Muffler / Auxiliary
+656C1,exhaust_header,Header
+400A1,belt_drive,Drive-Belt
+422B1,sprocket_rear,Wheel Sprocket
+365A1,chain,Primary Chain
+540B1,shock,Rear Shock
+455A1,fork_tube,Front Telescopic Fork Slider
+459A1,triple_clamp,Upper Triple Clamp
+459B1,triple_clamp,Lower Triple Clamp
+474C1,swingarm,Swingarm
+433A1,wheel_front,Front Wheel
+409A1,wheel_rear,Rear Wheel
+679D1,license_bracket,License Plate Bracket
+219A1,piston,Piston
+220A1,piston_rings,Piston Ring

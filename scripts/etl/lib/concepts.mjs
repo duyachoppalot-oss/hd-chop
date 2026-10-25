@@ -7,6 +7,13 @@
 import fs from 'node:fs';
 
 export const SEED = 'data/seed/concepts_seed.csv';
+export const TYPE_SEED = 'data/seed/component_type_concepts.csv';
+
+// H-D component type code -> concept slug (13_component_types, 06 gap fill).
+export function readTypeMap(file = TYPE_SEED) {
+  const [, ...lines] = fs.readFileSync(file, 'utf8').trim().split('\n');
+  return new Map(lines.map((l) => l.split(',')).filter(([c, s]) => c && s).map(([c, s]) => [c.trim(), s.trim()]));
+}
 
 const FILLER = /\b(assembly|assy|asy|kit|complete|set)\b/g;
 
