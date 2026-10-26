@@ -3,6 +3,7 @@ import { Redirect, router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { bikeLabel, useBike } from '@/lib/bike';
 import { specLines } from '@/lib/format';
+import { chassisLines } from '@/lib/chassis';
 import { font, inked, LINE, Palette, pushed, space, TAP, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Chip, Footer, Heading, Section } from '@/components/ui';
@@ -18,6 +19,7 @@ export default function Search() {
   const [q, setQ] = useState('');
   if (!bike) return <Redirect href="/" />;
   const spec = specLines(bike.specs ?? []);
+  const chassis = chassisLines(bike.chassis);
 
   const go = (words: string) => {
     const w = words.trim();
@@ -37,12 +39,26 @@ export default function Search() {
         </Pressable>
       </View>
 
-      {spec.lines.length > 0 && (
-        <View style={s.specs} accessibilityLabel={`Engine and transmission: ${spec.lines.join('; ')}`}>
-          {spec.lines.map((l) => (
-            <Text key={l} style={s.specLine}>{l}</Text>
-          ))}
-          {spec.note && <Text style={s.specNote}>{spec.note}</Text>}
+      {(spec.lines.length > 0 || chassis.length > 0) && (
+        <View style={s.specs}>
+          {spec.lines.length > 0 && (
+            <View accessible accessibilityLabel={`Engine and transmission: ${spec.lines.join('; ')}`}>
+              {spec.lines.map((l) => (
+                <Text key={l} style={s.specLine}>{l}</Text>
+              ))}
+              {spec.note && <Text style={s.specNote}>{spec.note}</Text>}
+            </View>
+          )}
+          {chassis.length > 0 && (
+            <View accessible accessibilityLabel={`Stock sizes: ${chassis.map((c) => `${c.label} ${c.value}`).join('; ')}`} style={s.chassis}>
+              {chassis.map((c) => (
+                <View key={c.label} style={s.chassisRow}>
+                  <Text style={s.chassisLabel}>{c.label}</Text>
+                  <Text style={s.chassisValue}>{c.value}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       )}
 
@@ -87,6 +103,10 @@ const styles = (color: Palette) => StyleSheet.create({
   specs: { marginTop: space.sm, paddingLeft: space.sm, borderLeftWidth: LINE, borderLeftColor: color.fill, gap: 2 },
   specLine: { fontFamily: font.type, fontSize: 17, color: color.text },
   specNote: { fontFamily: font.type, fontSize: 14, color: color.muted, fontStyle: 'italic' },
+  chassis: { marginTop: space.xs, gap: 2 },
+  chassisRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
+  chassisLabel: { fontFamily: font.banner, fontSize: 13, color: color.accent, width: 62 },
+  chassisValue: { fontFamily: font.type, fontSize: 15, color: color.text, flex: 1, lineHeight: 20 },
   change: { ...inked(color), minHeight: 48, justifyContent: 'center', paddingHorizontal: space.md, backgroundColor: color.panel },
   changeText: { fontFamily: font.sign, fontSize: 20, color: color.accent },
   input: {

@@ -40,7 +40,7 @@ export default function PickModel() {
   }
 
   const pick = (m: Model) => {
-    setBike({ year, model_code: m.model_code, model_name: m.model_name, specs: m.specs ?? [] });
+    setBike({ year, model_code: m.model_code, model_name: m.model_name, specs: m.specs ?? [], chassis: m.chassis });
     router.push('/search');
   };
 

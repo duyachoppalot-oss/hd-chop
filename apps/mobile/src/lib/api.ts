@@ -27,12 +27,25 @@ export type Spec = {
   mid_year_change: boolean;
   source_ref: string;
 };
+// Stock chassis sizes in our wording ('19 x 2.15 in', '100/90-19', '25 mm');
+// [] when no source covers a field. Older API builds omit it.
+export type Chassis = {
+  wheel_front: string[];
+  wheel_rear: string[];
+  tire_front: string[];
+  tire_rear: string[];
+  axle_front: string[];
+  axle_rear: string[];
+  fork_tube: string[];
+  handlebar: string[];
+};
 export type Model = {
   model_code: string;
   model_name: string | null;
   platform: string;
   has_parts: boolean;
   specs: Spec[];
+  chassis?: Chassis;
   family?: string | null;
   family_key?: string | null;
 };
