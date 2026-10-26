@@ -16,7 +16,10 @@ const BIKES = [
 ];
 const WORDS = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo'];
 
+// Remote: stay under the nginx limit (30/min per IP, docs/FIX_PLAN.md A2) -> one request per 2.1 s.
+const PAUSE = /\/\/(localhost|127\.0\.0\.1)[:/]/.test(BASE) ? 0 : 2100;
 const get = async (path) => {
+  if (PAUSE) await new Promise((r) => setTimeout(r, PAUSE));
   const r = await fetch(BASE + path, { headers: KEY ? { 'X-App-Key': KEY } : {} });
   return { status: r.status, body: await r.json() };
 };

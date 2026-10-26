@@ -38,7 +38,7 @@ Claude Code works through it top to bottom.
 - [x] CORS: drop `*`. Allow only the Expo web dev origins (localhost:8081/8083) when `NODE_ENV !== 'production'`.
 - [x] Mobile: send the key from `EXPO_PUBLIC_APP_KEY`; add it to `eas.json` profiles (done as EAS environments, not a literal: eas.json is committed and the repo is still public) and to the run notes in `apps/mobile/README.md` (simulator, Expo Go, web).
 - [x] Note in the README: an app key in the binary only stops casual scraping. Real protection = rate limit (A2) + paid gating (C2).
-- [ ] Check: curl without key → 401; with key → same results as before; Simulator + Expo Go still work.
+- [ ] Check: curl without key → 401; with key → same results as before; Simulator + Expo Go still work. (2026-10-26 live: 401 / 200, gate 25 cells identical to local; Expo web OK; Simulator + Expo Go not checked yet)
 - **STOP** — show diff, then deploy with `scripts/deploy/api.sh`.
 
 ### A4 [Laken] Real domain
