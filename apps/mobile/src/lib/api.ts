@@ -1,6 +1,8 @@
 // Client for apps/api (docs/SPEC.md "API"). Override the base URL with
 // EXPO_PUBLIC_API_URL (e.g. http://<mac-ip>:3001 against the local dev server).
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://hdchop.5.161.100.126.nip.io').replace(/\/$/, '');
+// Sent as X-App-Key (apps/api/middleware.ts). Local runs: apps/mobile/.env; EAS builds: EAS env vars.
+const APP_KEY = process.env.EXPO_PUBLIC_APP_KEY ?? '';
 
 // family / family_key: the named bike the code belongs to (FLHRCI -> "ROAD KING",
 // key "touring:FLHR"), from apps/api/lib/familyRule.ts. Null when unknown.
@@ -61,7 +63,7 @@ export class ApiError extends Error {
 async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { signal });
+    res = await fetch(`${API_URL}${path}`, { signal, headers: APP_KEY ? { 'X-App-Key': APP_KEY } : {} });
   } catch (err) {
     if ((err as Error).name === 'AbortError') throw err;
     throw new ApiError(0, 'Can’t reach the parts counter. Check your connection.');

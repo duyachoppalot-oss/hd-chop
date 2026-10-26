@@ -34,10 +34,10 @@ Claude Code works through it top to bottom.
 - **STOP** — Laken applies the nginx change.
 
 ### A3 App key + CORS
-- [ ] API: require header `X-App-Key` matching `HDCHOP_APP_KEYS` (comma list, from `api.env`, so keys can be rotated). Missing/wrong → 401. `/healthz` stays open if it exists.
-- [ ] CORS: drop `*`. Allow only the Expo web dev origins (localhost:8081/8083) when `NODE_ENV !== 'production'`.
-- [ ] Mobile: send the key from `EXPO_PUBLIC_APP_KEY`; add it to `eas.json` profiles and to the run notes in `apps/mobile/README.md` (simulator, Expo Go, web).
-- [ ] Note in the README: an app key in the binary only stops casual scraping. Real protection = rate limit (A2) + paid gating (C2).
+- [x] API: require header `X-App-Key` matching `HDCHOP_APP_KEYS` (comma list, from `api.env`, so keys can be rotated). Missing/wrong → 401. `/healthz` stays open if it exists.
+- [x] CORS: drop `*`. Allow only the Expo web dev origins (localhost:8081/8083) when `NODE_ENV !== 'production'`.
+- [x] Mobile: send the key from `EXPO_PUBLIC_APP_KEY`; add it to `eas.json` profiles (done as EAS environments, not a literal: eas.json is committed and the repo is still public) and to the run notes in `apps/mobile/README.md` (simulator, Expo Go, web).
+- [x] Note in the README: an app key in the binary only stops casual scraping. Real protection = rate limit (A2) + paid gating (C2).
 - [ ] Check: curl without key → 401; with key → same results as before; Simulator + Expo Go still work.
 - **STOP** — show diff, then deploy with `scripts/deploy/api.sh`.
 

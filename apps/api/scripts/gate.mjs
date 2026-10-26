@@ -1,7 +1,12 @@
 // Phase 2 gate (docs/ROADMAP.md): the five gate words on five test bikes across
 // Touring / Softail / Dyna / Sportster, through the HTTP API.
 // Usage: node scripts/gate.mjs [base_url]   (default http://localhost:3001)
+// Sends the first key of HDCHOP_APP_KEYS (env, else the repo-root .env) as X-App-Key.
+import fs from 'node:fs';
 const BASE = process.argv[2] ?? 'http://localhost:3001';
+const rootEnv = new URL('../../../.env', import.meta.url);
+const KEYS = process.env.HDCHOP_APP_KEYS ?? (fs.existsSync(rootEnv) ? /^HDCHOP_APP_KEYS=(.*)$/m.exec(fs.readFileSync(rootEnv, 'utf8'))?.[1] : '') ?? '';
+const KEY = KEYS.split(',')[0].trim();
 const BIKES = [
   [2004, 'FLHR'], // Touring, Road King
   [2010, 'FLHX'], // Touring, Street Glide
@@ -12,7 +17,7 @@ const BIKES = [
 const WORDS = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo'];
 
 const get = async (path) => {
-  const r = await fetch(BASE + path);
+  const r = await fetch(BASE + path, { headers: KEY ? { 'X-App-Key': KEY } : {} });
   return { status: r.status, body: await r.json() };
 };
 

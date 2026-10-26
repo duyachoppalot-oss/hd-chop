@@ -2,13 +2,13 @@ import type { NextConfig } from 'next';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Local dev reads the repo-root .env (APP_DATABASE_URL). In the container the
-// variable comes from --env-file and this does nothing.
+// Local dev reads the repo-root .env (APP_DATABASE_URL, HDCHOP_APP_KEYS). In the
+// container the variables come from --env-file and this does nothing.
 const rootEnv = path.resolve(__dirname, '../../.env');
-if (!process.env.APP_DATABASE_URL && fs.existsSync(rootEnv)) {
+if (fs.existsSync(rootEnv)) {
   for (const line of fs.readFileSync(rootEnv, 'utf8').split('\n')) {
-    const m = /^APP_DATABASE_URL=(.*)$/.exec(line.trim());
-    if (m) process.env.APP_DATABASE_URL = m[1];
+    const m = /^(APP_DATABASE_URL|HDCHOP_APP_KEYS)=(.*)$/.exec(line.trim());
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
   }
 }
 
