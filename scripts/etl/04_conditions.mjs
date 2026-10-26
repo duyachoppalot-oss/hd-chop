@@ -14,6 +14,9 @@
 // 3. EFI/carb inference: for each year where both X and XI exist and catalogs
 //    cover both, a part that fits XI but not X is tagged efi on XI; one that
 //    fits X but not XI is tagged carb on X.
+//    No efi tag (inferred or from text) on a bike whose fuel_system is efi: its
+//    code already says injected, and the tag only split its spans by year
+//    (61625-01D: FLSTCI 2001/2003 tagged, 2002/2004-05 not). 2026-10-26.
 // 4. conditions sorted + deduped; condition_source = catalog_text if any text
 //    tag, else inferred if any inferred tag, else none.
 //
@@ -60,7 +63,7 @@ async function main() {
       FROM oem_fitment WHERE oem_part_no IS NOT NULL
     `)
   ).rows;
-  const vehicles = (await app.query(`SELECT vehicle_id, year, model_code, platform FROM vehicles`)).rows;
+  const vehicles = (await app.query(`SELECT vehicle_id, year, model_code, platform, fuel_system FROM vehicles`)).rows;
   const parts = new Map((await app.query(`SELECT oem_number, description_clean FROM oem_parts`)).rows.map((r) => [r.oem_number, r.description_clean]));
   const loaded = new Set(
     (await app.query(`SELECT oem_number || '|' || vehicle_id AS k FROM fitment WHERE source = 'oem_catalog'`)).rows.map((r) => r.k)
@@ -112,6 +115,8 @@ async function main() {
   }
 
   // ---- 4: final conditions ----
+  const efiBike = new Set(vehicles.filter((v) => v.fuel_system === 'efi').map((v) => v.vehicle_id));
+  const efiDropped = { catalog_text: 0, inferred: 0 };
   const final = new Map(); // key -> { conditions, source }
   const review = [];
   const tagCount = {};
@@ -122,6 +127,11 @@ async function main() {
     if (mt) text.add(mt);
     const inf = inferred.get(key);
     const all = new Set([...text, ...(inf ? [inf] : [])]);
+    if (all.has('efi') && efiBike.has(Number(key.split('|')[1]))) {
+      efiDropped[text.has('efi') ? 'catalog_text' : 'inferred']++;
+      all.delete('efi');
+      text.delete('efi');
+    }
     for (const [a, b] of CONFLICTS)
       if (all.has(a) && all.has(b)) {
         review.push({ key, conflict: `${a}+${b}`, ids: e.ids.join(' ') });
@@ -134,6 +144,20 @@ async function main() {
     final.set(key, { conditions, source: src });
   }
   const notLoaded = [...final.keys()].filter((k) => !loaded.has(k)).length;
+  // What --apply would change against the live rows.
+  const live = new Map(
+    (await app.query(`SELECT oem_number || '|' || vehicle_id AS k, conditions FROM fitment WHERE source = 'oem_catalog'`)).rows.map((r) => [
+      r.k,
+      [...(r.conditions ?? [])].sort().join(','),
+    ])
+  );
+  const changes = [];
+  for (const [k, f] of final) {
+    const was = live.get(k);
+    if (was !== undefined && was !== f.conditions.join(',')) changes.push([k, was, f.conditions.join(',')]);
+  }
+  const changeKinds = {};
+  for (const [, was, now] of changes) changeKinds[`{${was}} -> {${now}}`] = (changeKinds[`{${was}} -> {${now}}`] || 0) + 1;
   const missing = [...loaded].filter((k) => !final.has(k)).length;
 
   // ---- report ----
@@ -153,6 +177,17 @@ async function main() {
   lines.push('Fitment rows by final tag:');
   for (const [t, n] of Object.entries(tagCount).sort((a, b) => b[1] - a[1])) lines.push(`  ${t.padEnd(15)} ${String(n).padStart(7)} (${pct(n, final.size)})`);
   lines.push(`condition_source: catalog_text ${sourceCount.catalog_text}, inferred ${sourceCount.inferred}, none ${sourceCount.none}`);
+  lines.push(`efi dropped on bikes whose fuel_system is efi: ${efiDropped.inferred} inferred, ${efiDropped.catalog_text} from catalog text`);
+  lines.push('');
+  lines.push(`Compared with live oem_catalog rows: ${changes.length} would change`);
+  for (const [kind, n] of Object.entries(changeKinds).sort((a, b) => b[1] - a[1]).slice(0, 12)) lines.push(`  ${kind.padEnd(34)} ${n}`);
+  const cstep = Math.max(1, Math.floor(changes.length / 20));
+  lines.push('Sample changes (20, evenly spaced):');
+  for (const [k, was, now] of changes.filter((_, i) => i % cstep === 0).slice(0, 20)) {
+    const [oem, vid] = k.split('|');
+    const v = vById.get(Number(vid));
+    lines.push(`  ${oem.padEnd(12)} ${(parts.get(oem) ?? '').slice(0, 28).padEnd(29)} ${v.year} ${v.model_code.padEnd(8)} {${was}} -> {${now}}`);
+  }
   lines.push(`Contradictions dropped: ${review.length}`);
   lines.push('');
   lines.push('Samples per tag (5 each): part, vehicle, source row ids');
