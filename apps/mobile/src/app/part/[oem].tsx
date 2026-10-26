@@ -93,11 +93,25 @@ function CodeRow({ row, mine, inset }: { row: ModelRow; mine?: string; inset?: b
 }
 
 // Collapsed: family name, code count, year envelope. Starts open when the
-// rider's own model is inside.
+// rider's own model is inside. One code: a fixed row, name over "CODE · years".
 function FamilyRow({ row, mine }: { row: Extract<FitRow, { kind: 'family' }>; mine?: string }) {
   const s = useStyles(styles);
   const hasMine = row.models.some((m) => m.model === mine);
   const [open, setOpen] = useState(hasMine);
+  if (row.models.length === 1) {
+    const m = row.models[0];
+    return (
+      <View accessibilityLabel={`${row.name}, ${m.model}, ${m.years}`} style={[s.row, s.famRow, hasMine && s.rowMine]}>
+        <Text style={s.chev}> </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.famName}>{row.name}</Text>
+          <Text style={s.famSub}>
+            {m.model} · {m.years}
+          </Text>
+        </View>
+      </View>
+    );
+  }
   return (
     <View>
       <Pressable

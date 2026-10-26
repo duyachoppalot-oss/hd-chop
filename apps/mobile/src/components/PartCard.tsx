@@ -49,7 +49,9 @@ export function PartCard({ part, model }: { part: Part; model: string }) {
           Also fits{' '}
           {others
             .slice(0, OTHER_SHOWN)
-            .map((r) => (r.kind === 'family' ? `${r.name} ×${r.models.length} ${r.years}` : `${r.model} ${r.years}`))
+            .map((r) =>
+              r.kind === 'model' ? `${r.model} ${r.years}` : r.models.length > 1 ? `${r.name} ×${r.models.length} ${r.years}` : `${r.name} ${r.years}`
+            )
             .join(' · ')}
           {others.length > OTHER_SHOWN ? ` · +${others.length - OTHER_SHOWN} more` : ''}
         </Text>

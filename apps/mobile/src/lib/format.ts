@@ -51,7 +51,9 @@ export type FitRow =
   | { kind: 'family'; key: string; name: string; years: string; models: ModelRow[] };
 
 // byModel, with codes of the same named bike (span.family_key) folded into one
-// family row when two or more of them are listed. First-appearance order kept.
+// family row. A family with one code listed still gets its row (name + code), so
+// it doesn't sit as a bare code among named rows; codes with no family stay bare.
+// First-appearance order kept.
 export function byFamily(spans: Span[]): FitRow[] {
   const groups = new Map<string, Span[]>();
   for (const s of spans) {
@@ -61,7 +63,7 @@ export function byFamily(spans: Span[]): FitRow[] {
   }
   return [...groups].flatMap(([key, ss]): FitRow[] => {
     const models = byModel(ss);
-    if (models.length < 2) return models.map((m) => ({ kind: 'model', ...m }));
+    if (models.length < 2 && !ss[0].family) return models.map((m) => ({ kind: 'model', ...m }));
     return [{ kind: 'family', key, name: titleCase(ss[0].family ?? models[0].model), years: envelope(ss), models }];
   });
 }
