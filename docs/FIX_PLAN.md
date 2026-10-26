@@ -38,7 +38,7 @@ Claude Code works through it top to bottom.
 - [x] CORS: drop `*`. Allow only the Expo web dev origins (localhost:8081/8083) when `NODE_ENV !== 'production'`.
 - [x] Mobile: send the key from `EXPO_PUBLIC_APP_KEY`; add it to `eas.json` profiles (done as EAS environments, not a literal: eas.json is committed and the repo is still public) and to the run notes in `apps/mobile/README.md` (simulator, Expo Go, web).
 - [x] Note in the README: an app key in the binary only stops casual scraping. Real protection = rate limit (A2) + paid gating (C2).
-- [ ] Check: curl without key → 401; with key → same results as before; Simulator + Expo Go still work. (2026-10-26 live: 401 / 200, gate 25 cells identical to local; Expo web OK; Simulator + Expo Go not checked yet)
+- [x] Check: curl without key → 401; with key → same results as before; Simulator + Expo Go still work. (2026-10-26 live: 401 / 200, gate 25 cells identical to local; Expo web + iOS Simulator (Expo Go) OK: years, models, search, part page; Laken's phone not checked)
 - **STOP** — show diff, then deploy with `scripts/deploy/api.sh`.
 
 ### A4 [Laken] Real domain
@@ -50,10 +50,10 @@ Claude Code works through it top to bottom.
 
 ### B1 Source-removal report (read-only)
 For each removable source (`service_catalog`, `hydra_glide`, `catalog_ocr`), report what the app loses if that source is pulled:
-- [ ] fitment rows, parts, supersession pairs, concepts that only that source supplies
-- [ ] bikes (year + model) that would drop to zero parts, and to under 100 parts
-- [ ] the 25 gate searches (`apps/api/scripts/gate.mjs`) re-run as if the source were gone (do it in a rolled-back transaction or a scratch copy of the spans; never touch live)
-- Output `reports/source_removal_<ts>.txt`. Laken takes this to the lawyer.
+- [x] fitment rows, parts, supersession pairs, concepts that only that source supplies
+- [x] bikes (year + model) that would drop to zero parts, and to under 100 parts
+- [x] the 25 gate searches (`apps/api/scripts/gate.mjs`) re-run as if the source were gone (do it in a rolled-back transaction or a scratch copy of the spans; never touch live)
+- Output `reports/source_removal_<ts>.txt`. Laken takes this to the lawyer. (2026-10-26: `scripts/dev/source_removal.mjs` -> `reports/source_removal_20261026_021113.txt`)
 - **STOP**
 
 ### B2 [Laken] Lawyer review

@@ -265,6 +265,14 @@ async function main() {
   fs.writeFileSync(reportPath, lines.join('\n') + '\n');
   const cols = ['reason', 'from', 'to', 'ids', 'note'];
   fs.writeFileSync(reviewPath, [cols.join(','), ...review.map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\n') + '\n');
+  // Accepted pairs with the sources that give them (scripts/dev/source_removal.mjs).
+  // Ref ids: bare = hd_oem_catalog_reference (oem_catalog), catalog_extract: = service_catalog, hydra_glide:.
+  const srcOf = (id) => (String(id).startsWith('catalog_extract:') ? 'service_catalog' : String(id).startsWith('hydra_glide:') ? 'hydra_glide' : 'oem_catalog');
+  const pairsPath = path.join('reports', `05_supersession_pairs_${ts}.csv`);
+  fs.writeFileSync(
+    pairsPath,
+    ['from,to,sources', ...accepted.map((e) => [e.from, e.to, [...new Set([...e.ref].map(srcOf))].sort().join(' ')].map(csvCell).join(','))].join('\n') + '\n'
+  );
   console.log(lines.join('\n'));
   console.log(`\nReport written to ${reportPath}`);
   console.log(`Review rows written to ${reviewPath}`);
