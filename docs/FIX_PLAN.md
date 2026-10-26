@@ -60,8 +60,8 @@ For each removable source (`service_catalog`, `hydra_glide`, `catalog_ocr`), rep
 - [ ] H-D service portal terms, hydra-glide.net (ask the owner too), the "HD Chop" name vs H-D trademarks, the not-affiliated notice. Decision recorded in DATA_RIGHTS.md.
 
 ### B3 Launch paperwork
-- [ ] Draft a privacy policy page (what's collected: search text in `search_misses`, purchase status via RevenueCat; no accounts, no location) and terms. Plain HTML served by the API's nginx host at `/privacy` and `/terms`.
-- [ ] "Not affiliated with or endorsed by Harley-Davidson" in the app footer (check it's there) and in App Store text drafts.
+- [x] Draft a privacy policy page (what's collected: search text in `search_misses`, purchase status via RevenueCat; no accounts, no location) and terms. Plain HTML served by the API's nginx host at `/privacy` and `/terms`. (2026-10-26: drafted in `apps/api/lib/legal.ts`, served by the API app at /privacy and /terms, outside the app key; not deployed; [brackets] for Laken)
+- [x] "Not affiliated with or endorsed by Harley-Davidson" in the app footer (check it's there) and in App Store text drafts. (footer on all 5 screens via `Footer` in ui.tsx; `docs/APP_STORE.md` draft)
 - **STOP**
 
 ---

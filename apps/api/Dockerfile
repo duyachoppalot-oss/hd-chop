@@ -11,5 +11,6 @@ WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3001 HOSTNAME=127.0.0.1
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/public ./public
 USER node
 CMD ["node", "server.js"]
