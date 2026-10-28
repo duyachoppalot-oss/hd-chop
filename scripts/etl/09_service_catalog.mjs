@@ -306,7 +306,7 @@ async function main() {
   try {
     await client.query('BEGIN');
     // catalog_ocr (11) merges against these pairs and may use service_catalog parts: re-run 11 after.
-    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'catalog_ocr', 'hydra_glide', 'inferred_span')`);
+    const delFit = await client.query(`DELETE FROM fitment WHERE source IN ('service_catalog', 'catalog_ocr', 'hydra_glide', 'vtwin', 'inferred_span')`);
     // Admin rows on service parts would block the part delete; 08 re-adds them.
     await client.query(
       `DELETE FROM fitment WHERE source = 'admin' AND oem_number IN (SELECT oem_number FROM oem_parts WHERE source = 'service_catalog')`

@@ -109,6 +109,35 @@ export async function reviewName(f: FormData) {
   revalidatePath(str(f, 'back') || '/review/names');
 }
 
+// Name review "On hold": an open part note, so the part leaves the list and shows up in
+// scripts/dev/notes.mjs for a later look. Whatever was typed in the name box rides along as a guess.
+const HOLD_PREFIX = 'On hold (name review)'; // app/review/names/page.tsx matches the same text
+
+export async function holdName(f: FormData) {
+  const oem = normOem(str(f, 'oem'));
+  if (!oem) return;
+  const current = str(f, 'current');
+  const guess = str(f, 'value').slice(0, 160);
+  const body = `${HOLD_PREFIX}: can't work out the name. Now: "${current}"${guess && guess !== current ? `. Guess: "${guess}"` : ''}`;
+  await query(
+    `INSERT INTO admin_notes (target_kind, target_key, body) SELECT 'part', $1, $2
+     WHERE NOT EXISTS (SELECT 1 FROM admin_notes WHERE target_kind = 'part' AND target_key = $1 AND status = 'open' AND body LIKE $3)`,
+    [oem, body, `${HOLD_PREFIX}%`]
+  );
+  revalidatePath('/review/names');
+}
+
+export async function releaseName(f: FormData) {
+  const oem = normOem(str(f, 'oem'));
+  if (!oem) return;
+  await query(
+    `UPDATE admin_notes SET status = 'done', updated_at = now()
+     WHERE target_kind = 'part' AND target_key = $1 AND status = 'open' AND body LIKE $2`,
+    [oem, `${HOLD_PREFIX}%`]
+  );
+  revalidatePath('/review/names');
+}
+
 // ---------- overrides ----------
 
 export type ActionState = { ok?: string; error?: string };
