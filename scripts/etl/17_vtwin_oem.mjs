@@ -30,7 +30,10 @@
 //     number, H-D has spoken, also for variants without a book of their own (CVO).
 //     In practice: old bikes and years our H-D sources don't cover. --all-bikes
 //     lifts this (reported either way);
-//   - "except" rows, rows with no model (outside the Touring/Sportster sections),
+//   - models named after "except" are left out ("except" naming no model -> review);
+//   - a section-default model (no model on the row, table or page) only on parts that
+//     already have fitment;
+//   - rows with no model at all,
 //     Colony-style hardware numbers (4-digit base, -1x suffix) and the Tools
 //     section go to review.
 //
@@ -80,13 +83,15 @@ const csvCell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.t
 
 const SECTIONS = [[1, 158, 'touring'], [159, 482, 'bigtwin'], [483, 842, 'sec3'], [843, 1028, 'sportster'], [1029, 1274, 'multifit'], [1275, 1368, 'tools']];
 const sectionOf = (p) => SECTIONS.find(([a, b]) => p >= a && p <= b)?.[2] ?? '?';
-const SECTION_DEFAULT = { touring: 'TOURING', sportster: 'SPORTSTER' };
+// Section index pages: "Touring", "Big Twin 1984-up", "Classic 1915-1983", "XL 1957-UP". The Classic section also
+// carries 45" / Servi-Car / K pages, so its default applies only on pages that name none of those (parsePage).
+const SECTION_DEFAULT = { touring: 'TOURING', bigtwin: 'BIG TWIN', sec3: 'BIG TWIN', sportster: 'SPORTSTER' };
 
 // Row anchors: V-Twin numbers (44-0651) and Colony hardware numbers (9787-12), not year ranges.
 const VT = /^\d{2}-\d{4}[A-Z]?\*?$|^(?!19\d\d-|20\d\d-)\d{4}-\d{1,2}[A-Z]?\*?$/;
 const OEM = /^(?:OEM#?)?(\d{3,5}-\d{2}[A-Z]{0,2}|\d{8})[.,;:)]?$/;
 const YR = /(?<!\d)((?:19|20)\d\d)(?:\s*[-–]\s*(?:Early|Late|Mid|E|L)?\s*((?:19|20)?\d\d|up|Up|UP|later|present|Present)(?!\d))?(?!\d)/g;
-const MODEL = /(?<![\w-])(FL[A-Z0-9]*|FX[A-Z0-9]*|XL[A-Z0-9]*|XG[A-Z0-9]*|VRSC[A-Z]*|KHK|KH|KR|ULH|UL|WLA|WL|Big Twins?|BT|ST|Sportsters?|Touring|Softails?|Dynas?|Twin Cams?|TC|Evo(?:lution)?|M-?8|Milwaukee[- ]Eight|Shovelhead|Panhead|Ironhead|Servi-?Car|45[”"]|74[”"]|80[”"])(?![\w-])/g;
+const MODEL = /(?<![\w])(FL[A-Z0-9]*|FX[A-Z0-9]*|XL[A-Z0-9]*|XG[A-Z0-9]*|VRSC[A-Z]*|KHK|KH|KR|ULH|UL|WLA|WL|Big Twins?|BT|ST|Sportsters?|Touring|Softails?|Dynas?|Twin Cams?|TC|Evo(?:lution)?|M-?8|Milwaukee[- ]Eight|Shovelhead|Panhead|Ironhead|Servi-?Car|45[”"]|61[”"]|64[”"]|74[”"]|80[”"])(?![\w])/g;
 const isYearToken = (t) => /^(19|20)\d\d-\d\d/.test(t) && +t.slice(0, 4) <= 2030;
 
 const BIG_TWIN = ['fl', 'fx', 'touring', 'softail', 'dyna', 'fxr'];
@@ -151,6 +156,7 @@ function parsePage(page, words) {
   const pageTitle = lines.filter((L) => L.top < 120).flatMap((L) => L.cells).filter((c) => c.size >= body + 6)
     .sort((a, b) => b.size - a.size).slice(0, 2).map((c) => c.text).join(' ');
   const tables = tablesOf(lines);
+  const mixed = words.some((w) => /^(45[”"]|Servi|WLA?$|WR$|G$|K$|KH$|XL|Sportster)/.test(w[0]));
   const inSpan = (d, t) => d.x1 > t.x0 && d.x0 < t.x1;
   const anchor = (d) => VT.test(d.words[0][0]) || (OEM.test(d.words[0][0]) && !isYearToken(d.words[0][0]));
   const rows = [];
@@ -181,7 +187,7 @@ function parsePage(page, words) {
     const title = t ? lines.filter((M) => t.top - M.top > 0 && t.top - M.top < 40)
       .map((M) => M.cells.filter((d) => inSpan(d, t))).filter((cs) => !cs.some((d) => d.words.some((x) => VT.test(x[0]))))
       .flat().map((d) => d.text).join(' ') : '';
-    rows.push({ page, section: sectionOf(page), display: m[1], row: parts.filter(Boolean).join(' ').trim(), title, pageTitle, table: !!t });
+    rows.push({ page, section: sectionOf(page), mixed, display: m[1], row: parts.filter(Boolean).join(' ').trim(), title, pageTitle, table: !!t });
   })));
   return rows;
 }
@@ -219,7 +225,7 @@ function rangesOf(r) {
       if (models.length) break;
       models = modelsIn(t); msrc = src;
     }
-    if (!models.length && SECTION_DEFAULT[r.section]) { models = [SECTION_DEFAULT[r.section]]; msrc = 'section'; }
+    if (!models.length && SECTION_DEFAULT[r.section] && !(r.section === 'sec3' && r.mixed)) { models = [SECTION_DEFAULT[r.section]]; msrc = 'section'; }
     if (!models.length) msrc = '';
     return { ...s, models, ysrc, msrc };
   });
@@ -282,6 +288,7 @@ async function main() {
     if (t === 'DYNA') return (v) => v.platform === 'dyna';
     if (t === 'XG') return (v) => v.platform === 'street';
     if (t.startsWith('VRSC')) return (v) => v.platform === 'v_rod';
+    if (/^(61|64)[”"]$/.test(t)) return (v) => /^EL/.test(v.model_code); // 61" OHV = EL Knucklehead (none in vehicles yet)
     if (/^(74|80)[”"]$/.test(t)) return (v) => ['fl', 'fx', 'touring', 'softail', 'dyna', 'fxr'].includes(v.platform) || SIDE_VALVE.includes(v.model_code);
     if (/^45[”"]$/.test(t) || /^SERVI-?CAR$/.test(t)) return (v) => v.platform === 'vintage' && /^(W|G)/.test(v.model_code);
     if (t === 'BIG TWIN' || t === 'BT') return (v) => BIG_TWIN.includes(v.platform) || SIDE_VALVE.includes(v.model_code);
@@ -294,7 +301,7 @@ async function main() {
   const bookYP = new Set([...hdRows].filter(([, n]) => n >= THIN).map(([id]) => bookKey(vById.get(id))));
   const pairs = new Map(); // oem|vid|conds -> row
   const review = [];
-  const st = { tokens: raw.length, withYears: 0, notInParts: 0, except: 0, noModel: 0, bySrc: {}, noBike: 0, wrongPlatform: 0, chainCovered: 0, fullBook: 0, farYears: 0, already: 0, candidates: 0 };
+  const st = { tokens: raw.length, withYears: 0, notInParts: 0, except: 0, sectionNoFit: 0, noModel: 0, bySrc: {}, noBike: 0, wrongPlatform: 0, chainCovered: 0, fullBook: 0, farYears: 0, already: 0, candidates: 0 };
   const rev = (r, reason, extra = '') => review.push({ page: r.page, oem: r.display, reason, win: r.win.slice(0, 90), extra });
 
   for (const r of raw) {
@@ -305,17 +312,25 @@ async function main() {
     const n = normalize(r.display);
     const part = parts.get(n);
     if (!part) { st.notInParts++; rev(r, 'not_in_oem_parts'); continue; }
-    if (/\bexcept\b/i.test(r.win)) { st.except++; rev(r, 'except'); continue; }
+    // "except FXDWG, FXDF": models named after "except" (up to the next year range) are left out;
+    // an "except" that names no model we know goes to review.
+    const exc = /\bexcept\b(.*)/i.exec(r.win);
+    const excludeModels = exc ? modelsIn(exc[1].split(/(?:19|20)\d\d/)[0]) : [];
+    if (exc && !excludeModels.length) { st.except++; rev(r, 'except'); continue; }
     const cond = conditionsOf(r.win);
     const plats = platOf.get(n);
     const cy = chainYears.get(part.chain_root);
     for (const seg of segs) {
       seg.win = r.win;
-      const models = seg.models;
+      const models = seg.models.filter((m) => !excludeModels.includes(m));
       if (!models.length) { st.noModel++; rev(r, 'no_model', `${seg.y1}-${seg.y2}`); continue; }
+      if (seg.msrc === 'section' && !plats) { st.sectionNoFit++; rev(r, 'section_model_part_without_fitment', `${seg.y1}-${seg.y2} ${models.join(',')}`); continue; }
       if (cy && (seg.y2 < cy[0] - ADJ || seg.y1 > cy[1] + ADJ)) { st.farYears++; rev(r, 'years_far_from_ours', `${seg.y1}-${seg.y2} vs ${cy[0]}-${cy[1]}`); continue; }
       const filters = models.map((m) => tokenFilter(m, seg));
-      const vs = vehicles.filter((v) => v.year >= seg.y1 && v.year <= seg.y2 && filters.some((f) => f(v)));
+      const excl = excludeModels.map((m) => tokenFilter(m, seg));
+      const ohv = /Knucklehead|Panhead|\bOHV\b/i.test(r.win); // overhead-valve text never means the U/V side-valve twins
+      const vs = vehicles.filter((v) => v.year >= seg.y1 && v.year <= seg.y2 && filters.some((f) => f(v)) && !excl.some((f) => f(v))
+        && !(ohv && SIDE_VALVE.includes(v.model_code)));
       if (!vs.length) { st.noBike++; rev(r, 'no_bike', `${seg.y1}-${seg.y2} ${models.join(',')}`); continue; }
       for (const v of vs) {
         if (plats && !plats.has(v.platform)) { st.wrongPlatform++; continue; }
@@ -343,7 +358,7 @@ async function main() {
   L.push(`17_vtwin_oem ${APPLY ? 'APPLY' : 'DRY RUN'} ${ts}  PDF ${PDF}`);
   const ys = raw.reduce((a, r) => ((a[r.segs?.[0]?.ysrc || 'none'] = (a[r.segs?.[0]?.ysrc || 'none'] ?? 0) + 1), a), {});
   L.push(`H-D number tokens ${st.tokens} (${raw.filter((r) => r.table).length} in tables; Tools section and Colony numbers left out); years from: ${Object.entries(ys).map(([k, v]) => `${k} ${v}`).join(', ')}`);
-  L.push(`with years ${st.withYears}; not in oem_parts ${st.notInParts} (review); "except" ${st.except} (review)`);
+  L.push(`with years ${st.withYears}; not in oem_parts ${st.notInParts} (review); "except" naming no model ${st.except} (review); section-default model on a part with no fitment ${st.sectionNoFit} (review)`);
   L.push(`segments with no model ${st.noModel}; years > ${ADJ} from the number's chain years ${st.farYears}; no bike in years ${st.noBike} (all review)`);
   L.push(`(part, bike) candidates ${st.candidates}; dropped, platform the number never fits ${st.wrongPlatform}; already from another source ${st.already}; year + platform the chain already covers ${st.chainCovered}`);
   L.push(`NEW vtwin fitment rows: ${P.length}; parts ${new Set(P.map((p) => p.oem)).size}; bikes ${new Set(P.map((p) => p.vehicle_id)).size}; rows on parts with no fitment yet ${P.filter((p) => p.newPart).length}`);
