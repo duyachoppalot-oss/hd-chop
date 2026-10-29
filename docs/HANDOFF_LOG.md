@@ -548,3 +548,14 @@ Append one entry per session. Newest at the bottom.
   - Applied: 66 rows for 57 H-D numbers (clutch 24, battery 20, speedo 16, brake hose 4, tach 2; high 40, medium 26).
   - Skipped: 12 numbers not in oem_parts (7 have letter-suffix siblings), 7 low, 13 with no H-D number.
   - Fitment untouched, so no 05-08 or gate run needed. Not shown in the API or app yet (hdchop_api has no grant on the table yet).
+- 2026-10-29: committed the cable work as a663293. Then built the rotor/sprocket reviewed list, `scripts/catalog/specs/vtwin_rotor_sprocket.csv` (uncommitted, not loaded).
+  - 46 rows, 30 H-D numbers: brake rotor diameter 35 rows (front/rear, side, wheel type), sprocket teeth 11.
+  - All quoted lines found on their pages. 26 numbers are in oem_parts, all named as a brake disc or sprocket there. Not in the app: 41500012A, 41500094, 42040-06A, 44136-84.
+  - Pages: rotors 52, 54, 269, 270, 608, 609, 917, 918; sprockets 227, 239, 568, 827, 901.
+  - Kept but flagged: p608's rear "41791-79 10”" looks like a misprint for 41813-79 (marked low).
+  - Needs Laken's DATA_RIGHTS row before loading. It would need a sizes table (diameter / teeth); oem_part_lengths only holds lengths.
+- 2026-10-29: Laken approved the rotor/sprocket DATA_RIGHTS row (high + medium, H-D number + value + model-year). Added the row.
+  - New migration `014_oem_part_sizes.sql` (applied). Its unique key includes `detail`, because 44137-77A is printed twice as front 10" on p608 (FX and FXWG dual disc).
+  - New loader `scripts/etl/19_vtwin_rotor_sprocket.mjs` (dry run by default). Applied: 37 rows for 26 numbers (rotor diameter 29, sprocket teeth 8; high 24, medium 13).
+  - Skipped: 5 rows whose numbers aren't in oem_parts, 1 low, 3 with no H-D number. Fitment untouched.
+  - Not in the API or app yet; hdchop_api has no grant on oem_part_lengths or oem_part_sizes.

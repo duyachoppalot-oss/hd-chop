@@ -1,0 +1,47 @@
+oem,item,position,value,unit,value_as_printed,detail,years,models,basis,confidence,page,evidence,note
+42040-06,brake_rotor,front,11.8,in,11.8”,,2006-17 / 2015-up / 2008-13,FXD; FXST FLST; FLT,prose,high,270,original. OEM No: 42040-06. Diameter measures to be 11.8”.,fits on the next two lines; p52 says 2008-13 FLT
+42040-06A,brake_rotor,front,11.8,in,11.8”,left side,2006-17 / 2015-up,FXD FXDB FXDC FXDL FXDWG FXDF; FXST FLST,oem_row,high,269,23-0907 - - 42040-06A 11.8” 8793-5T Cast 2006-17 FXD for left side,
+41500012A,brake_rotor,front,11.8,in,11.8”,left side,2006-17 / 2015-up,FXD; FXST,oem_row,high,269,23-0908 - - 41500012A 11.8”,
+41500022,brake_rotor,front,11.8,in,11.8”,left side,2015-up / 2006-17,FXST FLST; FXD,oem_row,medium,269,23-9002 23-9003 - 41500022 11.8”,p269 also prints it as 300M (300 mm) for 2015-up FXST and 2014-up XL left side
+41500022,brake_rotor,front,11.8,in,11.8”,left side,2014-up,XL,oem_row,medium,917,23-9002 23-9003 - 41500022 11.8”,Sportster section; fits text 'Cast or Wire Left Side Rotor; 2014-up'
+41500094,brake_rotor,front,11.8,in,11.8”,dual disc set,2014-up,FLT,oem_row,medium,269,- 23-0906 - 41500094 11.8” Included 2014-up FLT Dual Disc Set,fits with Enforcer or Impeller wheels
+44136-84,brake_rotor,front,11.5,in,11.5”,cast or wire wheel,1984-91,FX FXST FXSTS FLST FLT,oem_row,high,269,23-0343 23-0334 23-0319 44136-84 11.5” 8793-5T Cast 1984-91 FX-FXST-FXSTS-FLST-FLT,p917 prints the same for 1984-91 (Sportster section)
+44136-84,brake_rotor,front,11.5,in,11.5”,cast or wire wheel,1984-91,XL,oem_row,medium,917,23-0343 23-0334 23-0319 44136-84 11.5” 8793-5 Cast 8793-5T 1984-91 Cast or Wire,Sportster section; no model on the row
+44136-92,brake_rotor,front,11.5,in,11.5”,cast or wire wheel,1992-99,FX FXST FXSTS FLST FLT,oem_row,high,269,23-9206 23-0368 - 44136-92 11.5” 8793-5T Cast 1992-99 FX-FXST-FXSTS-FLST-FLT,
+44136-92,brake_rotor,front,11.5,in,11.5”,cast or wire wheel,1992-99,XL,oem_row,medium,917,23-9206 23-0368 23-0319 44136-92 11.5”,Sportster section; no model on the row
+44156-00,brake_rotor,front,11.5,in,11.5”,left side; cast or wire wheel,2000-13 / 2000-13,FXD FXST; FLT,oem_row,high,269,23-0356 23-0379 23-9049 44156-00 11.5” 8793-5T Cast 2000-13 FXD-FXST; 2000-13 FLT,
+44156-00,brake_rotor,front,11.5,in,11.5”,left side; cast or wire wheel,2000-13,XL,oem_row,medium,917,23-0356 23-0379 23-9049 44156-00 11.5”,Sportster section; no model on the row
+44136-00,brake_rotor,front,11.5,in,11.5”,right side; cast or wire wheel,2000-14 / 2000-13,FXD FLT; FLT,oem_row,high,270,23-3774 - 44136-00 11.5” 8793-5 Cast 2000-14 FXD; FLT; 2000-13 FLT,
+44260-00,brake_rotor,front,11.5,in,11.5”,right side; cast or wire wheel,2000-14,FXSTS FLSTS,oem_row,high,270,- - 44260-00 11.5” 8793-5 Cast 2000-14 FXSTS-FLSTS,
+44210-79,brake_rotor,front,10,in,10”,,1979-83,FLT,oem_row,high,270,23-0370 - 44210-79 10” 8792-5 1979-83 FLT,p608 prints the same
+41813-79,brake_rotor,front,10,in,10”,cast or wire wheel,1972-84 / 1973,FLH; FX,oem_row,high,608,23-0304 23-0305 41813-79 10” 8738-10 1972-84 FLH,p609 and p918 print the same
+41813-79,brake_rotor,rear,10,in,10”,cast or wire wheel,1973-80 / 1978-80,FL; FX,oem_row,medium,609,23-0340 23-0336 23-0315 41813-79 10” 8738-10 1973-80 All FL,p608 prints 41791-79 on this rear row (same V-Twin rotor); 41791-79 is 11.5” everywhere else
+41813-79,brake_rotor,front,10,in,10”,dual disc; wire wheel,1980-83,FXWG,oem_row,medium,609,23-1020 23-1021 41813-79 10” 8831-10 Wire 1980-83 FXWG Dual Disc Wire Wheel.,44137-79 printed on the next line
+41806-72B,brake_rotor,front,10,in,10”,built-in offset; cast or wire wheel,1972-84 / 1973,FLH; FX,oem_row,high,608,23-0309 23-0310 41806-72B 10” 8738-10 1972-84 FLH; 1973 only FX,p918 prints the same
+41806-72B,brake_rotor,rear,10,in,10”,built-in offset,1973-78,Big Twin,oem_row,high,608,23-0309 23-0310 41806-72B 10” 8738-10 1973-78 All Big Twin with built in offset,
+44137-77A,brake_rotor,front,10,in,10”,cast or wire wheel,1977-83 / 1982-83,FX; FXR,oem_row,high,608,23-0311 23-0312 44137-77A 10” 8758-10 1977-83 All FX Cast or Wire Wheel,p609 and p918 print the same
+44137-77A,brake_rotor,front,10,in,10”,dual disc; wire wheel,1980-83,FXWG,oem_row,high,608,23-0298 44137-77A 10” 8831-10 FXWG 1980-83 Dual Disc Wire Wheel,
+41807-74,brake_rotor,front,11.5,in,11.5”,cast or wire wheel,1974-77,FX,oem_row,high,609,23-0636 41807-74 11.5” 8759-5 C/W 1974-77 FX,
+40939-79A,brake_rotor,rear,12,in,12”,,1979-85,FLT,oem_row,high,54,23-0297 - - 40939-79A 12” 8792-5 1979-85 FLT; rear,p608 prints the same
+40909-81A,brake_rotor,rear,12,in,12”,.390 in thick; cast or wire wheel,1981-84,FLH,oem_row,high,270,23-0297 - 40909-81A 12” 8791-10 1981-84 FLH Cast or Wire .390 thick.,p608 prints the same
+40939-86A,brake_rotor,rear,11.5,in,11.5”,,1986-99,FLT,oem_row,high,54,23-0260 23-0354 - 40939-86A 11.5” 9807-10 1986-99 FLT,p269 prints the same
+41797-00,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,2000-07,FLT,oem_row,high,54,23-0357 23-0387 23-9051 41797-00 11.5” 2000-07 FLT Cast or Wire,
+41797-00,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,2000-up / 2000-07,FXST FLST FXD; FLT,oem_row,high,269,23-0357 23-0387 23-9051 41797-00 11.5” 9807-10T Wire 2000-up FXST-FLST-FXD; 2000-07 FLT,
+41797-00,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,2000-10,XL,oem_row,medium,917,23-0357 23-0387 23-9051 41797-00 11.5”,Sportster section; no model on the row
+41791-79,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,1981-92,FXST FXR,oem_row,high,269,23-0341 23-0333 23-0318 41791-79 11.5” 8791-10T 1981-92 FXST-FXR Cast or Wire,p270; p608; p609 and p918 print the same
+41791-79,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,1979-92,XL,oem_row,medium,917,23-0341 23-0333 23-0318 41791-79 11.5” 8791-10 Cast 8791-10T 1979-92 Cast or Wire,Sportster section; no model on the row
+41791-79,brake_rotor,rear,10,in,10”,cast or wire wheel,1973-80,FL,oem_row,low,608,23-0304 23-0305 41791-79 10” 8738-10 1973-80 All FL,likely misprint: p609 prints 41813-79 on this row
+41789-92,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,1993-99,FXST FXR FXDB,oem_row,high,269,23-0362 23-0361 23-9926 41789-92 11.5” 9807-10T 1993-99 FXST-FXR-FXDB Cast or Wire,
+41789-92,brake_rotor,rear,11.5,in,11.5”,cast or wire wheel,1993-99,XL,oem_row,medium,917,23-0362 23-0361 23-9926 41789-92 11.5”,Sportster section; no model on the row
+41833-08,brake_rotor,rear,10.5,in,10.5”,cast or wire wheel,2011-up,XL,oem_row,medium,917,23-9000 23-9001 - 41833-08 10.5”,Sportster section; no model on the row
+40275-70,compensator_sprocket,,24,teeth,24 Teeth,,1970-84,Big Twin,oem_row,high,568,19-0071 D 40275-70 Sprocket 1970-84 24 Teeth,1970-83 Big Twin compensator engine sprocket page
+40275-55A,compensator_sprocket,,24,teeth,24T,,,Big Twin,oem_row,medium,568,19-0044 D 40275-55A 24T Sprocket,1955-up Big Twin engine sprocket page; app calls it compensating sprocket 24 t; no years on the row
+40273-67,compensator_sprocket,,34,teeth,34T,,1967-76,XL,oem_row,high,901,19-0438 A 40273-67 34T Sprocket 1967-76,compensator sprocket components; fits 1957-76 XL
+40235-70A,engine_sprocket,,34,teeth,34,,1970-76 / 1976-78,XLCH; XLH,oem_row,high,901,19-0067 40235-70A 1970-76 XLCH 34,teeth column of the XLCH motor sprocket table
+40235-74,engine_sprocket,,34,teeth,34,,1977-78 / 1979-90,XLCH; XL,oem_row,high,901,19-0381 40235-74 1977-78 XLCH 34,
+40241-02,engine_sprocket,,34,teeth,34,,2004-up,XL,oem_row,high,901,19-0451 40241-02 2004-up 34,
+32493-02A,engine_sprocket,,34,teeth,34,sprocket / alternator rotor assembly,2004-up,XL,oem_row,medium,901,32-0030* 32493-02A 2004-up 34,
+35204-41,countershaft_sprocket,,17,teeth,17 tooth,,,45” side valve,oem_row,medium,827,19-0062 35204-41 17 tooth Countershaft Sprocket,45” transmission page; no years on the row
+,countershaft_sprocket,,22,teeth,22T,chain conversion; stock ratio,1986-94,FXR,stock_no_oem,medium,239,120 link chain. Fits 1986-94 FXR; 22T; and 48T.,York kit supplies the stock ratio: 22T front / 48T rear
+,rear_sprocket,,48,teeth,48T,chain conversion; stock ratio,1986-94,FXR,stock_no_oem,medium,239,120 link chain. Fits 1986-94 FXR; 22T; and 48T.,
+,compensator_sprocket,,34,teeth,34T,stock replacement,2007-17 / 2007-16,FLST FXST FXD; FLT,stock_no_oem,medium,227,19-0167 34T 2007-17 FLST; FXST; FXD; 2007-16 FLT,
