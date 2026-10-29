@@ -564,4 +564,4 @@ Append one entry per session. Newest at the bottom.
   - `GET /v1/part/:oem` now returns `stock_sizes` for every number in the chain: `[{oem, label, value, detail, used_on[]}]`. used_on pairs each year range with its models ('1984-99 FXST').
   - Mobile part screen: a "Stock size" section above Fits (label, value in gold, detail, years + models). An older number in the chain shows "as <number>".
   - Checked against the local API (:3001) with mobile-web-local-api: 38607-87A clutch cable 62.69 in; 41813-79 shows three rotor rows. Gate ran clean, no console errors.
-  - Not deployed: the live API needs `scripts/deploy/api.sh`.
+  - Deployed hd-chop-api:1035eba (healthy) from a clean `git archive` of HEAD, so the chassis session's uncommitted `apps/api/app/v1/models/route.ts` change was not shipped. Live /v1/part returns stock_sizes.
