@@ -67,6 +67,32 @@ export type PartDetail = {
   fits: { conditions: string[]; spans: Span[] }[];
 };
 
+// Search by family (/v1/families, /v1/family-search): frame = platform
+// (Touring, Dyna...), motor = engine (Shovelhead, Twin Cam...).
+export type FamilyInfo = { key: string; name: string; kind: 'frame' | 'motor'; year_start: number; year_end: number; models: number };
+export type FamilySpan = Span & { model_name: string | null };
+export type FamilyPart = {
+  oem: string;
+  replaces: string[];
+  description: string | null;
+  conditions: string[];
+  condition_source: ConditionSource;
+  year_start: number;
+  year_end: number;
+  spans: FamilySpan[];
+};
+export type FamilySearchResponse = {
+  query: string;
+  family: { key: string; name: string; kind: 'frame' | 'motor' };
+  years: { from: number; to: number };
+  offset: number;
+  page_size: number;
+  concepts: { slug: string; display_name: string; match: 'exact' | 'trigram' }[];
+  // total = parts (chain roots) for the concept; parts = this page.
+  results: { concept: { slug: string; display_name: string }; total: number; parts: FamilyPart[] }[];
+  fallback: FamilyPart[] | null;
+};
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -93,6 +119,14 @@ export const api = {
   search: (year: number, model: string, q: string, all: boolean, signal?: AbortSignal) =>
     get<SearchResponse>(
       `/v1/search?year=${year}&model=${encodeURIComponent(model)}&q=${encodeURIComponent(q)}${all ? '&all=1' : ''}`,
+      signal
+    ),
+  families: (signal?: AbortSignal) => get<{ families: FamilyInfo[] }>('/v1/families', signal).then((r) => r.families),
+  familySearch: (family: string, q: string, years: { from: number; to: number } | null, offset: number, signal?: AbortSignal) =>
+    get<FamilySearchResponse>(
+      `/v1/family-search?family=${encodeURIComponent(family)}&q=${encodeURIComponent(q)}` +
+        (years ? `&from=${years.from}&to=${years.to}` : '') +
+        (offset ? `&offset=${offset}` : ''),
       signal
     ),
   part: (oem: string, signal?: AbortSignal) => get<PartDetail>(`/v1/part/${encodeURIComponent(oem)}`, signal),

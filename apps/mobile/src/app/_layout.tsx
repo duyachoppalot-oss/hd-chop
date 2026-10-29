@@ -55,6 +55,8 @@ function Root({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="search" options={{ title: 'Parts counter' }} />
         <Stack.Screen name="results" options={{ title: 'Results' }} />
         <Stack.Screen name="part/[oem]" options={{ title: 'Part' }} />
+        <Stack.Screen name="family/index" options={{ title: 'Families' }} />
+        <Stack.Screen name="family/[key]" options={{ title: 'Family' }} />
       </Stack>
     </BikeProvider>
   );

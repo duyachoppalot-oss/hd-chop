@@ -2,7 +2,7 @@
 
 ## Core flow
 1. User picks **year** → **model** (shown by name, e.g. "Road King", stored as code FLHR).
-2. User types plain words: "gas tank", "blinkers", "bags", "kickstand".
+2. User types plain words: "gas tank", "turn signals", "bags", "kickstand".
 3. App returns every OEM part for that concept that fits the bike, grouped by part (with superseded numbers merged), each with:
    - the year span the same part was used, per model
    - the conditions that split it (carbureted vs EFI, ABS, CVO, etc.)
@@ -53,6 +53,8 @@ Starter tags: `carb`, `efi`, `abs`, `non_abs`, `cvo`, `california`, `hdi`, `cabl
 | GET | `/v1/models?year=` | `[{model_code, model_name, platform, has_parts, specs: [{ci, cc, speeds, horsepower, compression, mid_year_change, source_ref}]}]` (specs from `vehicle_specs`; several = engines sold that year; `[]` when no H-D document covers the bike) |
 | GET | `/v1/search?year=&model=&q=` | `{concepts:[...], results:[{concept, parts:[{oem, replaces[], description, conditions[], condition_source, spans:[{model_code, year_start, year_end}]}]}]}` |
 | GET | `/v1/part/:oem` | part detail, full chain, all spans |
+| GET | `/v1/families` | `[{key, name, kind: frame\|motor, year_start, year_end, models}]`: frame = `vehicles.platform` (Touring, Dyna, FXR, FL/FX big twin…), motor = `vehicles.engine` (Panhead, Shovelhead, Twin Cam…); only families with fitment |
+| GET | `/v1/family-search?family=&q=[&from=&to=][&offset=]` | Same concept resolution as `/v1/search`, over every bike in the family (optionally cut to years). `results:[{concept, total, parts:[{oem, replaces[], description, conditions[], condition_source, year_start, year_end, spans:[{model_code, model_name, family, family_key, year_start, year_end}]}]}]`; spans built from the family's bikes only; 60 chain roots per page (`offset`) |
 | GET | `/v1/vin/:vin` | Phase 4: decode VIN (NHTSA vPIC) → year + model |
 
 Free vs paid gating is enforced in the API (Phase 4), not just hidden in the UI.

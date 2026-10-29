@@ -13,7 +13,7 @@ const keys = () =>
     .split(',')
     .map((k) => k.trim())
     .filter(Boolean);
-const DEV_ORIGINS = new Set(['http://localhost:8081', 'http://localhost:8083']);
+const DEV_ORIGINS = new Set(['http://localhost:8081', 'http://localhost:8083', 'http://localhost:8084']);
 
 function cors(req: NextRequest): Record<string, string> {
   const origin = req.headers.get('origin');

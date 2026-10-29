@@ -78,7 +78,7 @@ export default function Results() {
               ))}
             </>
           ) : (
-            <Empty>Nothing close on your {label}. Try another word — “tank” instead of “fuel cell”, “blinkers” instead of “indicators”. We log misses and add the words riders use.</Empty>
+            <Empty>Nothing close on your {label}. Try another word — “tank” instead of “fuel cell”, “turn signals” instead of “indicators”. We log misses and add the words riders use.</Empty>
           )}
         </>
       ) : null}

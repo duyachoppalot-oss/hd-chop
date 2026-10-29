@@ -24,7 +24,7 @@ import path from 'node:path';
 
 const SOURCES = ['service_catalog', 'hydra_glide', 'catalog_ocr'];
 const GATE_BIKES = [[2004, 'FLHR'], [2010, 'FLHX'], [2005, 'FLSTC'], [2004, 'FXDL'], [2004, 'XL883']];
-const GATE_WORDS = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo'];
+const GATE_WORDS = ['gas tank', 'turn signals', 'bags', 'kickstand', 'speedo'];
 const singular = (q) => q.replace(/(ss|us)$/, '$1').replace(/(x|ch|sh)es$/, '$1').replace(/([^s])s$/, '$1');
 
 const ts = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '_');

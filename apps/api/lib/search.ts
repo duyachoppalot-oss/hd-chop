@@ -32,7 +32,7 @@ export function normalizeQuery(q: string): string {
   return q.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-// "blinkers" -> "blinker", "brake pads" -> "brake pad", "boxes" -> "box".
+// "turn signals" -> "turn signal", "brake pads" -> "brake pad", "boxes" -> "box".
 function singular(q: string): string {
   return q.replace(/(ss|us)$/, '$1').replace(/(x|ch|sh)es$/, '$1').replace(/([^s])s$/, '$1');
 }

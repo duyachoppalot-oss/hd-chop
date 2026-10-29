@@ -14,7 +14,7 @@ const BIKES = [
   [2004, 'FXDL'], // Dyna, Low Rider
   [2004, 'XL883'], // Sportster
 ];
-const WORDS = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo'];
+const WORDS = ['gas tank', 'turn signals', 'bags', 'kickstand', 'speedo'];
 
 // Remote: stay under the nginx limit (30/min per IP, docs/FIX_PLAN.md A2) -> one request per 2.1 s.
 const PAUSE = /\/\/(localhost|127\.0\.0\.1)[:/]/.test(BASE) ? 0 : 2100;

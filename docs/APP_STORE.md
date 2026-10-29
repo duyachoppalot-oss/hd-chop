@@ -7,12 +7,12 @@ Not final until the legal review (B2) and prices (C4). [Brackets] = Laken fills 
 - Subtitle: Find OEM parts for your bike  _(30 max)_
 
 ## Promotional text (170)
-Pick your year and model, type "gas tank" or "blinkers", and get every OEM part number that fits, with the years it was used and what splits it (carb vs EFI, ABS).
+Pick your year and model, type "gas tank" or "turn signals", and get every OEM part number that fits, with the years it was used and what splits it (carb vs EFI, ABS).
 
 ## Description
 HD Chop finds the factory part numbers for your Harley-Davidson.
 
-Pick your bike's year and model, then type what you need in plain words — "gas tank", "blinkers", "bags", "kickstand", "speedo". HD Chop shows every OEM part number that fits your bike, the years each number was used, which other models share it, and the conditions that split it: carbureted vs fuel injected, ABS vs non-ABS, California vs 49-state.
+Pick your bike's year and model, then type what you need in plain words — "gas tank", "turn signals", "bags", "kickstand", "speedo". HD Chop shows every OEM part number that fits your bike, the years each number was used, which other models share it, and the conditions that split it: carbureted vs fuel injected, ABS vs non-ABS, California vs 49-state.
 
 • Plain-word search: say it like you would at the parts counter
 • 1936 to today: Knucklehead to Milwaukee-Eight, Sportster, Softail, Dyna, FXR, Touring, V-Rod

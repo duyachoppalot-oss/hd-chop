@@ -31,7 +31,7 @@ Plan and per-script detail: `docs/ETL_PLAN.md`.
 - [x] Read-only DB role `hdchop_api` created 2026-10-23 (`packages/db/roles/hdchop_api.sql`: SELECT + insert into search_misses; no insert/update/delete elsewhere) ; password set by Laken; logs in from the server only (127.0.0.1)
 - [x] `/v1/years`, `/v1/models`, `/v1/search`, `/v1/part/:oem`
 - [x] `search_misses` logging (queries with no concept)
-- **Gate:** "gas tank", "blinkers", "bags", "kickstand", "speedo" return correct results for 5 test bikes across Touring/Softail/Dyna/Sportster.
+- **Gate:** "gas tank", "turn signals", "bags", "kickstand", "speedo" return correct results for 5 test bikes across Touring/Softail/Dyna/Sportster.
 - **Status (2026-10-23): gate run locally (`apps/api/scripts/gate.mjs`), all 25 cells answer correctly** — 2004 FLHR, 2010 FLHX, 2005 FLSTC, 2004 FXDL, 2004 XL883. "bags" empty on FXDL/XL883 (no OEM bags) is correct. Fix during gate: jiffy stand is a component family ("Leg, jiffy stand") → `contains` concept. Deploy to Vercel pending the API role.
 - **Deployed 2026-10-24** on the Hetzner server (Docker + nginx + Let's Encrypt; Vercel dropped — only a Hobby team was available): https://hdchop.5.161.100.126.nip.io. Gate re-run over public HTTPS: identical to the run on the server. Before App Store: move to a real domain.
 

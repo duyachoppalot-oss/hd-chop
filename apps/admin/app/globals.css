@@ -123,3 +123,12 @@ a.tl-bar:hover { outline: 2px solid var(--cream); text-decoration: none; z-index
 .copy-oem:hover { border-color: var(--gold-dim); }
 .copy-oem.big { font-size: inherit; padding: 0 6px; }
 .copy-oem .copy-tag { font-family: var(--font-body), sans-serif; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Family search: one row per year range, models folded under it */
+.rng { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+summary.rng { cursor: pointer; list-style: none; }
+summary.rng::-webkit-details-marker { display: none; }
+summary.rng .rng-y::before { content: '▸ '; color: var(--gold); }
+details[open] > summary.rng .rng-y::before { content: '▾ '; }
+.rng-y { font-weight: 700; font-size: 14px; }
+div.rng .rng-y { padding-left: 1.1em; }

@@ -10,7 +10,7 @@ import { Chip, Footer, Heading, Section } from '@/components/ui';
 
 // Words riders actually type; each resolves to a concept in part_concepts and
 // returned parts on most of the five Phase 2 gate bikes (2026-10-24 check).
-const QUICK = ['gas tank', 'blinkers', 'bags', 'kickstand', 'speedo', 'tail light', 'brake pads', 'air cleaner', 'handlebar', 'fuel cap', 'shocks', 'battery'];
+const QUICK = ['gas tank', 'turn signals', 'bags', 'kickstand', 'speedo', 'tail light', 'brake pads', 'air cleaner', 'handlebar', 'fuel cap', 'shocks', 'battery'];
 
 export default function Search() {
   const { color } = useTheme();
@@ -67,7 +67,7 @@ export default function Search() {
         value={q}
         onChangeText={setQ}
         onSubmitEditing={() => go(q)}
-        placeholder="gas tank, blinkers…"
+        placeholder="gas tank, turn signals…"
         placeholderTextColor={color.faint}
         returnKeyType="search"
         autoCapitalize="none"

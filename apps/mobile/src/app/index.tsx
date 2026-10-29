@@ -19,7 +19,7 @@ export default function PickYear() {
   const [picked, setPicked] = useState<number | null>(null);
   // The page doesn't scroll (a scrolling page fights the wheel's drag), so the
   // wheel takes what's left of the screen: 380 on a big phone, less on an SE.
-  const wheelHeight = Math.max(240, Math.min(380, useWindowDimensions().height - 510));
+  const wheelHeight = Math.max(240, Math.min(380, useWindowDimensions().height - 570));
 
   const year = picked ?? (bike && years?.includes(bike.year) ? bike.year : years?.[0] ?? null);
 
@@ -34,6 +34,15 @@ export default function PickYear() {
       {bike ? (
         <Big label={`Back to ${bikeLabel(bike)}`} sub="Search parts for this bike" onPress={() => router.push('/search')} style={{ marginTop: space.lg }} />
       ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Search a whole family instead"
+        onPress={() => router.push('/family')}
+        style={({ pressed }) => [s.family, pressed && pushed(color)]}
+      >
+        <Text style={s.familyText} numberOfLines={1}>Or search a whole family</Text>
+        <Text style={s.familyChev}>›</Text>
+      </Pressable>
       {loading ? <Loading /> : error ? <ErrorBox message={error} onRetry={retry} /> : null}
       {years?.length ? (
         <>
@@ -67,5 +76,20 @@ const styles = (color: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  family: {
+    ...inked(color),
+    minHeight: 48,
+    marginTop: space.md,
+    marginRight: 4,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.xs,
+    backgroundColor: color.panel,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.sm,
+  },
+  familyText: { fontFamily: font.sign, fontSize: 22, flexShrink: 1, color: color.accent, letterSpacing: 0.5 },
+  familyChev: { fontFamily: font.sign, fontSize: 28, color: color.accent },
   openText: { fontFamily: font.sign, fontSize: 30, color: color.onFill, letterSpacing: 2 },
 });
