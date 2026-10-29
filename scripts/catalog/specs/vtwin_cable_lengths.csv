@@ -1,0 +1,99 @@
+oem,cable,length_in,length_as_printed,end_or_nut,years,models,basis,confidence,page,evidence,note
+56344-00,throttle (90 degree fitting),43,43”,,1996-07,FLT,replaces,medium,113,43” Throttle • 90 Degree Fitting fits 1996-07 FLT. Replaces 56344-00.,sold as a set with a 39” idle cable
+38618-52,clutch,31,31”,,1952-67,Big Twin with mousetrap,stock_stated,high,738,38618-52 Stock; 1952-67 Big Twin with mousetrap 31”,casing length column
+38618-68,clutch,52.375,52-3/8”,,1968-83 / 1984-85 / 1986,Big Twin; FXST; FXWG,stock_stated,high,738,38618-68 Stock 1968-83 Big Twin; 1984-85 FXST; 1986 FXWG 52-3/8”,same number also printed 52.25” and 51.625” (Barnett) on this page
+38618-68,clutch,52.25,52.25”,,1968-83 / 1984-85 / 1986,Big Twin; FXST; FXWG,stock_stated,high,738,1986 FXWG 52.25”,
+38618-68,clutch,51.625,51.625”,,1968-83 / 1984-85 / 1986,Big Twin; FXST; FXWG,stock_stated,medium,738,1986 FXWG 51.625”,Barnett version
+38618-68,clutch,48.5,48 1/2 (no inch mark),,,"""Same OE Type""",stock_stated,low,738,38618-68 Stock Same OE Type 48,fraction printed without inch mark; 4” shorter than the other 38618-68 rows
+38618-68C,clutch,52.56,52.56”,,1984-85 / 1980-86,FXST; FXWG,stock_stated,high,417,52.56” Stock 38618-68C 1984-85 FXST; 1980-86 FXWG,
+38599-80A,clutch,57.75,57.75”,,1980-82,FLT FXR FXRS,stock_stated,high,738,38599-80A Stock 1980-82 FLT-FXR-FXRS,
+38599-83A,clutch,53.31,53.31”,,1983-86 / 1985-86 / 1985 / 1986 / 1984,FXR FXRS FXRT; FXRS S.E.; FXRC; FXRD; FXRDG,stock_stated,high,417,53.31” Stock 38599-83A 1983-86 FXR/FXRS/FXRT,
+38599-83A,clutch,54,54”,,1984-86,FXRS FXRT FXR,stock_stated,high,416,38599-83A Stock 1984-86 FXRS-FXRT-FXR 54”,rounded version of 53.31”
+38599-83A,clutch,53.31,53.31”,,1983-86,FLT,replaces,medium,114,Fits 1983-86 FLT. Replaces 38599-83A.,Touring page says FLT; Softail/FXR page says FXR family; length is on the row below the note
+38605-86A,clutch,54.25,54.25”,,1986,FXST 5 speed,stock_stated,high,416,38605-86A Stock 1986 FXST 5 Speed 54.25”,
+38611-86,clutch,48.75,48.75”,,1986,FLST 5 speed,stock_stated,high,416,38611-86 Stock 1986 FLST 5 Speed 48.75”,
+38606-87,clutch,64.75,64.75”,,1987-94,FXR FXRS FXRT,stock_stated,high,416,38606-87 Stock 1987-94 FXR-FXRS-FXRT 64.75”,p417 prints the same 64.75”
+38607-87,clutch,63,63”,,1987-06,FLT FXST FXSTC FLST,stock_stated,high,416,38607-87 Stock 1987-06 FLT-FXST-FXSTC-FLST 63”,p114 prints the same for 1987-06 FLT
+38607-87A,clutch,62.69,62.69”,,1984-99 / 1980-86 / 1987-99 / 1990-99 / 1993-96 / 1997-99,FXST; FXWG; FLSTC FLST; FLSTF; FLSTN; FLSTS,stock_stated,high,417,62.69” Stock 38607-87A 1984-99 FXST,
+38607-87A,clutch,62.69,62.69”,,1987-06,FLT,replaces,medium,114,Fits 1987-06 FLT. Replaces 38607-87A.,length on the row below the note
+38667-07,clutch,63,63”,,2007-up,FLT,replaces,medium,114,Fits 2007-up FLT. Replaces 38667-07.,length on the row below the note
+36755-87A,clutch,57.75,57.75”,,1987-94,FXRSE,stock_stated,high,416,36755-87A Stock 1987-94 FXRSE 57.75”,p417 prints 57.63” for 1987-93 FXRS S.R.; number starts 36- (as printed)
+36755-87A,clutch,57.63,57.63”,,1987-93,FXRS S.R.,stock_stated,medium,417,57.63” Stock 36755-87A 1987-93 FXRS S.R.,
+36753-87A,clutch,60.63,60.63”,,1987-94,FXLR,stock_stated,medium,417,60.63” Stock 36753-87A 1987-94 FXLR,number starts 36- (as printed)
+38617-95,clutch,60.75,60.75”,,1995-97,FXSTSB,stock_stated,high,416,38617-95 Stock 1995-97 FXSTSB 60.75”,
+38617-95,clutch,60.69,60.69”,,1995-99 / 1993-05 / 1994-00 / 1993-05 / 1992-05,FXD; FXDL; FXDS Conv.; FXDWG; FXDB FXDC,stock_stated,low,417,60.69” Stock 38617-95,fits on p417 repeat the Dyna list from the 38602-92 rows above; p416 says FXSTSB; trust p416
+38647-98,clutch,57,57”,,1998-06,FXSTSB,stock_stated,high,416,38647-98 Stock 1998-06 FXSTSB 57”,
+38602-92,clutch,68.69,68.69”,,1995-99 / 1993-05 / 1994-00 / 1993-05 / 1992-05,FXD; FXDL; FXDS Conv.; FXDWG; FXDB FXDC,stock_stated,high,417,68.69” Stock 38602-92,
+38666-00,clutch,64.69,64.69”,,2000-05 / 2001-03 / 2001-05,FXST FXSTI FXSTS FXSTSI FLSTC FLSTCI FLSTF FLSTFI FLSTS FLSTSI FXD FXDX FXDXT; FXDWG2/3; FXDL,stock_stated,high,417,64.69” Stock 38666-00,
+38789-06A,clutch,68.81,68.81”,,2006-up,FXDWG,stock_stated,high,417,68.81” Stock 38789-06A 2006-up FXDWG,
+38787-06A,clutch,64.57,64.57”,,2006-17,FXD,stock_stated,high,417,64.57” Stock 38787-06A 2006-17 FXD,
+38788-06A,clutch,65.66,65.66”,,2006-17,FXDL,stock_stated,high,417,65.66” Stock 38788-06A 2006-17 FXDL,
+38666-07,clutch,64.75,64.75 (no inch mark),,2007-17,FXST FLST,stock_stated,high,417,64.75 Stock 38666-07 2007-17 FXST-FLST,
+38664-07,clutch,62.66,62.66”,,2007-17,FXSTD,stock_stated,high,417,62.66” Stock 38664-07 2007-17 FXSTD,
+38619-84,clutch,47.06,47.06” casing,,1970-85 / 1981-85 / 1970-79,XLH; XLS; XLCH,stock_stated,high,1001,47.06” Stock 38619-84 70-85 XLH,printed in the casing-length column
+92065-70,tachometer,29.5,29-1/2”,,1970-73 / 1971-80,XLH XLCH (distributor drive),vt_join,medium,1001+1321,36-0990 92065-70 Cable 1970-73 XLH-XLCH,length from p1321 (36-0990 1971-80 29-1/2” distributor drive tach cable)
+92065-65A,tachometer,29.5,29-1/2”,,1965-69,XLH XLCH (magneto),vt_join,medium,1001+1321,36-0980 92065-65A Cable 1965-69 Magneto,length from p1321 (36-0980 1965-69 29-1/2” magneto tach cable)
+67026-62,speedometer,35,35”,5/8” nut,1980-83 / 1971-72 / 1962-80,FXWG; FX; FL FLH FLHS,oem_row,medium,740,36-0621 36-2524 67026-62 35”,fits from the heading above the row
+67026-36A,speedometer,35,35”,5/8” nut; male,1936-61,FL FLH,oem_row,medium,740,36-0620 67026-36A 35”,fits from the heading above the row
+67051-52,speedometer,46,46”,5/8” nut; female,1952-56,K (transmission drive),oem_row,medium,740,36-2570 36-2577 67051-52 46”,p837 and p1002 print 67051-52A 46”
+67078-85A,speedometer,40,40”,16mm nut,1987-94 / 1984-86 / 1984-86 / 1973-82 / 1981-82 / 1983-85,FXR FLXR; FXRS; FXSB; FX FXE; FXB; FXR,replaces,low,740,67078-85A; 67051-73 and 67052-78A.,"""Replaces"" list; 67051-73 is printed at 42” on its own row, so the list is not all one length"
+67052-78A,speedometer,40,40”,16mm nut,1987-94 / 1984-86 / 1984-86 / 1973-82 / 1981-82 / 1983-85,FXR FLXR; FXRS; FXSB; FX FXE; FXB; FXR,replaces,low,740,67078-85A; 67051-73 and 67052-78A.,same replaces list
+67048-83A,speedometer,43,43”,16mm nut,1980-85 / 1983-85,FXRT; FXE,oem_row,medium,740,36-2414 36-2529 67048-83A 43” 16mm,p421 heads the row 1987-93 FXRS/SP Conv.; p1002 heads it 1973 XL; 1988-94 XLH 883 HUG-DLX; XLH 1200
+67052-78B,speedometer,49,49”,16mm nut,,,oem_row,medium,740,36-0608 67052-78B 49” 16mm,no heading for this row on p740/p421/p1002
+67051-73,speedometer,42,42”,16mm nut,1973-78,FX,oem_row,medium,740,36-0601 67051-73 42” 16mm,p1002 prints 42.5” for 1973 XL
+67051-73,speedometer,42.5,42.5”,16mm nut,1973,XL,oem_row,medium,1002,36-0601 — 67051-73 42.5” 16mm,
+67026-81,speedometer,35,35”,12mm nut,1981-84,FLH,replaces,low,740,1981-84 FLH. Replaces OEM 67026-81 and 67072-87B.,67072-87B is printed at 40” on p112
+67072-79A,speedometer,40,40”,12mm nut,1980-86 / 1989-93 / 1982-83,FLHT-C/P FLT; FLHS; FXR FXRS,oem_row,medium,740,36-2412 67072-79A 40” 12mm,p112 prints 67072-79A and 67072-87B together at 40” for 1980-86 FLT
+67072-87B,speedometer,40,40”,12mm nut,1980-86,FLT,oem_row,low,112,36-2412 40” 12mm,second number in the OEM cell (67072-79A / 67072-87B); p740 lists 67072-87B in a 35” replaces note
+67060-87A,speedometer,39,39”,12mm nut,1987-95,FLHT FLHTC FLHTC-U,oem_row,medium,112,36-2418 67060-87A 39” 12mm,
+67077-85,speedometer,36,36”,16mm nut,1984-87 / 1985,FXE; FXEF,oem_row,low,421,36-2552 36-2527 67077-85 36” 16mm,"heading printed ""L1984-87 FXE 1985 FXEF Models."""
+67054-83A,speedometer,46.5,46.5”,16mm nut,1987-92 / 1983,FXRT; XLS,oem_row,medium,421,36-2410 — 67054-83A 46.5” 16mm,p1002 heads it 1983 XLS
+67038-84,speedometer,38.5,38.5”,12mm nut,1984-95 / 1984-95 / 1993-94 / 1991-94,FXST FXSTC FXSTS; FXWG; FXDWG; Dyna Glide,replaces,medium,421,Replaces OEM 67038-84; 67024-,
+67024-84A,speedometer,38.5,38.5”,12mm nut,1984-95 / 1984-95 / 1993-94 / 1991-94,FXST FXSTC FXSTS; FXWG; FXDWG; Dyna Glide,replaces,medium,421,84A; 67186-88C.,
+67186-88C,speedometer,38.5,38.5”,12mm nut,1984-95 / 1984-95 / 1993-94 / 1991-94,FXST FXSTC FXSTS; FXWG; FXDWG; Dyna Glide,replaces,medium,421,84A; 67186-88C.,
+67051-74,speedometer,39,39”,12mm nut,,,oem_row,medium,421,36-0603 — 67051-74 39” 12mm,no heading for this row
+67060-79A,speedometer,38,38”,12mm nut,1979-82,XLS,oem_row,medium,1002,36-2411 36-2533 67060-79A 38” 12mm,
+67079-86A,speedometer,34,34”,12mm nut,1987-95,FLST,oem_row,medium,421,36-2417 36-2428 67079-86A 34” 12mm,
+67051-70,speedometer,46,46”,16mm nut,1970-72,XLH,oem_row,medium,1002,36-0992 — 67051-70 46” 16mm,
+67023-37,speedometer (rear wheel drive),50,50”,5/8” nut; male,1937-52,45” solo,oem_row,medium,831,36-0622 R. Wheel 67023-37 50”,page also says 45” speedo cables are 50” long
+67028-51,speedometer (rear end),54.5,54½”,5/8” nut; male,1937-61,Servi-Car,oem_row,medium,831,36-0600 Rear End 67028-51 54½”,
+67028-62,speedometer (rear end),54.5,54½”,5/8” nut; female,1962-73,45” Servi-Car,oem_row,medium,831,36-0626 Rear End 67028-62 54½”,
+70011-84C,battery cable (ground),7.75,7-3/4”,,1984-88,FXST,oem_row,high,377,32-0327 70011-84C 7-3/4” 1984-88 FXST,
+70062-85,battery cable (ground),11.5,11-1/2”,,1985-86,FXR,oem_row,high,377,32-0328 70062-85 11-1/2” 1985-86 FXR,
+70186-82,battery cable (ground),8.5,8-1/2”,,1982-92 / 1987-94,FLT; FXR,oem_row,high,377,32-0331 70186-82 8-1/2” 1982-92 FLT,1987-94 FXR on the next line; p713 prints the same
+70103-95,battery cable (ground),9.75,9-3/4”,,1991-95,Dyna Glide,oem_row,high,377,32-0339 70103-95 9-3/4” 1991-95 Dynaglide,
+70060-92A,battery cable,9.5,9-1/2”,,1989-07 / 1993-94,FXST FLST; FXR,oem_row,high,377,32-0340 70060-92A 9-1/2” 1989-07 All FXST; FLST,printed twice (ground list and positive list)
+70064-89,battery cable (positive),9,9”,,1989-90,FXST,oem_row,high,377,32-0333 70064-89 9” 1989-90 FXST,
+70033-89,battery cable (positive),31.75,31-3/4”,,1989-92,FLT,oem_row,high,377,32-0334 70033-89 31-3/4” 1989-92 FLT,
+70102-90A,battery cable (positive),14.5,14-1/2”,,1991-95,Dyna Glide,oem_row,high,377,32-0338 70102-90A 14-1/2” 1991-95 Dynaglide,
+70377-93B,battery cable (positive),14,14”,,1993-96,FLT,oem_row,high,377,32-0342 70377-93B 14” 1993-96 FLT,
+70069-65B,battery cable (solenoid to battery and starter),15.5,15-1/2”,,1971-85 / 1984-85 / 1965-85 / 1982-88 / 1967-75 / 1982,FX; FXST; FLH; FXR; XLH; XL,oem_row,high,377,32-0310 70069-65B 15-1/2” Solenoid to Battery and Starter,XL fits from p982
+70069-83,battery cable (solenoid to starter),15.75,15-3/4”,,1983-84 / 1984 / 1983-85,FX; FXST; FLH,oem_row,high,377,32-0316 70069-83 15-3/4” Solenoid to Starter,
+70100-79A,battery cable (solenoid to starter),8.5,8-1/2”,,1982-88,FLT FXR,oem_row,high,377,32-0330 70100-79A 8-1/2” Solenoid to Starter,
+70097-75A,battery cable,10.75,10-3/4”,,1982-84,FXR,oem_row,high,713,32-0311 70097-75A 10-3/4” 1982-84 FXR,
+70097-75A,battery cable (positive),10.75,10-3/4”,,1986-96 / 1975-79 / 1979,XL; XLH; XL,oem_row,high,982,32-0311 70097-75A 10-3/4” 1986-96 XL; Pos.,
+70209-36,battery cable (ground),7.25,7-1/4”,,1936-52 / 1941-64,EL; FL,oem_row,high,713,32-1808 70209-36 7-1/4” 1936-52 EL; 1941-64 FL,
+70209-65A,battery cable (ground),8.5,8-1/2”,,1967-85,FL,oem_row,high,713,32-0314 70209-65A 8-1/2” 1967-85 FL,
+70313-71,battery cable (ground),10.25,10-1/4”,,1971-78,FX,oem_row,high,713,32-0313 70313-71 10-1/4” 1971-78 FX,
+70011-81,battery cable (negative),8,8”,,1981-85,XL,oem_row,high,982,32-0325 70011-81 8” 1981-85 All XL,
+70235-67A,battery cable (braided),9,9”,,1967-72,XLH,oem_row,medium,982,32-0324 70235-67A 9” 1967-72 XLH Braided,same number printed again at 8-1/2” on the next row
+70235-67A,battery cable (braided),8.5,8-1/2”,,1967-72,XLH,oem_row,medium,982,32-0363 70235-67A 8-1/2” 1967-72 XLH Braided,
+70295-70,battery cable,6.75,6-3/4”,,1970-78,XLCH,oem_row,high,982,32-0312 70295-70 6-3/4” 1970-78 XLCH,
+70083-82A,battery cable (positive to solenoid),15.75,15-3/4”,,1982-88,XL,oem_row,high,982,32-0315 70083-82A 15-3/4” Pos. to Solenoid 1982-88 XL,
+45120-72A,front brake hose,44.5,44-1/2”,,1972-81,FL FLH,oem_row,high,599,23-0730 45120-72A 44-1/2” 1972-81 FL-FLH,"page: ""Hoses listed are stock rubber construction"""
+45521-74A,front brake hose,40,40”,,1974-77,XL FX,oem_row,high,599,23-0732 45521-74A 40” 1974-77 XL-FX,p919 prints the same for 1974-77 XL
+45121-77,front brake hose (upper and lower),19,19”,,1978-79 / 1977-79 / 1980-82,FX FXE (upper and lower); XL (lower only); FX FXE XL (lower only),oem_row,high,599,23-0723 45121-77 19” Upper & Lower 1978-79 FX,
+45112-84A,front brake hose,45,45”,,1984-99,FXST,replaces,high,274,45” length. Fits 1984-99 FXST. Replaces,number on the next line (45112-84A. VT No. 23-0742)
+,throttle,38,38”,,1981-99,FX XL FL,stock_no_oem,medium,413,36-0855 38” Stock 1981-99 FX-XL-FL,p415 also: 38” 1981-89 FL FX FXST FLST with stock carb; p1000: 38” 1981-89 XL
+,throttle,34,34”,,1990-95 / 1990-95 / 1990-95 / 1995 / 1993-95 / 1991 / 1990-94 / 1990-92 / 1990-93,FXST FLST; FXSTC FLSTC FLSTF; FXD; FXSTSB; FLSTN; FXDB; FXLR FXR; FXRS FXRT; FXRS Conv. FXRS S.E.,stock_no_oem,medium,413,36-0856 34” Stock 1990-95 FXST/FLST,
+,throttle,30.5,30.5”,,1996-17 / 1996-up,FXD FXDI FXDX FXDXI FXDXT FXDL FXDLI FXDS Conv. FXDWG FXDWGI; FXST FLST FLT,stock_no_oem,low,413,36-0857 30.5” Stock 1996-17 FXD,p1000 prints the same V-Twin no. 36-0857 as Stock (34-1/4”) for 1996-98 XL; FLT 1996-up at 30.5” looks short
+,throttle,34,34”,,1990-95,XL,stock_no_oem,medium,1000,36-0856 1990-95 XL Stock (34”),
+,throttle,34.25,34-1/4”,,1996-98,XL,stock_no_oem,low,1000,36-0857 1996-98 XL Stock (34-1/4”),same V-Twin no. as the 30.5” Big Twin row on p413
+,throttle,38,38”,,1981-89,XL,stock_no_oem,medium,1000,36-0855 1981-89 XL Stock (38”),
+,throttle,33,33”,,1999-up,XL,stock_no_oem,medium,1000,36-0827 1999-up XL Stock (33”),
+,front brake hose (dual disc upper),19,19”,,1978-79,XLH XLCH,stock_no_oem,medium,921,23-8908 1978-79 XLH-XLCH Stock 19”,stainless replacement line listed at stock length
+,front brake hose (upper),14,14”,,1977-81,XL,stock_no_oem,medium,921,23-8906 1977-81 XL Stock 14”,
+,front brake hose (upper),24,24”,,1983,XLH,stock_no_oem,medium,921,23-8926 1983 XLH Stock 24”,banjo to first bend is 24”
+,front brake hose (dual disc lower),19,19”,,1978-82,XLH XLCH,stock_no_oem,medium,921,23-8908 1978-82 XLH-XLCH Stock 19”,
+,front brake hose (lower),21,21”,,1977-82,XL,stock_no_oem,medium,921,23-8909 1977-82 XL Stock 21”,
+,clutch,51,"51""",,,XL,stock_no_oem,low,837,XL Clutch Worm/Cable Kit includes stock type 51,no years on the line

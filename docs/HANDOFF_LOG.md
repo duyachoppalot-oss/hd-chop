@@ -529,3 +529,22 @@ Append one entry per session. Newest at the bottom.
   - older HANDOFF_LOG entries (history).
 - Not committed. The live app gets the new chips only with the next app build.
 - Decision (Laken): keep 'blinkers'/'blinker' as a hidden search synonym for turn_signal. Never show the word in the app, admin or store text.
+- 2026-10-28 V-Twin page-by-page documentation (read-only, nothing loaded): reports/vtwin_pages_20261028_222225.md (+ .csv, 44,423 rows). Every table on all 1,368 pages rebuilt from word boxes using its own header columns (Size, Length, Rim, Axle, Fork, Teeth, Volt ...), plus spec-like sentences. Each row has page, page/table title, kind (oem_fitment 4,960 / stock_size_by_model 793 / size_by_model 1,871 / oem_size 272 / prose stock specs 186 / prose size+model 329 / product-only rows) and topic (wheel/rim, fork, axle, rotor, cable length, chain/pulley, electrical, engine internals ...). Extractor: side-session-notes .../vtwin/pages.py. Spec rows still carry noise (oversize steps, wrapped notes); only wheel/axle/fork/bar sizes are approved in DATA_RIGHTS.
+
+### 2026-10-28 — V-Twin cable/line lengths, reviewed list (vtwin deep-dive session)
+- Laken asked for the cable/line lengths as a clean reviewed list first; DATA_RIGHTS row is Laken's call. Nothing loaded.
+- Read every V-Twin page with cables/hoses and lengths (~70 pages) by hand and wrote `reports/vtwin_cables_reviewed.csv`: 98 rows, 74 H-D numbers.
+  - Clutch 32, speedometer 25, battery cables 22, front brake hoses 9, throttle 8 (stock length per model-year, no H-D number), tach 2.
+  - Each row has page + quoted line, a basis (stock_stated / oem_row / replaces / vt_join / stock_no_oem) and a confidence (high 47, medium 41, low 10).
+- `scripts/catalog/vtwin_cables_check.py` (read-only) checks each quoted line is on its page (0 problems), each H-D number is printed there, and shows what the app has for each number → `reports/vtwin_cables_<ts>.md`.
+  - 62 of 74 numbers are in oem_parts, all named as a cable, hose or ground strap there. 7 of the 12 missing have a letter-suffix sibling (38607-87 → 38607-87A).
+- Stacked fractions: the PDF sets ¾ etc. half a line off, so "7 ”" is really 7-3/4". The checker joins them back.
+- Left out: +N extensions, bulk cut-to-length cables, and cross-table V-Twin-number joins (V-Twin reuses its numbers), including the 2020-23 Touring 372004xx clutch cables.
+- Catalog conflicts are kept and marked in the notes, e.g. 38617-95 is FXSTSB on p416 but the Dyna list on p417; 36-0857 is 30.5" Big Twin on p413 but 34-1/4" XL on p1000.
+- Next: Laken decides on a DATA_RIGHTS row for stock cable lengths; then a table plus loader (dry-run first).
+- 2026-10-29: Laken approved the cable-length DATA_RIGHTS row (high + medium rows, H-D number + length + model-year). Added the row.
+  - Moved the reviewed list to `scripts/catalog/specs/vtwin_cable_lengths.csv`.
+  - New migration `013_oem_part_lengths.sql` (applied) and loader `scripts/etl/18_vtwin_cable_lengths.mjs` (dry run by default).
+  - Applied: 66 rows for 57 H-D numbers (clutch 24, battery 20, speedo 16, brake hose 4, tach 2; high 40, medium 26).
+  - Skipped: 12 numbers not in oem_parts (7 have letter-suffix siblings), 7 low, 13 with no H-D number.
+  - Fitment untouched, so no 05-08 or gate run needed. Not shown in the API or app yet (hdchop_api has no grant on the table yet).
