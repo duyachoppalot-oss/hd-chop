@@ -43,6 +43,46 @@ export async function GET(_req: Request, ctx: { params: Promise<{ oem: string }>
       [root]
     );
     for (const f of fits) f.spans = await withFamilies(f.spans);
-    return ok({ requested: chain.find((c) => c.oem.toUpperCase().replace(/[\s-]/g, '') === key)?.oem ?? oem, ...detail, chain, supersession, fits });
+    const stock_sizes = await stockSizes(root);
+    return ok({ requested: chain.find((c) => c.oem.toUpperCase().replace(/[\s-]/g, '') === key)?.oem ?? oem, ...detail, chain, supersession, fits, stock_sizes });
   });
+}
+
+// Stock cable / hose lengths (oem_part_lengths) and rotor diameters / sprocket teeth
+// (oem_part_sizes) for every number in the chain. One entry per number + size; used_on
+// lists the year / model text the source printed with it ("1987-06 FLT FXST FXSTC FLST").
+const ITEM_LABEL: Record<string, string> = {
+  clutch_cable: 'Clutch cable', throttle_cable: 'Throttle cable', speedometer_cable: 'Speedometer cable', tach_cable: 'Tach cable',
+  battery_cable: 'Battery cable', brake_hose: 'Brake hose', brake_rotor: 'Brake rotor', engine_sprocket: 'Engine sprocket',
+  compensator_sprocket: 'Compensator sprocket', countershaft_sprocket: 'Countershaft sprocket', rear_sprocket: 'Rear sprocket',
+};
+type SizeRow = { oem: string; item: string; position: string; value: string; num: number; detail: string; years: string; models: string };
+async function stockSizes(root: string) {
+  const rows = await query<SizeRow>(
+    `SELECT p.oem_display AS oem, l.item, '' AS position, l.value, l.length_in::float AS num, l.detail, l.years, l.models
+       FROM oem_part_lengths l JOIN oem_parts p USING (oem_number) WHERE p.chain_root = $1
+     UNION ALL
+     SELECT p.oem_display, s.item, s.position, s.value, s.value_num::float, s.detail, s.years, s.models
+       FROM oem_part_sizes s JOIN oem_parts p USING (oem_number) WHERE p.chain_root = $1
+     ORDER BY 2, 3, 5, 1`,
+    [root]
+  );
+  const out = new Map<string, { oem: string; label: string; value: string; detail: string | null; used_on: string[] }>();
+  for (const r of rows) {
+    const k = [r.oem, r.item, r.position, r.value, r.detail].join('|');
+    const label = [r.position ? r.position[0].toUpperCase() + r.position.slice(1) : '', (ITEM_LABEL[r.item] ?? r.item).toLowerCase()].filter(Boolean).join(' ');
+    const e = out.get(k) ?? out.set(k, { oem: r.oem, label: label[0].toUpperCase() + label.slice(1), value: r.value, detail: r.detail || null, used_on: [] }).get(k)!;
+    for (const on of usedOn(r.years, r.models)) if (!e.used_on.includes(on)) e.used_on.push(on);
+  }
+  return [...out.values()];
+}
+
+// years '1984-99 / 1980-86' + models 'FXST; FXWG' -> ['1984-99 FXST', '1980-86 FXWG'];
+// lists of different lengths stay one entry.
+function usedOn(years: string, models: string): string[] {
+  const ys = years.split(' / ').map((y) => y.trim()).filter(Boolean);
+  const ms = models.split(';').map((m) => m.trim()).filter(Boolean);
+  if (ys.length > 1 && ys.length === ms.length) return ys.map((y, i) => `${y} ${ms[i]}`);
+  const one = `${ys.join(', ')} ${ms.join(', ')}`.trim();
+  return one ? [one] : [];
 }

@@ -559,3 +559,9 @@ Append one entry per session. Newest at the bottom.
   - New loader `scripts/etl/19_vtwin_rotor_sprocket.mjs` (dry run by default). Applied: 37 rows for 26 numbers (rotor diameter 29, sprocket teeth 8; high 24, medium 13).
   - Skipped: 5 rows whose numbers aren't in oem_parts, 1 low, 3 with no H-D number. Fitment untouched.
   - Not in the API or app yet; hdchop_api has no grant on oem_part_lengths or oem_part_sizes.
+- 2026-10-29: stock sizes on the part screen.
+  - Correction to the two notes above: hdchop_api already reads oem_part_lengths and oem_part_sizes. `packages/db/roles/hdchop_api.sql` sets default SELECT on tables hdchop_app creates, so no grant was needed.
+  - `GET /v1/part/:oem` now returns `stock_sizes` for every number in the chain: `[{oem, label, value, detail, used_on[]}]`. used_on pairs each year range with its models ('1984-99 FXST').
+  - Mobile part screen: a "Stock size" section above Fits (label, value in gold, detail, years + models). An older number in the chain shows "as <number>".
+  - Checked against the local API (:3001) with mobile-web-local-api: 38607-87A clutch cable 62.69 in; 41813-79 shows three rotor rows. Gate ran clean, no console errors.
+  - Not deployed: the live API needs `scripts/deploy/api.sh`.

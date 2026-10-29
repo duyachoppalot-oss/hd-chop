@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { api } from '@/lib/api';
+import { api, StockSize } from '@/lib/api';
 import { useBike } from '@/lib/bike';
 import { byFamily, conditionLabel, FitRow, ModelRow } from '@/lib/format';
 import { useApi } from '@/lib/useApi';
@@ -9,7 +9,8 @@ import { font, Palette, space, TAP, useStyles, useTheme } from '@/lib/theme';
 import { Screen } from '@/components/Screen';
 import { Badge, ErrorBox, Footer, Heading, Loading, Section } from '@/components/ui';
 
-// Part detail: newest number, the numbers it replaces, every model and year
+// Part detail: newest number, the numbers it replaces, its stock size (cable
+// length, rotor diameter, sprocket teeth) when documented, every model and year
 // span it fits, split by conditions. Codes of the same named bike fold into
 // one family row (Road King: FLHR, FLHRC, FLHRCI...) that opens to each code.
 export default function PartDetail() {
@@ -49,6 +50,15 @@ export default function PartDetail() {
             </>
           ) : null}
 
+          {data.stock_sizes?.length ? (
+            <>
+              <Section title="Stock size" />
+              {data.stock_sizes.map((z) => (
+                <SizeRow key={[z.oem, z.label, z.value, z.detail].join('|')} size={z} shown={data.oem} />
+              ))}
+            </>
+          ) : null}
+
           {data.fits.map((f) => (
             <View key={f.conditions.join(',') || 'any'}>
               <Section
@@ -77,6 +87,25 @@ export default function PartDetail() {
       ) : null}
       <Footer />
     </Screen>
+  );
+}
+
+// "Clutch cable ........ 62.69 in", then the detail / older number and the
+// years + models printed with that size.
+function SizeRow({ size, shown }: { size: StockSize; shown: string }) {
+  const s = useStyles(styles);
+  const sub = [size.detail, size.oem !== shown ? `as ${size.oem}` : null].filter(Boolean).join(' · ');
+  return (
+    <View style={s.sizeRow} accessibilityLabel={`${size.label}, ${size.value}${sub ? `, ${sub}` : ''}`}>
+      <View style={s.sizeHead}>
+        <Text style={s.sizeLabel}>{size.label}</Text>
+        <Text style={s.sizeValue} selectable>
+          {size.value}
+        </Text>
+      </View>
+      {sub ? <Text style={s.famSub}>{sub}</Text> : null}
+      {size.used_on.length ? <Text style={s.famSub}>{size.used_on.join(', ')}</Text> : null}
+    </View>
   );
 }
 
@@ -156,5 +185,9 @@ const styles = (color: Palette) => StyleSheet.create({
   famName: { fontFamily: font.sign, fontSize: 24, color: color.text, letterSpacing: 0.5 },
   famSub: { fontFamily: font.type, fontSize: 15, color: color.muted },
   model: { fontFamily: font.typeBold, fontSize: 17, color: color.text, width: 96 },
+  sizeRow: { paddingVertical: space.sm, paddingHorizontal: space.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.rule, gap: 2 },
+  sizeHead: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
+  sizeLabel: { fontFamily: font.sign, fontSize: 22, color: color.text, letterSpacing: 0.5, flex: 1 },
+  sizeValue: { fontFamily: font.typeBold, fontSize: 22, color: color.accent },
   years: { fontFamily: font.type, fontSize: 17, color: color.muted, flex: 1 },
 });

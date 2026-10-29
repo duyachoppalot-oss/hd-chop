@@ -65,7 +65,11 @@ export type PartDetail = {
   chain: { oem: string; description: string | null; number_source: string }[];
   supersession: { from: string; to: string }[];
   fits: { conditions: string[]; spans: Span[] }[];
+  // Stock cable / hose length, rotor diameter, sprocket teeth for a number in the chain.
+  // used_on: year + model text printed with it ('1987-06 FLT'). Missing on older API builds.
+  stock_sizes?: StockSize[];
 };
+export type StockSize = { oem: string; label: string; value: string; detail: string | null; used_on: string[] };
 
 // Search by family (/v1/families, /v1/family-search): frame = platform
 // (Touring, Dyna...), motor = engine (Shovelhead, Twin Cam...).
