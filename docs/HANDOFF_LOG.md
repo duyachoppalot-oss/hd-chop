@@ -565,3 +565,13 @@ Append one entry per session. Newest at the bottom.
   - Mobile part screen: a "Stock size" section above Fits (label, value in gold, detail, years + models). An older number in the chain shows "as <number>".
   - Checked against the local API (:3001) with mobile-web-local-api: 38607-87A clutch cable 62.69 in; 41813-79 shows three rotor rows. Gate ran clean, no console errors.
   - Deployed hd-chop-api:1035eba (healthy) from a clean `git archive` of HEAD, so the chassis session's uncommitted `apps/api/app/v1/models/route.ts` change was not shipped. Live /v1/part returns stock_sizes.
+- 2026-10-30: local dev over any network (Laken: "run off my hotspot").
+  - New `scripts/dev/db-tunnel.sh`: SSH tunnel, 127.0.0.1:55432 on the Mac -> 127.0.0.1:5432 on the server.
+    - The server already allows password logins from 127.0.0.1 (pg_hba `host all all 127.0.0.1/32`), so no server change was needed.
+    - Runs as a background loop that reconnects after drops; start/status/stop; does nothing if already up.
+  - Local `.env` points APP_, SOURCE_ and API_DATABASE_URL at 127.0.0.1:55432 (backup `.env.bak-20261030_162912`). `.env.example` documents it.
+  - `npm run dev` in apps/admin and apps/api starts the tunnel first. ETL scripts and psql need `scripts/dev/db-tunnel.sh` run first.
+  - Verified: admin 200, local /v1/part 200, ETL-style dotenv connection, and an automatic reconnect after killing the ssh process.
+  - allow-db-ip.sh is no longer needed. The old allow-list lines for 108.188.232.156 and 35.139.71.102 are still in pg_hba; Laken can remove them.
+  - The deployed API is unchanged (it uses ~/hd-chop/api.env on the server).
+  - Not fixed: the local `.env` API_DATABASE_URL line has a second app key glued onto its end, different from HDCHOP_APP_KEYS. Laken to check.
