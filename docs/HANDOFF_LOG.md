@@ -637,3 +637,4 @@ Append one entry per session. Newest at the bottom.
 - 2026-10-31: committed the chassis/engine-spec work above (it had been deployed from a dirty worktree but never committed).
   - Regression: the 2026-10-29 deploy hd-chop-api:1035eba was built from clean HEAD, which didn't contain the uncommitted /v1/models chassis change.
   - Live /v1/models has had no `chassis` since then (checked 2010 FXD), so the YOUR BIKE sizes are missing in the app. A redeploy from this commit restores it.
+- 2026-10-31: redeployed hd-chop-api:7944555 from a clean tree (healthy). Live /v1/models has chassis again (2010 FXD 19 x 2.15 / 17 x 4.50 in, 25 mm axle, 49 mm fork; 1987 FXRS 80 ci 5-speed, 35 mm fork). /v1/part stock_sizes and /privacy still work.
