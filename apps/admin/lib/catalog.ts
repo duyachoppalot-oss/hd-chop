@@ -10,8 +10,12 @@ export type { Word } from './catalogText';
 // Catalog PDFs the viewer (/catalog) can show. Words come from the pdfplumber cache
 // (scripts/catalog/pdf_words.py: [text, x0, x1, top, bottom, size, bold] in points);
 // page images are rendered on first view with pdftoppm and cached next to them.
+// The cache lives in ~/Developer/catalog-cache/vtwin (outside the repo: catalog text), not
+// the OS temp dir, which macOS clears on its own. A page whose words are missing is
+// extracted on first view.
 const run = promisify(execFile);
-const CACHE = path.join(process.env.HDCHOP_CATALOG_CACHE ?? os.tmpdir(), 'hdchop_vtwin');
+const CACHE = process.env.HDCHOP_CATALOG_CACHE ?? path.join(os.homedir(), 'Developer', 'catalog-cache', 'vtwin');
+const REPO = path.basename(process.cwd()) === 'admin' ? path.resolve(process.cwd(), '..', '..') : process.cwd();
 
 export const CATALOGS = {
   vtwin: {
@@ -38,9 +42,14 @@ export const sectionOf = (c: CatalogKey, page: number) =>
 // Stacked fractions ("3/4" set half a line off, between a number and its inch mark)
 // are joined back: 7 + 3/4 + ” -> 7-3/4 ”.
 const FR = /^\d{1,2}[/•]\d{1,2}$/;
-export function pageWords(c: CatalogKey, page: number): Word[] {
+export async function pageWords(c: CatalogKey, page: number): Promise<Word[]> {
   const f = path.join(CACHE, 'words', `${String(page).padStart(4, '0')}.json`);
-  if (c !== 'vtwin' || !fs.existsSync(f)) return [];
+  if (c !== 'vtwin') return [];
+  if (!fs.existsSync(f)) {
+    await run('python3', ['-I', path.join(REPO, 'scripts', 'catalog', 'pdf_words.py'), CATALOGS[c].pdf, path.join(CACHE, 'words'), String(page), String(page)])
+      .catch(() => null);
+    if (!fs.existsSync(f)) return [];
+  }
   const raw = (JSON.parse(fs.readFileSync(f, 'utf8')) as (string | number)[][]).map(
     (w) => [String(w[0]), Number(w[1]), Number(w[2]), Number(w[3]), Number(w[4]), Number(w[5] ?? 0), Number(w[6] ?? 0)] as Word
   );

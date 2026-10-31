@@ -16,7 +16,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ catalog:
   const [{ total }] = await query<{ total: number }>(
     `SELECT count(*)::int AS total FROM catalog_captures WHERE catalog = $1 AND status <> 'skipped'`, [catalog]
   );
-  const words = pageWords(catalog, page);
+  const words = await pageWords(catalog, page);
   const ignoreTaken = new URL(req.url).searchParams.get('all') === '1';
   return Response.json({
     catalog, page, pages: CATALOGS[catalog].pages, section: sectionOf(catalog, page),

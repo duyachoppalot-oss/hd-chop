@@ -683,3 +683,18 @@ Append one entry per session. Newest at the bottom.
   - Linked from the nav, from /part ("Lineage →") and from /catalog/compare rows.
   - Example, 60665-89 Touring: 60605-79B 1980 → 60605-85 / 60664-85B 1985 → 60543-89 1987 → 60665-89 1989 → 60665-94 1994 → 60665-99B 1999 → 60553-07 2007 → 60553-07A 2014 → 25700385 2016 → 25700418 2017.
   - `lib/compare.ts` gained partsNamedLike() (shared).
+- 2026-10-31: fixed the catalog highlighter returning no words.
+  - Cause: the V-Twin word cache lived in the macOS temp dir, which the OS purges; only 47 of 1,368 pages were left.
+  - Moved to `~/Developer/catalog-cache/vtwin` (words/, png/; outside the repo), with `HDCHOP_CATALOG_CACHE` to override. Used by apps/admin lib/catalog.ts, 17_vtwin_oem, and vtwin_cables_check.py.
+  - The admin re-extracts a missing page on first view (pdf_words.py for that page, ~2 s). A full rebuild into the new folder was started in the background.
+- 2026-10-31: reviewed and cataloged all 216 saved catalog captures (Laken). Backup in table `catalog_captures_backup_20261031`.
+  - Every capture: kind set (fitment 179, stock_spec 22, size 6, other 9 headings/counts), part name cleaned and filled (was empty on 38, wrong on several, e.g. brake disc bolts saved as "Compensator Sprocket Kit"), status 'reviewed'.
+  - 100 are linked to a part type (concept_slug). The note now holds the interpretation, e.g. "Outer primary cover generations, FLT: 1980-84, 1985-88...".
+  - 156 part names; same-part boxes are grouped on /catalog/compare (charging kit 6, front brake rotor 6, saddlebag lid 4...).
+- 2026-10-31: admin /part/[oem] "Catalog ranges" (Laken: see the fitment ranges when looking at parts).
+  - `lib/partCaptures.ts` + `GET /api/part/:oem/captures` + `components/CatalogRanges.tsx`.
+  - Which captures count:
+    - "number": a capture that prints a number of the part's chain; per line, a box with number and years on different lines counts whole. Shown even on families we don't list the part for.
+    - "kind": the capture's part name has all its words in our name with the noun agreeing, or it has the same part type; only on families the part fits.
+  - Per family: our H-D year runs (green) vs captured ranges (gold for number, light gold for kind); change lines green where our years start or stop that year; list of captures with notes.
+  - Checked: 60665-89 (1989-93 matches), 41755-86 (1986-91 matches), 42040-06 (capture says 2008-13 FLT, which we don't list).

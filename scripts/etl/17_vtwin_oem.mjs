@@ -8,7 +8,7 @@
 // names), confidence 'low', source_ref 'VT p<page>'.
 //
 // Reading the catalog: word boxes per page (scripts/catalog/pdf_words.py, pdfplumber; cached
-// in the OS temp dir) rebuild tables from their "VT No. ... OEM ..." header rows. Each H-D
+// in ~/Developer/catalog-cache/vtwin) rebuild tables from their "VT No. ... OEM ..." header rows. Each H-D
 // number's range comes from its own table row (years, model, ABS/carb notes), else the
 // table's title ("Countershaft Group for 1936-85 Big Twin"), else the page title; the
 // source_ref says which ('VT p549', 'VT p549 title', 'VT p549 page'). Every range found,
@@ -97,9 +97,10 @@ const isYearToken = (t) => /^(19|20)\d\d-\d\d/.test(t) && +t.slice(0, 4) <= 2030
 const BIG_TWIN = ['fl', 'fx', 'touring', 'softail', 'dyna', 'fxr'];
 const SIDE_VALVE = ['U', 'UH', 'UL', 'ULH', 'V', 'VC', 'VD', 'VL', 'VLD', 'VLH'];
 
-// Word boxes per page (scripts/catalog/pdf_words.py), cached in the OS temp dir.
+// Word boxes per page (scripts/catalog/pdf_words.py), cached in ~/Developer/catalog-cache/vtwin
+// (outside the repo; not the OS temp dir, which macOS clears). Missing pages are re-extracted.
 function pageWords() {
-  const dir = path.join(os.tmpdir(), 'hdchop_vtwin', 'words');
+  const dir = process.env.HDCHOP_CATALOG_CACHE ? path.join(process.env.HDCHOP_CATALOG_CACHE, 'words') : path.join(os.homedir(), 'Developer', 'catalog-cache', 'vtwin', 'words');
   const n = fs.existsSync(dir) ? fs.readdirSync(dir).length : 0;
   if (n < 1368) execFileSync('python3', ['-I', path.join('scripts', 'catalog', 'pdf_words.py'), PDF, dir], { stdio: 'inherit' });
   return fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => [+f.slice(0, 4), JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))]);

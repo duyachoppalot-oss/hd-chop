@@ -9,10 +9,10 @@
 # Writes reports/vtwin_cables_check_<ts>.txt and reports/vtwin_cables_<ts>.md.
 #
 # Usage: APP_DATABASE_URL=... python3 -I scripts/catalog/vtwin_cables_check.py [words_dir]
-import csv, json, os, re, subprocess, sys, tempfile, time, collections
+import csv, json, os, re, subprocess, sys, time, collections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WD = sys.argv[1] if len(sys.argv) > 1 else os.path.join(tempfile.gettempdir(), 'hdchop_vtwin', 'words')
+WD = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.expanduser('~'), 'Developer', 'catalog-cache', 'vtwin', 'words')
 SRC = os.path.join(ROOT, 'scripts', 'catalog', 'specs', 'vtwin_cable_lengths.csv')
 TS = time.strftime('%Y%m%d_%H%M%S')
 FR = re.compile(r'^\d{1,2}[/•]\d{1,2}$')
