@@ -132,3 +132,29 @@ summary.rng .rng-y::before { content: '▸ '; color: var(--gold); }
 details[open] > summary.rng .rng-y::before { content: '▾ '; }
 .rng-y { font-weight: 700; font-size: 14px; }
 div.rng .rng-y { padding-left: 1.1em; }
+
+/* Catalog viewer (/catalog) */
+.cat { padding: 12px 24px 40px; }
+.cat-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cat-bar form { display: flex; align-items: center; }
+.cat-bar button, .cat-bar select, .cat-side button, .cat-side select { background: var(--panel-2); color: var(--cream); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; font: inherit; cursor: pointer; }
+.cat-bar button:disabled, .cat-side button:disabled { opacity: 0.4; cursor: default; }
+.cat-jump { width: 64px; background: var(--panel); color: var(--cream); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font: inherit; text-align: center; }
+.cat-main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+.cat-page { position: relative; user-select: none; cursor: crosshair; background: #fff; border: 1px solid var(--line); max-width: 900px; }
+.cat-page img { display: block; width: 100%; height: auto; pointer-events: none; }
+.cat-num { position: absolute; background: rgba(212, 165, 44, 0.28); pointer-events: none; }
+.cat-cap { position: absolute; border: 3px solid; cursor: pointer; }
+.cat-cap.on { border-width: 3px; box-shadow: 0 0 0 2px #000; }
+.cat-box { position: absolute; border: 2px dashed; background: rgba(212, 165, 44, 0.12); pointer-events: none; }
+.cat-side { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 90px); overflow: auto; }
+.cat-side h2 { margin: 10px 0 0; }
+.cat-side textarea, .cat-note { width: 100%; background: var(--panel); color: var(--cream); border: 1px solid var(--line); border-radius: 4px; padding: 8px; font-size: 12.5px; }
+.cat-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-kinds button { border-width: 2px; }
+.cat-kinds button.on { background: var(--gold); color: #000; font-weight: 600; }
+.cat-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-side button.primary { background: var(--gold); color: #000; font-weight: 600; border-color: var(--gold); }
+.cat-item { display: grid; grid-template-columns: 10px auto; gap: 2px 8px; text-align: left; align-items: center; }
+.cat-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cat-preview { grid-column: 2; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }

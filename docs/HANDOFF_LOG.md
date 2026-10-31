@@ -575,3 +575,20 @@ Append one entry per session. Newest at the bottom.
   - allow-db-ip.sh is no longer needed. The old allow-list lines for 108.188.232.156 and 35.139.71.102 are still in pg_hba; Laken can remove them.
   - The deployed API is unchanged (it uses ~/hd-chop/api.env on the server).
   - Not fixed: the local `.env` API_DATABASE_URL line has a second app key glued onto its end, different from HDCHOP_APP_KEYS. Laken to check.
+- 2026-10-30: resolved the 13 on-hold garbled names (admin notes #5-#17).
+  - Each name came from a clean reading of the same number in another H-D book: 12 from the 1950 45ci book, 45916-73 from the 1971-84 FX book p147.
+  - Applied as `rename_part` overrides (reason "name_review: from H-D book <page>") and closed the 13 notes.
+  - The garbled text came from OCR of the 1942 WLA book. Other 1942-WLA-only names may be garbled the same way; the 1950 45ci book is the place to cross-check them.
+- 2026-10-31: 1942 WLA OCR name sweep (`reports/wla_name_fixes.csv`).
+  - 52 garbled names found among parts still named from the 1942 WLA text.
+  - Applied 32 as `name_review` overrides: 16 A (clean in the 1950 45ci book, page in the reason) and 16 B (read from the garbled text).
+  - 20 C rows left for Laken (unreadable; mostly Army N/M parts).
+- 2026-10-31: admin catalog viewer, /catalog (Laken: preview each catalog page and highlight what to document).
+  - Shows each V-Twin page as an image: pdftoppm at 120 dpi, cached in $TMPDIR/hdchop_vtwin/png.
+  - H-D numbers are highlighted. Drag a box: the words inside come from the PDF's own word boxes (stacked fractions joined, columns split by " | ").
+  - Pick a kind (fitment range / size / stock spec / supersession / other), edit the text, add a note, save.
+  - Saved boxes stay drawn; click one to edit, change status or delete. Keys: ← → for pages, Esc drops the box. Export CSV at /api/catalog/captures/export.
+  - New migration `015_catalog_captures.sql` (applied). Captures are review material only; DATA_RIGHTS still decides what loads.
+  - Files: apps/admin/lib/catalog.ts, app/catalog/{page,viewer}.tsx, app/api/catalog/**, globals.css, a nav link.
+  - Tested on p417: drag, save and redraw all work, and the console is clean. The test capture was deleted.
+  - Only the V-Twin PDF so far; the H-D OCR books need word boxes (tesseract tsv) to plug in.
