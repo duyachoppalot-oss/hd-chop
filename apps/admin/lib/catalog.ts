@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import type { Word } from './catalogText';
+
+export type { Word } from './catalogText';
 
 // Catalog PDFs the viewer (/catalog) can show. Words come from the pdfplumber cache
 // (scripts/catalog/pdf_words.py: [text, x0, x1, top, bottom, size, bold] in points);
@@ -31,7 +34,6 @@ export const isCatalog = (k: string): k is CatalogKey => k in CATALOGS;
 export const sectionOf = (c: CatalogKey, page: number) =>
   [...CATALOGS[c].sections].reverse().find((s) => page >= s.from)?.name ?? '';
 
-export type Word = [text: string, x0: number, x1: number, top: number, bottom: number];
 
 // Stacked fractions ("3/4" set half a line off, between a number and its inch mark)
 // are joined back: 7 + 3/4 + ” -> 7-3/4 ”.
@@ -40,7 +42,7 @@ export function pageWords(c: CatalogKey, page: number): Word[] {
   const f = path.join(CACHE, 'words', `${String(page).padStart(4, '0')}.json`);
   if (c !== 'vtwin' || !fs.existsSync(f)) return [];
   const raw = (JSON.parse(fs.readFileSync(f, 'utf8')) as (string | number)[][]).map(
-    (w) => [String(w[0]), Number(w[1]), Number(w[2]), Number(w[3]), Number(w[4])] as Word
+    (w) => [String(w[0]), Number(w[1]), Number(w[2]), Number(w[3]), Number(w[4]), Number(w[5] ?? 0), Number(w[6] ?? 0)] as Word
   );
   const fr = raw.filter((w) => FR.test(w[0]));
   const rest = raw.filter((w) => !FR.test(w[0]));
@@ -79,7 +81,12 @@ export async function pageImage(c: CatalogKey, page: number): Promise<Buffer> {
 
 export const KINDS = ['fitment', 'size', 'stock_spec', 'supersession', 'other'] as const;
 export type Kind = (typeof KINDS)[number];
+export const STATUSES = ['new', 'reviewed', 'loaded', 'rejected', 'skipped'] as const;
 export type Capture = {
   capture_id: number; page: number; x0: number; y0: number; x1: number; y1: number;
-  text: string; kind: Kind; note: string; status: string; created_at: string;
+  text: string; kind: Kind; part: string; concept_slug: string | null; note: string; status: string; created_at: string;
 };
+export const CAPTURE_COLS = 'capture_id, page, x0::float, y0::float, x1::float, y1::float, text, kind, part, concept_slug, note, status, created_at';
+// part name -> part type slug when it matches a part_concepts name or term (case-insensitive)
+export const CONCEPT_OF = `(SELECT slug FROM part_concepts p WHERE lower(p.display_name) = lower(trim($PART))
+   OR lower(trim($PART)) = ANY (SELECT lower(t) FROM unnest(p.hd_terms || p.user_terms) t) ORDER BY concept_id LIMIT 1)`;

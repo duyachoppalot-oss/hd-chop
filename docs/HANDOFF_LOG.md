@@ -592,3 +592,13 @@ Append one entry per session. Newest at the bottom.
   - Files: apps/admin/lib/catalog.ts, app/catalog/{page,viewer}.tsx, app/api/catalog/**, globals.css, a nav link.
   - Tested on p417: drag, save and redraw all work, and the console is clean. The test capture was deleted.
   - Only the V-Twin PDF so far; the H-D OCR books need word boxes (tesseract tsv) to plug in.
+- 2026-10-31: catalog viewer, Part field and suggested boxes. Laken's 106 captures (pp 3-42, all kind fitment) = per part type, the year/model ranges where it changes.
+  - Migration `016_catalog_capture_part.sql` (applied):
+    - `part` (copied from the note for the 78 that had one) and `concept_slug` (set when the part matches a part_concepts name or term; 7 linked).
+    - New status 'skipped'.
+  - Part box: suggests our 70 part types plus every part name already used (/api/catalog/parts).
+  - `apps/admin/lib/catalogSuggest.ts`: suggests boxes around runs of year/model lines, widened to their table row, with the heading above as the part name.
+    - It ignores column headers, notes, V-Twin/Colony numbers posing as years, and boxes overlapping saved or skipped captures.
+  - Scored against Laken's boxes with ?all=1 (pages 3-42): 89% of boxes matched, 78% word recall, ~2.5 extra suggestions per page, 46 part-name guesses agree. The misses are boxes with no years in them (sizes, counts).
+  - Keys: Enter accepts (Enter also saves drawn and edited boxes), Esc skips for good, Shift+Enter adds a line, drag draws your own box. Tested on p44; test rows deleted.
+  - Known: tables whose columns touch can share one suggested box (p44 shifter shaft + bushing kit).

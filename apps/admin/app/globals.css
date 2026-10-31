@@ -158,3 +158,9 @@ div.rng .rng-y { padding-left: 1.1em; }
 .cat-item { display: grid; grid-template-columns: 10px auto; gap: 2px 8px; text-align: left; align-items: center; }
 .cat-dot { width: 10px; height: 10px; border-radius: 50%; }
 .cat-preview { grid-column: 2; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+.cat-edit { display: flex; flex-direction: column; gap: 10px; }
+.cat-sug { position: absolute; border: 2px dashed rgba(60, 60, 60, 0.55); cursor: pointer; }
+.cat-sug span { position: absolute; top: -9px; left: -9px; background: #3a352c; color: var(--cream); font-size: 10px; line-height: 16px; min-width: 16px; text-align: center; border-radius: 8px; padding: 0 3px; }
+.cat-sug.on { border: 3px dashed #d4a52c; background: rgba(212, 165, 44, 0.18); }
+.cat-sug.on span { background: var(--gold); color: #000; font-weight: 700; }
+.cat-part { font-size: 15px; font-weight: 600; }
