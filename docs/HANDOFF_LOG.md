@@ -638,3 +638,20 @@ Append one entry per session. Newest at the bottom.
   - Regression: the 2026-10-29 deploy hd-chop-api:1035eba was built from clean HEAD, which didn't contain the uncommitted /v1/models chassis change.
   - Live /v1/models has had no `chassis` since then (checked 2010 FXD), so the YOUR BIKE sizes are missing in the app. A redeploy from this commit restores it.
 - 2026-10-31: redeployed hd-chop-api:7944555 from a clean tree (healthy). Live /v1/models has chassis again (2010 FXD 19 x 2.15 / 17 x 4.50 in, 25 mm axle, 49 mm fork; 1987 FXRS 80 ci 5-speed, 35 mm fork). /v1/part stock_sizes and /privacy still work.
+- 2026-10-31: documented 99427-84 (Non-Current Shovelhead Engine Parts 1966-84). Laken's "(2)" copy is identical to the known book 1966-84-shovel-engine.
+  - The parts pages (PDF 3-10) were already loaded by 11: 241 numbers, 11,793 fitment rows.
+  - New: `scripts/catalog/specs/shovel_99427_84.mjs`, transcribed from the page images and not loaded anywhere:
+    - HISTORY: engine changes by year
+    - VIN_70S and VIN_80S: model codes; 1984 dry/wet clutch vs EVO
+    - MODELS: years, ci, speeds, hp, features
+  - Report: `reports/shovel_99427-84_documented.md`, plus 71 size facts in `reports/shovel_99427-84_sizes.csv`.
+  - Leads for Laken:
+    - 1984 FLTC/FLHTC/FLHTP/FXRS/FXRT/FXRP have no engine set; the book says Evo.
+    - FL 57 hp and FLH 66 hp; no horsepower is stored for 1966-84 yet.
+    - VIN-table models missing from vehicles: FLHP, FLHX 1984, FLHS 1981-83, FLTC 1981/83, FLHTP 1983, FXRP 1983.
+- 2026-10-31: applied two fixes from 99427-84 (Laken).
+  - 01_vehicles has a new `CODE_ENGINE` (per model, changeover years). From the book's 1984 VIN table: 1984 FLTC, FLHTC, FLHTP, FXRS, FXRT, FXRP = evolution_bigtwin.
+    - 01 --apply changed exactly those 6. 1984 FLHT, FXR and FXRDG are still unset (the book doesn't mark them).
+  - `shovelhead_model_history.mjs` now gives FL 57 hp and FLH 66 hp for 1966-80 (74 ci).
+    - 12 --apply: 242 rows replaced; 30 bikes now have horsepower (the 80 ci FLH option has none).
+  - Gate unchanged. Local /v1/models 1970 FLH shows 66 hp. Not deployed; the live API reads the same DB, so it already serves these.

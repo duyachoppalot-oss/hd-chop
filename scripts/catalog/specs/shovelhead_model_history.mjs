@@ -6,6 +6,8 @@
 // to the base code, see books.mjs DROP_80). half: the printed year is "1/2"
 // (mid-year change), so both specs apply that year.
 // speeds null = the row prints no transmission.
+// hp: as printed for the model (FL low compression 57 hp, FLH high compression 66 hp;
+// the FL 1972-80 row continues the same low-compression motor).
 // Notes are short paraphrases of the row's remarks.
 
 export const SOURCE = {
@@ -15,9 +17,9 @@ export const SOURCE = {
 };
 
 export const ROWS = [
-  { label: 'FL', code: 'FL', from: 1966, to: 1971, ci: 74, speeds: 4, note: 'Low compression, 57 hp; public, police, commercial, Shrine' },
-  { label: 'FL', code: 'FL', from: 1972, to: 1980, ci: 74, speeds: 4, note: 'Police, commercial, Shrine only' },
-  { label: 'FLH', code: 'FLH', from: 1966, to: 1980, ci: 74, speeds: 4, note: 'High compression, 66 hp' },
+  { label: 'FL', code: 'FL', from: 1966, to: 1971, ci: 74, speeds: 4, hp: '57 hp', note: 'Low compression, 57 hp; public, police, commercial, Shrine' },
+  { label: 'FL', code: 'FL', from: 1972, to: 1980, ci: 74, speeds: 4, hp: '57 hp', note: 'Police, commercial, Shrine only' },
+  { label: 'FLH', code: 'FLH', from: 1966, to: 1980, ci: 74, speeds: 4, hp: '66 hp', note: 'High compression, 66 hp' },
   { label: 'FLHS', code: 'FLHS', from: 1977, to: 1977, ci: 74, speeds: null, note: '"Classic Brown" and other colors' },
   { label: 'FLHS 80', code: 'FLHS', from: 1980, to: 1980, ci: 80, speeds: 4, note: 'Stripped-down FLH 80' },
   // Printed under the FLHS 80 block without its own model label; "first 1340cc"

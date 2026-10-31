@@ -37,7 +37,7 @@
 //
 // engine: hd_engine_types.engine_key whose year range covers the year, among
 // the engines that platform used. Years where two ranges meet (1984, 1999,
-// 2017) use OVERLAP_ENGINE or stay null.
+// 2017) use CODE_ENGINE (per model, from a document), then OVERLAP_ENGINE, or stay null.
 //
 // fuel_system: 'efi' for EFI "...I" codes (code ends in I and the code without
 // the I is also a picker code). Everything else stays 'unknown'; step 04 may
@@ -202,6 +202,14 @@ const OVERLAP_ENGINE = {
   1984: { softail: 'evolution_bigtwin', fx: 'shovelhead', fl: 'shovelhead' },
   1999: { touring: 'twin_cam', dyna: 'twin_cam', softail: 'evolution_bigtwin' }, // Softail got the TC88B in 2000
   2017: { touring: 'milwaukee_eight', trike: 'milwaukee_eight', softail: 'twin_cam', dyna: 'twin_cam' },
+};
+
+// Changeover-year engines named per model, ahead of OVERLAP_ENGINE: the 99427-84
+// 1984 VIN table marks these touring and FXR models "EVO" (Shovelhead models carry
+// dry / wet clutch codes); scripts/catalog/specs/shovel_99427_84.mjs VIN_80S.
+const CODE_ENGINE = {
+  1984: { FLTC: 'evolution_bigtwin', FLHTC: 'evolution_bigtwin', FLHTP: 'evolution_bigtwin',
+          FXRS: 'evolution_bigtwin', FXRT: 'evolution_bigtwin', FXRP: 'evolution_bigtwin' },
 };
 
 // FXLR is listed under both FXR (1987-1994) and Softail (1988-2025). The
@@ -442,7 +450,7 @@ async function main() {
     // FL/FX chassis engines come from the platform's engine list: the picker's
     // era family (Shovelhead) doesn't cover the 1985-86 Evo FX bikes.
     const eraFamily = eraFams[0] ?? null;
-    const engine = engineFor(platform, year, chassis ? null : eraFamily, engines, familyEngine);
+    const engine = CODE_ENGINE[year]?.[code] ?? engineFor(platform, year, chassis ? null : eraFamily, engines, familyEngine);
     if (eraFamily && !chassis && !engine) { reject('outside_engine_era'); continue; }
     // Era-family names count only inside that era (the picker files 1978-82 FLH
     // under Panhead as "PANHEAD HIGH COMPRESSION").
