@@ -6,6 +6,7 @@ import { CopyOem } from '@/components/CopyOem';
 import { OverrideForms } from '@/components/OverrideForms';
 import { OVERRIDE_SELECT, OverrideList, type Override } from '@/components/OverrideList';
 import { Timeline, type Bar, type Group, type Lane } from '@/components/Timeline';
+import { CatalogRanges } from '@/components/CatalogRanges';
 
 export const dynamic = 'force-dynamic';
 
@@ -162,6 +163,12 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
           ) : (
             <p className="muted">No fitment rows for this chain.</p>
           )}
+          <h2>Catalog ranges</h2>
+          <p className="small muted" style={{ marginTop: -6 }}>
+            Your V-Twin catalog captures about this part (gold = prints this number, light gold = same kind of part) against our H-D years (green).
+            Green lines: a captured change year where our years start or stop too.
+          </p>
+          <CatalogRanges oem={key} />
           <h2>Overrides on this chain</h2>
           <div className="panel">
             <OverrideList items={overrides} back={back} />
