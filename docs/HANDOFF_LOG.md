@@ -502,6 +502,38 @@ Append one entry per session. Newest at the bottom.
 - 2026-10-28 V-Twin "work the data out" (dry run reports/17_vtwin_oem_20261028_025659.txt, NOT applied): model codes joined by hyphens (FX-FXE, FLH-FXST) now read; 61"/64" = EL only, 74"/80" = big twins; section defaults from the catalog's own index pages (Big Twin 1984-up 159-482, Classic 1915-1983 483-842 only on pages naming no 45"/Servi-Car/K/XL); section-default models only on parts that already have fitment; models after "except" left out; Knucklehead/Panhead/OHV text never lands on U/V side-valve twins. Ranges with no model 1,038 -> 358. Load set 4,053 rows (row 2,272 / title 1,690 / page 91; softail 1987-89 2,283, vintage 1,770) vs 3,220 live. Still review: 840 numbers with years not in oem_parts (234 letter-suffix siblings of ours, 43 eight-digit), 196 ranges > 3 years from ours, 53 "except" with no model, 39 section-default on parts without fitment.
 - APPLIED (Laken, 2026-10-28): 17 --apply (deleted 3,220, inserted 4,053 vtwin rows; reports/17_vtwin_oem_20261028_030216.txt) -> 05 (3,156 pairs, 0 chain changes) -> 06 -> 07 --max-hole 3 (12,811) -> 08 (1,462 overrides, spans refreshed). Gate identical (reports/gate_after_17v4.txt).
 
+### 2026-10-26 (engine specs 1984+ and chassis sizes: wheel / tire / front axle / fork tube)
+- New engine modules in scripts/catalog/specs/: evo_1340_1987_90_catalog, police_1984_90_catalog, evo_bigtwin_1984_86_catalogs (speeds only; those books print no size), evo_sportster_1986_90_catalog. Wired into 12_vehicle_specs TABLES. 12 now allows ci null and drops a speeds-only row when another option for the bike gives a size with the same speeds.
+- New migration 012_vehicle_chassis_specs: one row per stated fact, holding item, position, value in our wording, size_mm, source, source_rank (1 = H-D, 2 = V-Twin) and source_ref.
+- New source modules in scripts/catalog/specs/chassis/:
+  - hd_tire_guide_2020: 111 Stock rows, p4-14. CVO numbered variants are listed explicitly next to their base codes.
+  - vtwin_axle_fork: front axle from p68 and p459; fork tube from p62, p288, p620 and p1019.
+- New scripts/etl/16_chassis_specs.mjs, with these merge rules:
+  - H-D wins over V-Twin.
+  - A named code wins over a group or family row.
+  - CODE also matches CODE+I.
+  - A second stock size stays when the guide prints two (2016-17 FXSE rear, 2018-20 FLTRXSE front).
+- APPLIED (Laken):
+  - migration 012
+  - 16 --apply: 7,268 rows on 1,558 of 1,873 bikes
+  - 12 --apply: 242 rows on 233 bikes
+  - 15 --apply: 1,161 portal rows, one per bike from 1991 on; the engine name is in `note` until migration 011
+- /v1/models now returns chassis: { wheel_front, wheel_rear, tire_front, tire_rear, axle_front, axle_rear, fork_tube, handlebar }, each a string[].
+  - Checked on the local API: 2010 FXD gives 96/1584, 19 x 2.15 / 17 x 4.50 in, 25 mm axle, 49 mm fork. 1987 FXRS gives 80/1340 5-speed, 35 mm fork.
+  - NOT deployed: needs scripts/deploy/api.sh.
+  - Field names sent to the mobile session.
+- Gaps:
+  - handlebar: no stock statement in either source
+  - rear axle: no diameter printed
+  - Sportster front axle
+  - 2018+ Softail axle and fork
+  - wheels before 1981
+  - 1984-86 Evo big twins show the transmission only
+  - 1986 FXSTC/FLST, 1988 FXRP size, 1990 XLH
+- Nothing committed.
+- DEPLOYED (Laken): api.sh run from a clean worktree of HEAD eeaac3d plus only the /v1/models chassis change. The image is hd-chop-api:eeaac3d-dirty and is healthy. Server /v1/models returns chassis and the new specs (2010 FXD, 1987 FXRS, 2017 FXSE checked).
+- That HEAD already had commit eeaac3d ("B3 drafts: /privacy and /terms"), so /privacy and /terms are now public (200). The privacy page's nginx log-retention line ([14] days) is still unverified.
+
 ### 2026-10-28 (search by family: endpoint + mobile screen + admin page)
 - Laken chose "both" (mobile app and admin console).
 - API (apps/api): new lib/familySearch.ts, GET /v1/families, GET /v1/family-search?family=&q=[&from=&to=][&offset=] (SPEC.md API table updated). Frame families = vehicles.platform (FL Big Twin, FX Big Twin, Sportster, Touring, FXR, Softail, Dyna, V-Rod, Trike, Street, Revolution Max). Motor families = vehicles.engine (Flathead, Panhead, Shovelhead, Ironhead Sportster, Evolution Big Twin, Evolution Sportster, Twin Cam, Milwaukee-Eight). Words -> concept reuse resolveConcepts. Spans come from fitment on the family's bikes only, using the fitment_spans rule (high/medium, gaps-and-islands per root + conditions + platform + model), so a code reused on another platform (FLH fl vs touring) stays out. Sorted by first year; 60 roots per page; no concept -> trigram fallback, logged to search_misses with vehicle_id NULL.
@@ -602,3 +634,6 @@ Append one entry per session. Newest at the bottom.
   - Scored against Laken's boxes with ?all=1 (pages 3-42): 89% of boxes matched, 78% word recall, ~2.5 extra suggestions per page, 46 part-name guesses agree. The misses are boxes with no years in them (sizes, counts).
   - Keys: Enter accepts (Enter also saves drawn and edited boxes), Esc skips for good, Shift+Enter adds a line, drag draws your own box. Tested on p44; test rows deleted.
   - Known: tables whose columns touch can share one suggested box (p44 shifter shaft + bushing kit).
+- 2026-10-31: committed the chassis/engine-spec work above (it had been deployed from a dirty worktree but never committed).
+  - Regression: the 2026-10-29 deploy hd-chop-api:1035eba was built from clean HEAD, which didn't contain the uncommitted /v1/models chassis change.
+  - Live /v1/models has had no `chassis` since then (checked 2010 FXD), so the YOUR BIKE sizes are missing in the app. A redeploy from this commit restores it.
