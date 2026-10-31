@@ -164,3 +164,37 @@ div.rng .rng-y { padding-left: 1.1em; }
 .cat-sug.on { border: 3px dashed #d4a52c; background: rgba(212, 165, 44, 0.18); }
 .cat-sug.on span { background: var(--gold); color: #000; font-weight: 700; }
 .cat-part { font-size: 15px; font-weight: 600; }
+
+/* Catalog compare (/catalog/compare) */
+.cmp { padding: 12px 24px 40px; }
+.cmp-main { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+.cmp-list { position: sticky; top: 76px; max-height: calc(100vh - 90px); overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.cmp-item { display: flex; flex-direction: column; text-align: left; background: var(--panel); color: var(--cream); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; font: inherit; cursor: pointer; }
+.cmp-item.on { border-color: var(--gold); background: var(--panel-2); }
+.cmp-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.cmp-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.cmp-tabs button, .cmp-match button { background: var(--panel-2); color: var(--cream); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; font: inherit; cursor: pointer; }
+.cmp-tabs button.on { background: var(--gold); color: #000; font-weight: 600; }
+.cmp-match { display: flex; gap: 8px; align-items: center; }
+.cmp-match input { max-width: 320px; }
+.cmp-sum { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; }
+.cmp-chip { border-radius: 12px; padding: 3px 10px; font-size: 12.5px; border: 1px solid; }
+.cmp-chip.agree { border-color: var(--green); color: var(--green); }
+.cmp-chip.close { border-color: #d6b84a; color: #d6b84a; }
+.cmp-chip.vt { border-color: var(--red); color: var(--red); }
+.cmp-chip.ours { border-color: var(--muted); color: var(--muted); }
+.cmp-tl { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 26px 12px 12px; }
+.cmp-axis { position: relative; height: 16px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.cmp-axis span { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); top: -16px; }
+.cmp-mark { position: absolute; top: 22px; bottom: 8px; width: 2px; margin-left: -1px; opacity: 0.75; pointer-events: auto; }
+.cmp-mark.agree { background: var(--green); }
+.cmp-mark.close { background: #d6b84a; }
+.cmp-mark.vt { background: var(--red); }
+.cmp-mark.ours { background: var(--muted); opacity: 0.4; }
+.cmp-label { position: relative; font-size: 12px; color: var(--muted); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.cmp-row { position: relative; height: 26px; }
+.cmp-bar { position: absolute; top: 3px; height: 18px; border-radius: 3px; font-size: 11px; line-height: 18px; padding: 0 4px; overflow: hidden; white-space: nowrap; }
+.cmp-bar.vt { background: rgba(212, 165, 44, 0.85); color: #000; font-weight: 600; text-decoration: none; }
+.cmp-bar.hd { background: rgba(111, 174, 106, 0.55); }
+.cmp-chain { position: absolute; top: 4px; padding-left: 6px; font-size: 12px; white-space: nowrap; pointer-events: auto; }
+.cmp-chain.end { padding-left: 0; padding-right: 6px; text-align: right; }

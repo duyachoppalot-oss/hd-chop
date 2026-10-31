@@ -662,3 +662,14 @@ Append one entry per session. Newest at the bottom.
   - Moved: 2 fuel gauges out of speedometer, 1 fuel sender out of wiring harness. Gaskets, harnesses and bulbs keep their own type.
   - Ran 06 --apply, 07 --max-hole 3, 08. Gate unchanged.
   - Live, 2005 FLSTC: "fuel gauge" / "gas gauge" -> 75053-01B; "fuel sender" / "sending unit" -> 75207-04A.
+- 2026-10-31: admin /catalog/compare (Laken: captures vs our H-D data, plus a lineage timeline of the parts).
+  - Left: every captured part name. Right, per family:
+    - change years: agree / within a year / only in captures (possible gap) / only ours;
+    - a year timeline: the captured ranges (gold, linked to the page) above our matching H-D part chains (green bars, oldest first, superseded numbers shown "A → B", links to /part and /web).
+  - `lib/captureFacts.ts` parses capture lines into ranges. `lib/compare.ts`:
+    - family from line models (token rules per HD_TERMINOLOGY; trikes only when named), else the box, else the catalog section;
+    - our parts by name: filler stripped, noun agrees, every non-position word present;
+    - our change years = years where the set of chains on that family changes.
+  - Editable "Our parts named like" box.
+  - Results: outer primary cover agrees on all 6 change years (1985, 89, 94, 99, 2007, 16); caliper and oil pump cover close; clutch pack needs "clutch plate"; compensator needs "compensating sprocket".
+  - Read-only; nothing loaded.

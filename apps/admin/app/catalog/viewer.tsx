@@ -178,6 +178,7 @@ export default function CatalogViewer({ catalog, title, sections, initialPage }:
         <label className="small"><input type="checkbox" checked={showSugs} onChange={(e) => setShowSugs(e.target.checked)} /> Suggestions</label>
         <label className="small"><input type="checkbox" checked={showNums} onChange={(e) => setShowNums(e.target.checked)} /> H-D numbers</label>
         <a className="small" href="/api/catalog/captures/export">Export CSV ({data?.total ?? 0})</a>
+        <a className="small" href="/catalog/compare">Compare with our data</a>
       </div>
       {error ? <p style={{ color: 'var(--red)' }}>{error}</p> : null}
 
