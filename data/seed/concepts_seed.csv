@@ -37,6 +37,8 @@ tail_lamp,Tail Lamp,lighting,tail lamp|tail lamp light|tail light|taillamp|taill
 turn_signal,Turn Signal,lighting,turn signal|turn signal lens|turnsignal|turnsignal lens|directional lamp,blinkers|blinker|signals|turn signals,head,
 speedometer,Speedometer,instruments,speedometer|speedometer head,speedo|gauge|speed gauge,head,
 tachometer,Tachometer,instruments,tachometer,tach|rpm gauge,head,
+fuel_gauge,Fuel Gauge,instruments,fuel gauge|fuel level gauge,gas gauge|fuel meter|gas meter|fuel level,head,
+fuel_sender,Fuel Sender,fuel,fuel level sender|fuel level sensor|fuel gauge sending unit|fuel sending unit|sending unit|fuel level sending unit,fuel sender|gas sender|sending unit|fuel level sensor,head,oil|pressure|temperature|speed|neutral
 ignition_switch,Ignition Switch,electrical,ignition switch,key switch|ignition,head,
 starter,Starter,electrical,starter motor|starter,starter motor,head,
 stator,Stator,electrical,stator,alternator,head,

@@ -655,3 +655,10 @@ Append one entry per session. Newest at the bottom.
   - `shovelhead_model_history.mjs` now gives FL 57 hp and FLH 66 hp for 1966-80 (74 ci).
     - 12 --apply: 242 rows replaced; 30 bikes now have horsepower (the 80 ci FLH option has none).
   - Gate unchanged. Local /v1/models 1970 FLH shows 66 hp. Not deployed; the live API reads the same DB, so it already serves these.
+- 2026-10-31: fuel gauges searchable (Laken: 75053-01B wasn't). "fuel gauge" used to find only Speedometer (trigram on its "gauge" term).
+  - New part types in `data/seed/concepts_seed.csv`:
+    - fuel_gauge (44 parts): fuel gauge, gas gauge, fuel level.
+    - fuel_sender (57 parts): fuel level sender/sensor, sending unit; excludes oil/pressure/temperature/speed/neutral. Every bare "Sending unit" is a 75xxx fuel sender.
+  - Moved: 2 fuel gauges out of speedometer, 1 fuel sender out of wiring harness. Gaskets, harnesses and bulbs keep their own type.
+  - Ran 06 --apply, 07 --max-hole 3, 08. Gate unchanged.
+  - Live, 2005 FLSTC: "fuel gauge" / "gas gauge" -> 75053-01B; "fuel sender" / "sending unit" -> 75207-04A.
