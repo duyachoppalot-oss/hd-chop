@@ -68,10 +68,10 @@ const FILLER = /\b(assembly|assy|asy|kit|kits|complete|set|sets|of|only|pair|eac
 export const cleanName = (s: string) =>
   s.toLowerCase().replace(/\(.*?\)/g, ' ').replace(/\s+for\s+.*$/, ' ').replace(/[^a-z0-9 ]+/g, ' ').replace(FILLER, ' ').replace(/\s+/g, ' ').trim();
 
-// Our parts named like the part name, noun agreeing; then per year the chains on that family.
-export async function ourSide(match: string, family: string, from: number, to: number) {
+// Our parts named like the match words: noun agrees, every non-position word present.
+export async function partsNamedLike(match: string) {
   const words = cleanName(match).split(' ').filter(Boolean);
-  if (!words.length) return { parts: [], years: [] as { year: number; chains: string[] }[] };
+  if (!words.length) return [];
   const noun = words[words.length - 1].replace(/s$/, '');
   // every word must be in our name (word start, so "cover" matches "covers"), except
   // position words: "outer primary cover" ~ "Cover, primary"; "clutch plate" !~ "Plate, switch"
@@ -89,7 +89,13 @@ export async function ourSide(match: string, family: string, from: number, to: n
      ORDER BY ws DESC, oem_display LIMIT 400`,
     [words.join(' '), noun, required]
   );
-  if (!parts.length) return { parts: [], years: [] };
+  return parts;
+}
+
+// Our parts named like the part name; then per year the chains on that family.
+export async function ourSide(match: string, family: string, from: number, to: number) {
+  const parts = await partsNamedLike(match);
+  if (!parts.length) return { parts: [], years: [] as { year: number; chains: string[] }[] };
   const years = await query<{ year: number; chains: string[] }>(
     `SELECT v.year, array_agg(DISTINCT p.chain_root ORDER BY p.chain_root) AS chains
      FROM fitment f JOIN vehicles v USING (vehicle_id) JOIN oem_parts p USING (oem_number)

@@ -673,3 +673,13 @@ Append one entry per session. Newest at the bottom.
   - Editable "Our parts named like" box.
   - Results: outer primary cover agrees on all 6 change years (1985, 89, 94, 99, 2007, 16); caliper and oil pump cover close; clutch pack needs "clutch plate"; compensator needs "compensating sprocket".
   - Read-only; nothing loaded.
+- 2026-10-31: admin /lineage?oem= (Laken: the initial part and the progression of every part that came from it).
+  - `lib/lineage.ts`: "same kind" = parts named like the subject (compare's noun rule, editable) plus its own chain, on bikes sharing a model code with it, per family.
+    - One row per part chain: numbers oldest first, year runs, models.
+    - Hand-offs: on a model, the year one chain stops and another starts.
+  - Views:
+    - Timeline: "first" tag, gold = subject, "next YEAR → part" buttons re-center on that part.
+    - Web: cytoscape staircase, rows oldest to newest, x = first year, edges = hand-offs; click for numbers and models, double-click to re-center.
+  - Linked from the nav, from /part ("Lineage →") and from /catalog/compare rows.
+  - Example, 60665-89 Touring: 60605-79B 1980 → 60605-85 / 60664-85B 1985 → 60543-89 1987 → 60665-89 1989 → 60665-94 1994 → 60665-99B 1999 → 60553-07 2007 → 60553-07A 2014 → 25700385 2016 → 25700418 2017.
+  - `lib/compare.ts` gained partsNamedLike() (shared).

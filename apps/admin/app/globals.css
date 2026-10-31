@@ -198,3 +198,13 @@ div.rng .rng-y { padding-left: 1.1em; }
 .cmp-bar.hd { background: rgba(111, 174, 106, 0.55); }
 .cmp-chain { position: absolute; top: 4px; padding-left: 6px; font-size: 12px; white-space: nowrap; pointer-events: auto; }
 .cmp-chain.end { padding-left: 0; padding-right: 6px; text-align: right; }
+
+/* Part lineage (/lineage) */
+.lin-row.subject .cmp-chain { font-weight: 600; }
+.lin-tag { background: var(--gold); color: #000; font-size: 10px; font-weight: 700; border-radius: 3px; padding: 0 4px; margin-right: 6px; text-transform: uppercase; }
+.lin-next { background: transparent; color: var(--green); border: 1px solid var(--green); border-radius: 10px; font-size: 11px; padding: 0 6px; margin-left: 6px; cursor: pointer; font-family: inherit; }
+.lin-web-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
+.lin-web { height: 640px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.lin-pick { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.lin-row .cmp-chain { max-width: 70%; overflow: hidden; text-overflow: ellipsis; }
+.cmp-tl { overflow: hidden; }

@@ -164,6 +164,7 @@ function DetailView({ d }: { d: Detail }) {
               ))}
               <span className="muted small"> {p.name} · {p.from === p.to ? p.from : `${p.from}-${p.to}`}</span>
               <Link href={`/web?seed=${encodeURIComponent(`part:${p.root.replace(/-/g, '')}`)}`} className="small"> web</Link>
+              <Link href={`/lineage?oem=${encodeURIComponent(p.root)}&family=${d.family}`} className="small"> lineage</Link>
             </span>
           </div>
         ))}

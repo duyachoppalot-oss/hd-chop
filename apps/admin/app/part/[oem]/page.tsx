@@ -128,7 +128,7 @@ export default async function PartPage({ params }: { params: Promise<{ oem: stri
         {ctype ? <> · H-D type <span className="mono">{ctype.type_code}</span> {ctype.type_name} · introduced {ctype.intro_year ?? 'unknown'} <span className="small">({ctype.books} books)</span></> : null}
         {root !== key ? <> · chain root <Link href={`/part/${root}`} className="mono">{display.get(root)}</Link></> : null}
         {' · '}
-        <Link href={`/web?seed=part:${key}`}>Open in web →</Link>
+        <Link href={`/web?seed=part:${key}`}>Open in web →</Link>{' · '}<Link href={`/lineage?oem=${key}`}>Lineage →</Link>
       </p>
 
       <div className="cols">
