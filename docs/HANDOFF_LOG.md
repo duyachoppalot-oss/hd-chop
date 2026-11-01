@@ -733,3 +733,19 @@ Append one entry per session. Newest at the bottom.
   - 1987-90 Touring + FXR + Softail fitment by year: 4,921 / 5,562 / 6,047 / 7,325 -> 13,077 / 14,870 / 16,324 / 19,324.
   - Gate (`reports/gate_after_1340.txt`) matches `gate_before_1340.txt` except 68440-86, which now starts 1988 (was 1991).
   - Not deployed. Fitment is DB-only, so the live API serves it already.
+- 2026-11-01: owner's manuals, NHTSA recalls, VIN lookup. Dry runs only; nothing loaded or deployed.
+  - Owner's manuals:
+    - `~/Developer/catalog-extract/fetch_manuals.mjs` saved 352 domestic owner's manuals plus the 1980-current tire chart (portal group 16, public, no login, 8-15 s apart). Formats: whole-document print PDF (BLAISE `pdfSnapshots`), the viewer's pdfUrl, or per-section PDFs.
+    - 69 BLAISE manuals have no PDF: Buell, plus 2008/10/11 Dyna, some CVO, Police and Street.
+    - Scans (1979 to about 2004) OCR'd by `ocr_manuals.sh`. Tables pulled by `manual_specs.py` (caption x position gives the column).
+  - `scripts/catalog/manual_specs_report.mjs` -> `reports/manual_specs_20261101_150044.txt` (+ rows CSV).
+    - 351 manuals, about 24.5k rows. Full table coverage 2004 on (engine, gears, sprockets, capacities, weights and dimensions per model, tire sizes and pressures, bulbs). 1979-2003 rows are OCR, rough.
+    - 80 H-D part numbers printed in the tables (bulbs etc.); 71 are in oem_parts.
+    - Portal Terms-of-Use question applies (DATA_RIGHTS line 9).
+  - `scripts/etl/20_nhtsa_recalls.mjs` (dry run): NHTSA names H-D models by model code, so recalls map onto vehicles (year, model_code).
+    - API pass: 69 campaigns, 400 pairs, 324 mapped.
+    - The API pass found only 69 campaigns: recallsByVehicle answers 400 for some models (e.g. 2013 FLHTK).
+    - Now reads NHTSA's flat files (FLAT_RCL_PRE/POST_2010.zip, downloaded with Laken's OK; H-D makes only -> `~/Developer/catalog-extract/nhtsa/flat/hd_only.tsv`, 1,491 rows). `--api` keeps the old path.
+    - 181 vehicle campaigns, 1967-2026; 1,314 (campaign, year, model) pairs; 953 mapped. 38 of those were mapped via model codes named in the defect summary, for generic model text like "FL" or "DYNA".
+    - 361 not mapped: generic or old names (FLH SERIES, 1200, ELECTRA GLIDE). An alias list would fix most. Report `reports/20_nhtsa_recalls_20261101_150547.txt`.
+  - `apps/api/app/v1/vin/[vin]/route.ts`: VIN -> vPIC (Series = model code, ModelYear) -> our vehicle. Not cached. Checked locally on format test VINs (2010 FLHX, FLTR, XL1200N). Not deployed.
