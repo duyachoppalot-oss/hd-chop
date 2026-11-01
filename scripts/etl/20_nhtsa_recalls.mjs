@@ -76,7 +76,7 @@ const norm = (m) => m.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '
 const strip = (c) => c.replace(/(96|103|107|110|114|117|131)$/, '');
 // NHTSA spellings of our codes: displacement appended (FLH1200, FLH80, XLH1000, FX1200),
 // EFI "I" appended (FLHPI, FLHTCUI: our vehicles carry EFI in fuel_system, not the code)
-const variants = (c) => [c, strip(c), c.replace(/(1200|1000|1340|80|74)$/, ''), c.replace(/I$/, ''), c.replace(/-?(CVO|SHRINE)$/, '')];
+const variants = (c) => [c.replace(/^([A-Z]+?)(\d)-CVO$/, '$1SE$2'), c, strip(c), c.replace(/(1200|1000|1340|80|74)$/, ''), c.replace(/I$/, ''), c.replace(/-?(CVO|SHRINE)$/, '')];
 const one = (year, c) => variants(c).map((x) => vkey.get(`${year}|${x}`)).find(Boolean) ?? null;
 // shared resolver (codes, families like FLH / XL / 1200, year-bounded model names)
 const matchText = (year, model) => {

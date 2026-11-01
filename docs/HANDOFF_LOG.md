@@ -754,3 +754,12 @@ Append one entry per session. Newest at the bottom.
     - Recall mapper also accepts NHTSA's spellings: displacement suffix (FLH1200, FLH80, XLH1000), EFI "I" (FLHPI, FLHTCUI), -CVO / SHRINE.
     - Result: 1,097 of 1,314 pairs mapped (was 953). Report `reports/20_nhtsa_recalls_20261101_153141.txt`.
   - Left unmatched: 130 NHTSA codes we have no vehicle for that year. Some are real bikes missing from our picker: FLHS 1994-98, FLTC/FLTCU/FLTR 1994-98, police FLHP/FLHPE/FLHTP in many years, FLHTCUL and FLTRUSE 2017-19. Others are NHTSA mislabels (FXD 1986-90) or non-big-twin (Servicar, AMF lightweights, sidecars). Also 36 names, mostly 1970s "1200"/"1340", "DYNA GLIDE" and the make alone.
+- 2026-11-01: vehicle gaps NHTSA names, checked against H-D owner's manuals (Laken). Dry run only: `scripts/etl/21_vehicle_gaps.mjs` -> `reports/21_vehicle_gaps_20261101_154023.txt` (+ CSV).
+  - Manual text: one file per manual in `~/Developer/catalog-extract/manuals/text` (pdftotext, or the OCR pages).
+  - A (year, code) counts as confirmed when owner's manuals of that year print the code 3+ times. Left out: family words (FL, FX, FXD, DYNA…), lightweights, sidecars, and bare XLH after 1985 (= the XLH 883/1100/1200 codes we carry).
+  - 84 gaps: 22 confirmed, 7 weak (1-2 mentions), 55 NHTSA only.
+    - Confirmed: police FLHTP 2007-12/2014, FLHPE 2007-09, FLHPI/FLHPEI 2005-06, FLHP 2003, FXDP 2003-04; FLTC 1994; CVO FLTRSE3 2009, FLHRSEI2 2003; FLTRXL 2026; FXDS-CON 1999.
+    - NHTSA only (likely mislabels, or manuals don't print them): FLHS 1994-98, FLTR 1994-97, FLSTS 1989-92, FXD 1986-90, FLHTCUL / FLTRUSE 2017-19.
+  - Recall mapper: NHTSA's CVO spelling FLHTCU4-CVO / FLTR3-CVO = FLHTCUSE4 / FLTRSE3 (1,098 pairs mapped).
+  - Not applied. Applying = add the confirmed list to 01 as document evidence (like DOC_YEARS), dry-run 01, then 01 -> 03… chain.
+  - Side finding: our 1994 Sportsters are coded XL883/XL1200 (no XLH prefix), unlike 1987-89.
