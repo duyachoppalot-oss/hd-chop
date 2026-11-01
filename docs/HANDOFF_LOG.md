@@ -763,3 +763,15 @@ Append one entry per session. Newest at the bottom.
   - Recall mapper: NHTSA's CVO spelling FLHTCU4-CVO / FLTR3-CVO = FLHTCUSE4 / FLTRSE3 (1,098 pairs mapped).
   - Not applied. Applying = add the confirmed list to 01 as document evidence (like DOC_YEARS), dry-run 01, then 01 -> 03… chain.
   - Side finding: our 1994 Sportsters are coded XL883/XL1200 (no XLH prefix), unlike 1987-89.
+- 2026-11-01: 01 takes owner's-manual model-years as document evidence: `scripts/catalog/specs/manual_model_years.csv`, the 22 confirmed rows from 21. docFamily: FLH* after 1984 = Touring, FXD* from 1991 = Dyna.
+  - Dry run `reports/01_vehicles_20261101_155635.txt` adds exactly those 22, nothing changed or retired:
+    - police FLHP 2003, FLHPE 2007-09, FLHPEI/FLHPI 2005-06, FLHTP 2007-12/2014, FXDP 2003-04 (Twin Cam);
+    - FLTC 1994 (Evo); FLHRSEI2 2003, FLTRSE3 2009; FLTRXL 2026 (M8); FXDS-CON 1999.
+  - Added bikes take no picker name (the app shows the code).
+  - FLHPEI gets fuel 'unknown', not 'efi': the efi rule needs the code without the I in the picker. Not applied.
+  - Searched the portal's parts catalogs (group 14, 407 listed, `~/Developer/catalog-extract/parts_catalog_list.json`). We already have the books for all of them in `rows/`, and their models columns print the codes heavily:
+    - 2007 police: FLHTP 1,170, FLHPE 1,130; 2005 police: FLHPI/FLHPEI 995 each;
+    - 2009 FLTRSE3 2,223; 2003 FLHRSEI2 1,653; 2026 touring FLTRXL 3,112; 1993-94 touring FLTC 180; 1999 dyna FXDS-CON 355.
+  - These bikes have no fitment only because vehicles lacked them (09 loads onto existing vehicles).
+  - Next: 01 --apply, then 09 (and 03/11 --apply), 05 -> 06 -> 07 --max-hole 3 -> 08, then the gate.
+  - Possible follow-up: the 2003-04 police books also name FLHPI/FLHPEI, years NHTSA didn't flag. Letting single-year service-catalog model columns add codes would fill more police years.
