@@ -6,6 +6,7 @@
 //   hd     1971-86 H-D books: INDEX PART NAME ..... USED ON  ("84 to * - FXST; 85 to * - FXWG")
 //   hd1950 1950 spare parts: PART NAME .... PRICE--YEARS ..... codeword ("1941 to 1950", "1949 & 1950")
 //   wla    1942 WLA list: PART NAME .... MFG  qty40 qty41 qty42 per100
+//   col3   1987-90 All 1340cc: one used-on column each for FLT / FXR / Softail, V.I.N. codes
 
 import { parseUsedOn, splitUsedOn, twoDigitYear } from '../etl/lib/usedon.mjs';
 
@@ -533,6 +534,124 @@ function parseVin(book, page, lines) {
   return rows;
 }
 
+// ---------- col3 layout (1987-90 All 1340cc Models: INDEX | PART | NAME | FLT | FXR | SOFTAIL) ----------
+// One used-on column per family; header words "FLT", "FXR", "SOFTAIL" on each page (tesseract
+// TSV) give the column positions (a page without the header reuses the last page's). Cells:
+//   "87*-ALL" (* = through the book's last year; OCR reads it as ° " ' too), "87-EC" (that year
+//   only), "87 to 89-ALL", "88&89-ALL", "L88*-BL" (late 1988: boundary year, low),
+//   "89*-DB/J,FA" (DB, DJ, FA), "EAB" (= EA/B). Two-letter codes are the V.I.N. model
+//   designation (books.mjs `columns`); ALL = every code of that column's family.
+//   "--" / "=" / empty = not used.
+// OCR repairs first: "877-ALL" = 87*-ALL (* read as 7), "87888-ALL" = 87&88 (& read as 8),
+// "87°ALL" / "87--ALL" (dash lost / doubled), "N/A" and "~" = not used. In a code group "I"
+// is a slash ("BH/KIL" = BH/K/L) and "U" is J ("BU" = BJ). Codes are unique across families
+// (D* and FA = FLT, E* = FXR, B* = Softail), so a code is read whatever column it landed in
+// (OCR shifts columns on some pages); the column only decides what "ALL" means. Pages that
+// print full model names instead ("87-FLTC,FLHTC", "87-FXRC") are read too.
+const COL3_YEARS = /(?:\b([EL])\s*)?(?<!\d)(\d{2})(?:\s*&\s*(\d{2}))?\s*([*°"'”’]?)\s*(?:to\s*(\d{2}|[*°"'”’]))?\s*(?:[-–]+|(?<=[*°"'”’])\s*)\s*/g;
+let col3Last = null;
+
+function col3Fits(book, family, cell) {
+  const legend = book.columns[family];
+  const all = Object.assign({}, ...Object.values(book.columns));
+  const flags = [];
+  const byCode = new Map();
+  let t = fixYearTo(cell.replace(/[|¦_;]/g, ' ').replace(/\s+/g, ' ').trim()); // "87t0 89" -> "87 to 89"
+  t = t.replace(/\b(8[7-9]|90)7(?=\s*[-–])/g, '$1*').replace(/\b(8[7-9]|90)8(8[7-9]|90)(?=\s*[*°"'”’]?\s*[-–])/g, '$1&$2');
+  t = t.replace(/^N\/?A\b\s*/i, '');
+  if (!t || /^[-=—–.~\s]*$/.test(t)) return { fits: [], flags };
+  const add = (code, years, low) => {
+    const e = byCode.get(code) ?? byCode.set(code, { years: new Set(), low: new Set() }).get(code);
+    years.forEach((y) => e.years.add(y));
+    low.forEach((y) => e.low.add(y));
+  };
+  const heads = [...t.matchAll(COL3_YEARS)].filter((m) => +m[2] >= 30);
+  if (!heads.length) { flags.push(`used_on:unread:${t.slice(0, 20)}`); return { fits: [], flags }; }
+  heads.forEach((m, i) => {
+    const from = 1900 + Number(m[2]);
+    const amp = m[3] ? 1900 + Number(m[3]) : null;
+    const star = !!m[4] || /^[*°"'”’]$/.test(m[5] ?? '');
+    const to = m[5] && /^\d{2}$/.test(m[5]) ? 1900 + Number(m[5]) : star ? book.to : (amp ?? from);
+    if (from < book.from || from > book.to || to < from || to > book.to) { flags.push(`used_on:year:${m[0].trim()}`); return; }
+    const years = amp && !star && !m[5] ? [from, amp] : Array.from({ length: to - from + 1 }, (_, k) => from + k);
+    const low = m[1] ? [from] : [];
+    const body = t.slice(m.index + m[0].length, i + 1 < heads.length ? heads[i + 1].index : undefined).trim();
+    if (/^ALL?\b/i.test(body)) { for (const k of Object.keys(legend)) for (const c of [legend[k]].flat()) add(c, years, low); return; }
+    let any = false;
+    for (const grp of body.split(',')) {
+      const g = grp.trim().toUpperCase();
+      const full = /^(F[LX][A-Z-]{1,8})\b/.exec(g);
+      if (full && !/^(FL|FX|FA)$/.test(full[1])) { add(full[1].replace(/\.$/, ''), years, low); any = true; continue; }
+      const codes = /^([A-Z]{2}(?:\s*[\/I]?\s*[A-Z](?![A-Z]{2}))*)/.exec(g.replace(/\s+/g, ''));
+      if (!codes) continue;
+      const str = codes[1].replace(/U/g, 'J');
+      const head = str.slice(0, 2);
+      const keys = [head, ...str.slice(2).replace(/[\/I]/g, '').split('').map((ch) => head[0] + ch)];
+      for (const k of keys) {
+        if (!(k in all)) { flags.push(`code:unknown:${k}`); continue; }
+        for (const c of [all[k]].flat()) add(c, years, low);
+        any = true;
+      }
+    }
+    if (!any) flags.push(`used_on:unread:${body.slice(0, 20)}`);
+  });
+  return { fits: [...byCode].map(([code, e]) => ({ code, years: [...e.years].sort(), lowYears: [...e.low] })), flags };
+}
+
+function parseCol3(book, page, tsv) {
+  if (!tsv) return [];
+  const words = tsv.split('\n').slice(1).map((l) => l.split('\t')).filter((c) => c[0] === '5' && c[11]?.trim())
+    .map((c) => ({ x: +c[6], x1: +c[6] + +c[8], y: +c[7] + +c[9] / 2, h: +c[9], text: c[11].trim() }));
+  const head = (re) => words.filter((w) => re.test(w.text));
+  const fams = ['FLT', 'FXR', 'SOFTAIL'].map((f) => head(new RegExp(`^${f}$`)).sort((a, z) => a.y - z.y)[0]);
+  if (fams.every(Boolean) && Math.abs(fams[0].y - fams[2].y) < 40) {
+    const yh = fams[0].y;
+    const near = (re) => head(re).filter((w) => Math.abs(w.y - yh) < 60).sort((a, z) => a.x - z.x)[0];
+    const part = near(/^PART$/), name = near(/^NAME$/);
+    const c = fams.map((w) => (w.x + w.x1) / 2);
+    col3Last = {
+      yh, xPart: part ? part.x - 40 : 0, xName: name ? name.x - 15 : null,
+      bounds: [c[0] - (c[1] - c[0]) / 2, (c[0] + c[1]) / 2, (c[1] + c[2]) / 2, c[2] + (c[2] - c[1]) / 2],
+    };
+  }
+  const L = col3Last;
+  if (!L) return [];
+  // lines by y, tolerance from the page's typical word height (a "-" is only a few px tall
+  // and must not start its own line); a line's y is the mean of its words
+  words.sort((a, z) => a.y - z.y);
+  const hs = words.map((w) => w.h).sort((a, z) => a - z);
+  const tol = (hs[Math.floor(hs.length / 2)] ?? 30) * 0.6;
+  const lines = [];
+  for (const w of words) {
+    const l = lines[lines.length - 1];
+    if (l && Math.abs(w.y - l.y) < tol) { l.ws.push(w); l.y += (w.y - l.y) / l.ws.length; } else lines.push({ y: w.y, ws: [w] });
+  }
+  const rows = [];
+  const fam = ['FLT', 'FXR', 'SOFTAIL'];
+  for (const { y, ws } of lines) {
+    if (y <= L.yh + 20) continue;
+    if (/\bMODELS\b.*\b(D[BD]|E[AB]|B[HJ])\b/.test(ws.map((w) => w.text).join(' '))) continue; // page-foot legend
+    ws.sort((a, z) => a.x - z.x);
+    const left = ws.filter((w) => w.x1 <= L.bounds[0] + 5);
+    // part number: first token in the PART column (or the first token that reads as one)
+    const cand = left.filter((w) => w.x >= L.xPart && (L.xName == null || w.x < L.xName + 10));
+    const pw = cand.find((w) => readPart(w.text.replace(/[^0-9A-Za-z-]/g, ''))) ?? left.slice(0, 2).find((w) => /^\d{3,5}-\d{2}[A-Z]{0,3}$/.test(w.text));
+    if (!pw) continue;
+    const pr = readPart(pw.text.replace(/[^0-9A-Za-z-]/g, ''));
+    if (!pr) continue;
+    const name = left.filter((w) => w.x > pw.x).map((w) => w.text).join(' ').replace(/[\s.·:;-]+$/, '');
+    const cells = fam.map((_, i) => ws.filter((w) => {
+      const cx = (w.x + w.x1) / 2;
+      return cx >= L.bounds[i] && cx < L.bounds[i + 1];
+    }).map((w) => w.text).join(' '));
+    const fits = [], flags = [...(pr.flag ? [pr.flag] : [])];
+    fam.forEach((f, i) => { const r = col3Fits(book, f, cells[i]); fits.push(...r.fits); flags.push(...r.flags); });
+    if (!fits.length && !flags.length) flags.push('used_on:missing');
+    rows.push({ page, part_raw: pw.text, part: pr.part, name, used_raw: cells.map((c, i) => `${fam[i]}: ${c || '-'}`).join(' | '), fits, flags });
+  }
+  return rows;
+}
+
 export function parsePage(book, page, text, tsv) {
   const lines = text.split('\n');
   if (book.layout === 'hd') return parseHd(book, page, lines);
@@ -540,5 +659,6 @@ export function parsePage(book, page, text, tsv) {
   if (book.layout === 'wla') return tsv ? parseWlaTsv(book, page, tsv) : parseWla(book, page, lines);
   if (book.layout === 'appl') return parseAppl(book, page, tsv);
   if (book.layout === 'vin') return parseVin(book, page, lines);
+  if (book.layout === 'col3') return parseCol3(book, page, tsv);
   throw new Error(`unknown layout ${book.layout}`);
 }

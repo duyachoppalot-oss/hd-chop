@@ -233,8 +233,15 @@ BOOKS.push(
     file: path.join(RATBIKE, '1987-90 All 1340cc Models Parts Catalog.pdf'),
     title: '1987-90 All 1340cc Models Parts Catalog',
     from: 1987, to: 1990,
-    layout: 'hd',
-    codes: [],
+    // FLT | FXR | SOFTAIL used-on columns with V.I.N. model designations, legend from PDF p2
+    // and the page feet ("FLST/C BJ": BJ is both). FXRC / FXRS-CON have no vehicle here.
+    layout: 'col3',
+    columns: {
+      FLT: { DB: 'FLTC', DD: 'FLHT', DJ: 'FLHTC', DM: 'FLTCU', DP: 'FLHTCU', FA: 'FLHS' },
+      FXR: { EA: 'FXR', EB: 'FXRS', EC: 'FXRT', EG: 'FXRS-SP', EJ: 'FXRC', EL: 'FXLR', EM: 'FXRS-CON' },
+      SOFTAIL: { BH: 'FXST', BJ: ['FLST', 'FLSTC'], BK: 'FXSTC', BL: 'FXSTS', BM: 'FLSTF' },
+    },
+    codes: ['FXRC', 'FXRS-CON'],
     code: DROP_80,
   },
 );

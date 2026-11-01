@@ -698,3 +698,38 @@ Append one entry per session. Newest at the bottom.
     - "kind": the capture's part name has all its words in our name with the noun agreeing, or it has the same part type; only on families the part fits.
   - Per family: our H-D year runs (green) vs captured ranges (gold for number, light gold for kind); change lines green where our years start or stop that year; list of captures with notes.
   - Checked: 60665-89 (1989-93 matches), 41755-86 (1986-91 matches), 42040-06 (capture says 2008-13 FLT, which we don't list).
+- 2026-11-01: cataloged Laken's next 115 captures (pp 51-132; backup `catalog_captures_backup_20261101`): 93 fitment, 20 stock_spec, 1 size, 1 other. All 331 captures are now reviewed; 141 linked to a part type.
+  - Checked every H-D number printed in the captures (196) against our fitment, see `reports/capture_year_gaps_20261101.csv`:
+    - 59 agree or sit inside our years; 56 are not in the app;
+    - 64 have catalog years we lack, 12 are on a family we don't list.
+  - Pattern: our Touring years often start at 1991 where the catalog says 1979/1986/1988 (16207-79D, 40939-86A, 41804-84A, 44045-87, 75040-88A). Some gaps are V-Twin "-up" ranges running past a later supersession, so they're not real.
+  - Nothing loaded.
+- 2026-11-01: why our Touring years look thin before 1991 (from the capture gap check). Two causes, nothing changed yet.
+  1. Book 1987-90-1340 ("1987-90 All 1340cc Models", 283 pp, OCR fine) loads 72 fitment rows: 11 parses 4,267 rows but 4,243 go to review.
+     - The book prints three used-on columns, FLT | FXR | SOFTAIL, with cells like "87*-ALL", "89-DB/J,FA", "L88-BL". Layout 'hd' expects one models column.
+     - Legend (PDF p2): FLT DB=FLTC DD=FLHT DJ=FLHTC DM=FLTC-U DP=FLHTC-U FA=FLHS; FXR EA=FXR EB=FXRS EC=FXRT EG=FXRS-SP EJ=FXRC EL=FXLR; Softail BH=FXST BJ=FLSTC BK=FXSTC BL=FXSTS BM=FLSTF; "*" = through the current model year.
+     - So 1987-90 FLT/FXR/Softail rely on oem_catalog (~500-1,600 rows/yr) plus police.
+  2. Letter-suffix revisions are separate chains: 40939-86 (1986-90) + 40939-86A (1991-99) together = the catalog's 1986-99.
+     - 6,031 earlier-to-later suffix pairs; 132 already chained; 1,846 not linked where the later one starts after the earlier ends; 4,053 overlap (parallel options, leave alone).
+  - Proposed: a 3-column layout for 11 (x position from the .tsv -> family column, legend codes, "*" -> 1990); a dry-run 05 rule chaining sequential suffix revisions (later starts after earlier ends).
+- 2026-11-01: 3-column parser for book 1987-90-1340 (Laken). Dry run only; nothing applied.
+  - `scripts/catalog/parse.mjs` layout 'col3':
+    - column positions come from the FLT/FXR/SOFTAIL header words in the page TSV; the last page's are reused when a page has no header;
+    - lines are grouped by the page's median word height (dashes no longer split rows);
+    - cells: "87*-ALL" (* through 1990; OCR ° " ' too), "87-EC", "87 to 89", "88&89", "L88" (low); groups "DB/J/M/P", "FA".
+  - OCR repairs: 877 = 87*, 87888 = 87&88, "t0" = to, I = /, U = J, N/A skipped.
+  - A V.I.N. code is read whatever column it lands in (codes are unique per family); full model names (pp 272-273) are accepted.
+  - books.mjs: layout col3; `columns` legend (BJ = FLST and FLSTC); codes FXRC and FXRS-CON declared (we have no vehicle for either).
+  - Before: 24 clean rows, 72 fitment rows loaded. Dry run: 4,431 rows, 3,490 clean (79%); 2,668 numbers (528 new); 53,371 pairs, 44,596 not in hdchop yet.
+    - Most of the 941 in review are the hardware listing (GX/KX/HX codes, p250+).
+  - Checks: 16207-79B 1987-90 FLT+FXR; 41755-86 1987-90 FLT; 75040-88 1989-90 FLT; 44045-87 late 1987-90.
+  - To apply: 11 --apply (all books), then 05 -> 06 -> 07 --max-hole 3 -> 08, then the gate.
+- 2026-11-01: 34799-65 (4-speed ratchet-top shifter assembly), checked after Laken's 4-speed article.
+  - Override 1517 hides 1980-84 FL/FLH (from hydra_glide). Override 1518 adds FX 1971-73 (H-D 1941-78 FL-FX book p44).
+  - Now FL/FLH 1965-79 and FX 1971-73, matching the H-D 1941-84 FL book p80 ("65 to Early 79"; rotary top from 1979).
+  - Live API shows it. 1941-84-fl prints "3479965" (dash lost) after N/A, which is why 11 hadn't used it.
+- 2026-11-01: applied book 1987-90-1340 (col3 parser). 11 --apply (all books), then 05, 06, 07 --max-hole 3 and 08, all --apply.
+  - catalog_ocr: 282,484 -> 322,717 fitment rows (8,189 parts). 05 added 3,153 supersession pairs; chain_root changed on 497 parts. 08 re-applied 1,518 overrides.
+  - 1987-90 Touring + FXR + Softail fitment by year: 4,921 / 5,562 / 6,047 / 7,325 -> 13,077 / 14,870 / 16,324 / 19,324.
+  - Gate (`reports/gate_after_1340.txt`) matches `gate_before_1340.txt` except 68440-86, which now starts 1988 (was 1991).
+  - Not deployed. Fitment is DB-only, so the live API serves it already.
