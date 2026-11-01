@@ -749,3 +749,8 @@ Append one entry per session. Newest at the bottom.
     - 181 vehicle campaigns, 1967-2026; 1,314 (campaign, year, model) pairs; 953 mapped. 38 of those were mapped via model codes named in the defect summary, for generic model text like "FL" or "DYNA".
     - 361 not mapped: generic or old names (FLH SERIES, 1200, ELECTRA GLIDE). An alias list would fix most. Report `reports/20_nhtsa_recalls_20261101_150547.txt`.
   - `apps/api/app/v1/vin/[vin]/route.ts`: VIN -> vPIC (Series = model code, ModelYear) -> our vehicle. Not cached. Checked locally on format test VINs (2010 FLHX, FLTR, XL1200N). Not deployed.
+  - Model text now goes through the shared resolver: `resolveModelText` in `scripts/etl/lib/vendorterms.mjs`. Order: whole text as code/family, then a code word, then that year's `vehicles.model_name`, so names stay year-bounded.
+    - New family rule from Laken: bare `1200` / `883` / `1000` = the XL Sportster of that size. Because it's year-bounded, 1970s "1200" (the 74 ci FL/FX) stays unmatched: there's no XL1200 before 1988. 17_vtwin_oem picks this up on its next run.
+    - Recall mapper also accepts NHTSA's spellings: displacement suffix (FLH1200, FLH80, XLH1000), EFI "I" (FLHPI, FLHTCUI), -CVO / SHRINE.
+    - Result: 1,097 of 1,314 pairs mapped (was 953). Report `reports/20_nhtsa_recalls_20261101_153141.txt`.
+  - Left unmatched: 130 NHTSA codes we have no vehicle for that year. Some are real bikes missing from our picker: FLHS 1994-98, FLTC/FLTCU/FLTR 1994-98, police FLHP/FLHPE/FLHTP in many years, FLHTCUL and FLTRUSE 2017-19. Others are NHTSA mislabels (FXD 1986-90) or non-big-twin (Servicar, AMF lightweights, sidecars). Also 36 names, mostly 1970s "1200"/"1340", "DYNA GLIDE" and the make alone.

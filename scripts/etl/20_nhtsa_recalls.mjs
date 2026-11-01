@@ -14,6 +14,7 @@ import os from 'node:os';
 import path from 'node:path';
 import pg from 'pg';
 import 'dotenv/config';
+import { resolveModelText } from './lib/vendorterms.mjs';
 
 const API = 'https://api.nhtsa.gov';
 const CACHE = path.join(os.homedir(), 'Developer/catalog-extract/nhtsa');
@@ -35,7 +36,7 @@ async function get(url) {
 }
 
 const pool = new pg.Pool({ connectionString: process.env.APP_DATABASE_URL });
-const vehicles = (await pool.query('SELECT vehicle_id, year, model_code, platform FROM vehicles')).rows;
+const vehicles = (await pool.query('SELECT vehicle_id, year, model_code, model_name, platform FROM vehicles')).rows;
 const vkey = new Map(vehicles.map((v) => [`${v.year}|${v.model_code}`, v]));
 const years = [...new Set(vehicles.map((v) => v.year))].filter((y) => y >= 1966).sort();
 
@@ -73,15 +74,16 @@ await pool.end();
 // NHTSA model names are codes, sometimes with an engine suffix (FLHX103) or spaces
 const norm = (m) => m.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
 const strip = (c) => c.replace(/(96|103|107|110|114|117|131)$/, '');
-const one = (year, c) => vkey.get(`${year}|${c}`) ?? vkey.get(`${year}|${strip(c)}`) ?? null;
-// the model text itself, else one of its words (SPORTSTER XLCH -> XLCH)
+// NHTSA spellings of our codes: displacement appended (FLH1200, FLH80, XLH1000, FX1200),
+// EFI "I" appended (FLHPI, FLHTCUI: our vehicles carry EFI in fuel_system, not the code)
+const variants = (c) => [c, strip(c), c.replace(/(1200|1000|1340|80|74)$/, ''), c.replace(/I$/, ''), c.replace(/-?(CVO|SHRINE)$/, '')];
+const one = (year, c) => variants(c).map((x) => vkey.get(`${year}|${x}`)).find(Boolean) ?? null;
+// shared resolver (codes, families like FLH / XL / 1200, year-bounded model names)
 const matchText = (year, model) => {
   const v = one(year, norm(model));
-  if (v) return [v];
-  const hits = model.toUpperCase().split(/[\s/,]+/).map((w) => one(year, norm(w))).filter(Boolean);
-  return [...new Map(hits.map((h) => [h.vehicle_id, h])).values()];
+  return v ? [v] : resolveModelText(model, year, vehicles).matches;
 };
-// generic text (FL, DYNA, 1200): the codes the defect summary names in parentheses for that year
+// text the resolver can't place: the codes the defect summary names in parentheses for that year
 const fromSummary = (year, summary) => [...new Map([...(summary ?? '').matchAll(/\(([A-Z]{2,}[A-Z0-9-]*)\)/g)]
   .map((m) => one(year, m[1])).filter(Boolean).map((v) => [v.vehicle_id, v])).values()];
 
@@ -109,7 +111,11 @@ L.push('', 'Campaigns per model year:', '  ' + [...perYear].map(([y, s]) => `${y
 const comp = new Map();
 for (const c of campaigns.values()) { const k = c.component.split(':')[0]; comp.set(k, (comp.get(k) ?? 0) + 1); }
 L.push('', 'Campaigns by component:', ...[...comp].sort((a, z) => z[1] - a[1]).map(([k, n]) => `  ${String(n).padStart(4)} ${k}`));
-L.push('', `NHTSA models not matched to a vehicle (${unmatched.size}):`, '  ' + [...unmatched.keys()].sort().join(', '));
+const codeLike = (k) => /^\d{4} [A-Z]{2,}[A-Z0-9-]*$/.test(k);
+const um = [...unmatched.keys()].sort();
+L.push('', `NHTSA models not matched to a vehicle (${unmatched.size}):`,
+  `  model codes we have no vehicle for that year (${um.filter(codeLike).length}): ` + um.filter(codeLike).join(', '),
+  `  names / families / other makes (${um.filter((k) => !codeLike(k)).length}): ` + um.filter((k) => !codeLike(k)).join(', '));
 L.push('', 'Sample campaigns (20):');
 for (const c of [...campaigns.values()].slice(0, 20)) L.push(`  ${c.c} ${c.date} ${c.component} | H-D #${c.hd || '?'} | ${c.bikes.size} of our bikes | ${c.summary.slice(0, 140)}`);
 fs.mkdirSync('reports', { recursive: true });

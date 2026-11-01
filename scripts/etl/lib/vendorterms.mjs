@@ -47,6 +47,12 @@ function family(tok, y0, y1, vs) {
       return pick((v) => v.platform === 'softail' && /^FL/.test(v.model_code), 'FL Softails');
     case 'FXD':
       return pick((v) => v.platform === 'dyna', 'Dyna');
+    case '1200':
+    case '883':
+    case '1000':
+      // displacement alone = that Sportster (Laken 2026-11-01): XL1200*, XLH1200, XR1000 not included
+      if (y0 < 1957) return { kind: 'review', matches: [], reason: `${tok} before 1957` };
+      return pick((v) => v.platform === 'sportster' && new RegExp(`^XL[A-Z]*${tok}`).test(v.model_code), `Sportster ${tok}`);
     case 'XL':
       if (y0 < 1957) return { kind: 'review', matches: [], reason: 'XL before 1957 (K model era)' };
       // XR750 is a factory race bike; vendors' "XL" means street Sportsters.
@@ -83,4 +89,27 @@ export function splitFitmentRaw(text, upTo = 2026) {
     if (!m) return { tok: p, raw: true };
     return { tok: m[1], y0: +m[2], y1: /UP/i.test(m[3]) ? upTo : +m[3] };
   });
+}
+
+// Free model text from a source that mixes codes, families and names ("FLH SERIES",
+// "SPORTSTER XLCH", "ELECTRA GLIDE", "1200 CUSTOM SPORTSTER") for one model year.
+// Order: the whole text as a code/family (resolveSegment), each word as a code/family, then
+// the model names of that year's vehicles (vehicles.model_name, so names stay year-bounded:
+// "FAT BOB" is FXDF in 2008 and FXFB in 2018). Same result shape as resolveSegment.
+const FILLER = /\b(SERIES|MODELS?|FAMILY|MOTORCYCLES?|HARLEY[- ]DAVIDSON|H-D)\b/g;
+export function resolveModelText(text, year, vehicles) {
+  const t = text.toUpperCase().replace(FILLER, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return { kind: 'skip', matches: [], reason: 'make only' };
+  const whole = resolveSegment(t, year, year, vehicles);
+  if (whole.matches.length || ['skip', 'reject'].includes(whole.kind)) return whole;
+  const words = t.split(/[\s/,]+/).filter(Boolean);
+  const byWord = words.map((w) => resolveSegment(w, year, year, vehicles)).filter((r) => r.matches.length);
+  // a code word beats a family word (SPORTSTER XLCH -> XLCH, not every Sportster)
+  const codes = byWord.filter((r) => r.kind === 'model');
+  if (codes.length) return { kind: 'model', matches: [...new Set(codes.flatMap((r) => r.matches))], reason: 'code in text' };
+  const inYear = vehicles.filter((v) => v.year === year && v.model_name);
+  const named = inYear.filter((v) => ` ${v.model_name.toUpperCase()} `.includes(` ${t} `));
+  if (named.length) return { kind: 'family', matches: named, reason: 'model name' };
+  if (byWord.length === 1) return byWord[0];
+  return { kind: 'review', matches: [], reason: whole.reason };
 }
