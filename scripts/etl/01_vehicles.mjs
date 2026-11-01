@@ -53,6 +53,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { readBooks, available as serviceCatalogAvailable } from './lib/servicecatalog.mjs';
 import { parseUsedOn, splitUsedOn } from './lib/usedon.mjs';
+import { readCsv } from './lib/csv.mjs';
+import { fileURLToPath } from 'node:url';
 import * as shovelHistory from '../catalog/specs/shovelhead_model_history.mjs';
 import { bookBySlug } from '../catalog/books.mjs';
 
@@ -143,6 +145,12 @@ for (let y = 1979; y <= 1982; y++) DOC_YEARS.set(`${y}|XLS`, '1979-85 XL catalog
 // FLHTP police Electra Glide from the 1984.5 mid-year introduction through 1990, and rows
 // name it on its own every year 1984-90 ("Late 84 to 90-FLHTP"). We had FLHTP from 1991 only.
 for (let y = 1984; y <= 1990; y++) DOC_YEARS.set(`${y}|FLHTP`, '1984.5-90 FXRP/FLHTP catalog');
+// H-D owner's manuals (added 2026-11-01, Laken): model-years NHTSA's recall file names that
+// the picker lacks (or 01 had no evidence for), each printed 3+ times by an owner's manual of
+// that year (scripts/etl/21_vehicle_gaps.mjs -> scripts/catalog/specs/manual_model_years.csv:
+// police FLHTP/FLHPE/FLHPI/FXDP 2003-14, FLTC 1994, CVO FLTRSE3 2009 / FLHRSEI2 2003, ...).
+for (const r of readCsv(fileURLToPath(new URL('../catalog/specs/manual_model_years.csv', import.meta.url))))
+  if (!DOC_YEARS.has(`${r.year}|${r.code}`)) DOC_YEARS.set(`${r.year}|${r.code}`, `owner's manual: ${r.manual}`);
 // 1986-90 XLH Evolution Sportster catalog (99451-90 era, (c) 1989), page 2 V.I.N. table:
 // 1986 XLH 883, 883 Deluxe, 1100; 1987 adds the 883 Hugger; 1988-90 XLH 883, 1200,
 // 883 Hugger, 883 Deluxe.
@@ -166,8 +174,9 @@ const NOT_EVO_XL = (year, code) => year >= 1986 && year <= 1990 && /^XL/.test(co
 // catalog's word: FX 1978-79, FXE 1973 ("73 - FX, FXE"), FXS 1983 ("Late 82 & 83 -
 // FXS-80"), FXSB 1982 ("82 & 83 - FXWG, FXE-80, FXSB"), FXEF 1984 ("84 & 85 - FXSB, FXEF").
 const FX_NOT_BUILT = new Set(['1980|FX', '1981|FX', '1982|FX', '1983|FX', '1984|FX', '1984|FXS']);
-const docFamily = (code) =>
-  /^FLT|^FLHT/.test(code) ? 'Touring' : code.startsWith('XL') ? 'Sportster' : code.startsWith('W') ? 'Flathead' : 'Shovelhead';
+const docFamily = (code, year) =>
+  /^FLT|^FLHT/.test(code) || (year >= 1985 && /^FLH/.test(code)) ? 'Touring' : year >= 1991 && /^FXD/.test(code) ? 'Dyna'
+    : code.startsWith('XL') ? 'Sportster' : code.startsWith('W') ? 'Flathead' : 'Shovelhead';
 const XL_MODEL_YEARS = [1957, 1957];
 
 // Bare family abbreviations in catalog text ("FX" = Dyna/FX family, "FL" =
@@ -369,7 +378,7 @@ async function main() {
   for (const k of DOC_YEARS.keys())
     if (!pickerKeys.has(k)) {
       const [y, code] = k.split('|');
-      rows.push({ year: Number(y), model_id: null, code, model_name: null, family: docFamily(code), filter_group: 'DOC' });
+      rows.push({ year: Number(y), model_id: null, code, model_name: null, family: docFamily(code, Number(y)), filter_group: 'DOC' });
     }
 
   const inRange = rows.filter((r) => r.year >= VEHICLES_YEAR_MIN && r.year <= VEHICLES_YEAR_MAX);
