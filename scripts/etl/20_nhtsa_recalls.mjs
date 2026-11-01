@@ -5,7 +5,7 @@
 //
 //   node scripts/etl/20_nhtsa_recalls.mjs            dry run: fetch (cached), map, report
 //   node scripts/etl/20_nhtsa_recalls.mjs --refresh  re-fetch instead of using the cache
-//   (--apply: not built yet; needs the recall tables and Laken's OK)
+//   node scripts/etl/20_nhtsa_recalls.mjs --apply    replace nhtsa_recalls + vehicle_recalls (migration 017)
 //
 // Cache: ~/Developer/catalog-extract/nhtsa/<year>.json. Report: reports/20_nhtsa_recalls_<ts>.txt
 // plus a CSV of every (campaign, year, model) pair.
@@ -19,6 +19,7 @@ import { resolveModelText } from './lib/vendorterms.mjs';
 const API = 'https://api.nhtsa.gov';
 const CACHE = path.join(os.homedir(), 'Developer/catalog-extract/nhtsa');
 const refresh = process.argv.includes('--refresh');
+const APPLY = process.argv.includes('--apply');
 fs.mkdirSync(CACHE, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ts = new Date().toISOString().replace(/[-:]/g, '').replace('T', '_').slice(0, 15);
@@ -50,7 +51,7 @@ if (useFlat) {
     const f = line.split('\t');
     if (f.length < 22 || f[10] !== 'V' || !/^(19|20)\d\d$/.test(f[4])) continue;
     const d = f[15];
-    pairs.push({ year: Number(f[4]), model: f[3], r: { NHTSACampaignNumber: f[1], ReportReceivedDate: d ? `${d.slice(6, 8)}/${d.slice(4, 6)}/${d.slice(0, 4)}` : '', Component: f[6], Summary: f[19], Remedy: f[21], hd: f[5], affected: Number(f[11]) || null } });
+    pairs.push({ year: Number(f[4]), model: f[3], r: { NHTSACampaignNumber: f[1], ReportReceivedDate: d ? `${d.slice(6, 8)}/${d.slice(4, 6)}/${d.slice(0, 4)}` : '', Component: f[6], Summary: f[19], Consequence: f[20], Remedy: f[21], hd: f[5], affected: Number(f[11]) || null } });
   }
 }
 for (const year of useFlat ? [] : years) {
@@ -69,7 +70,6 @@ for (const year of useFlat ? [] : years) {
   }
   for (const [model, recalls] of Object.entries(data)) for (const r of recalls) pairs.push({ year, model, r });
 }
-await pool.end();
 
 // NHTSA model names are codes, sometimes with an engine suffix (FLHX103) or spaces
 const norm = (m) => m.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
@@ -91,13 +91,15 @@ const campaigns = new Map();
 const unmatched = new Map();
 let matched = 0, bySummary = 0;
 const rows = [];
+const links = new Map(); // "campaign|vehicle_id" -> { nhtsa_model, matched_by }
 for (const p of pairs) {
   const c = p.r.NHTSACampaignNumber;
-  if (!campaigns.has(c)) campaigns.set(c, { c, date: p.r.ReportReceivedDate, component: p.r.Component, hd: p.r.hd || (/recall is (\w+)/i.exec(p.r.Remedy ?? '')?.[1] ?? ''), summary: p.r.Summary ?? '', bikes: new Set() });
+  if (!campaigns.has(c)) campaigns.set(c, { c, date: p.r.ReportReceivedDate, component: p.r.Component, hd: p.r.hd || (/recall is (\w+)/i.exec(p.r.Remedy ?? '')?.[1] ?? ''), summary: p.r.Summary ?? '', consequence: p.r.Consequence ?? '', remedy: p.r.Remedy ?? '', bikes: new Set() });
   let vs = matchText(p.year, p.model), how = 'model';
   if (!vs.length) { vs = fromSummary(p.year, p.r.Summary); how = 'summary'; }
   if (vs.length) { matched++; how === 'summary' && bySummary++; vs.forEach((v) => campaigns.get(c).bikes.add(v.vehicle_id)); }
   else unmatched.set(`${p.year} ${p.model}`, (unmatched.get(`${p.year} ${p.model}`) ?? 0) + 1);
+  for (const v of vs) if (!links.has(`${c}|${v.vehicle_id}`)) links.set(`${c}|${v.vehicle_id}`, { c, vehicle_id: v.vehicle_id, nhtsa_model: p.model, matched_by: how });
   for (const v of vs.length ? vs : [null]) rows.push([c, p.year, p.model, v?.model_code ?? '', v?.platform ?? '', vs.length ? how : '', p.r.Component, p.r.ReportReceivedDate]);
 }
 
@@ -123,3 +125,21 @@ fs.writeFileSync(`reports/20_nhtsa_recalls_${ts}.txt`, L.join('\n') + '\n');
 const q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
 fs.writeFileSync(`reports/20_nhtsa_recall_pairs_${ts}.csv`, ['campaign,year,nhtsa_model,model_code,platform,matched_by,component,report_date', ...rows.map((r) => r.map(q).join(','))].join('\n') + '\n');
 console.log(`→ reports/20_nhtsa_recalls_${ts}.txt. ${campaigns.size} campaigns, ${pairs.length} pairs, ${matched} mapped.`);
+
+if (APPLY) {
+  const toDate = (d) => (/^\d\d\/\d\d\/\d{4}$/.test(d) ? `${d.slice(6)}-${d.slice(3, 5)}-${d.slice(0, 2)}` : null);
+  const db = await pool.connect();
+  try {
+    await db.query('BEGIN');
+    await db.query('DELETE FROM vehicle_recalls');
+    await db.query('DELETE FROM nhtsa_recalls');
+    for (const c of campaigns.values())
+      await db.query(`INSERT INTO nhtsa_recalls (campaign, report_date, component, hd_recall, summary, consequence, remedy, source_ref) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [c.c, toDate(c.date), c.component ?? '', c.hd ?? '', c.summary, c.consequence, c.remedy, useFlat ? 'NHTSA FLAT_RCL' : 'NHTSA recalls API']);
+    for (const l of links.values())
+      await db.query('INSERT INTO vehicle_recalls (campaign, vehicle_id, nhtsa_model, matched_by) VALUES ($1,$2,$3,$4)', [l.c, l.vehicle_id, l.nhtsa_model, l.matched_by]);
+    await db.query('COMMIT');
+    console.log(`Applied: ${campaigns.size} recalls, ${links.size} vehicle links.`);
+  } catch (e) { await db.query('ROLLBACK'); throw e; } finally { db.release(); }
+}
+await pool.end();

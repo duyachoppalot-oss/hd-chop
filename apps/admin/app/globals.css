@@ -215,3 +215,18 @@ div.rng .rng-y { padding-left: 1.1em; }
 .cr-caps { display: grid; gap: 6px; margin-top: 8px; }
 .cr-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: rgba(212, 165, 44, 0.45); }
 .cr-dot.number { background: var(--gold); }
+
+/* model page spec card */
+.speccard h4 { margin: 14px 0 6px; }
+.speccard-years { display: flex; flex-wrap: wrap; gap: 3px; margin: 6px 0 10px; }
+.speccard-years a { font-family: var(--mono, monospace); font-size: 12px; padding: 2px 5px; border: 1px solid var(--line, #ccc); border-radius: 4px; text-decoration: none; }
+.speccard-years a.on { background: var(--gold, #c9a227); color: #000; border-color: var(--gold, #c9a227); }
+.speccard-years sup { color: var(--red, #c33); font-size: 9px; }
+.speccard-facts { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 0; font-size: 13px; }
+.speccard-facts dt { color: var(--muted, #888); text-transform: capitalize; }
+.speccard-facts dd { margin: 0; }
+.speccard-recall, .speccard-kind { margin: 4px 0; font-size: 13px; }
+.speccard-recall summary, .speccard-kind summary { cursor: pointer; text-transform: none; }
+.speccard-kind > summary { text-transform: capitalize; font-weight: 600; }
+.speccard-table { margin: 6px 0 10px; width: 100%; }
+.speccard-table caption { text-align: left; font-size: 12px; padding: 2px 0; }

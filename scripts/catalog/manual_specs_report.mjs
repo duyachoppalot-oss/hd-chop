@@ -54,7 +54,8 @@ for (const [file, m] of Object.entries(specs)) {
       // scanned manuals: the page has no table captions, so the row's own label says what it is
       const rk = t.col === 'ocr' ? labelKind(r.join(' ')) : kind;
       if (t.col === 'ocr') { if (!rk) continue; kinds.add(rk); }
-      if (r.length < 2 || /^(ITEM|COMPONENT|MODEL|LAMP|GEAR|DRIVE|SPECIFICATION|IN\.|LB\.|PSI)\b/i.test(r[0]) || /^\d+ Specifications|Specifications \d+$/.test(r.join(' '))) continue;
+      // header rows (ITEM | FLHT | FLHTC, LB. | KG) stay: they label the columns on the model page
+      if (r.length < 2 || /^\d+ Specifications|Specifications \d+$/.test(r.join(' '))) continue;
       rows.push({ year, family, file, title: m.title, kind: rk, table: t.title, page: t.page, label: r[0], values: r.slice(1).join(' | ') });
     }
   }

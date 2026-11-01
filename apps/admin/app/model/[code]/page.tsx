@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MODEL_RE, query } from '@/lib/db';
 import { Notes } from '@/components/Notes';
+import { SpecCard } from '@/components/SpecCard';
 import { Timeline, toneFor, yearsText, type Group, type Lane } from '@/components/Timeline';
 
 export const dynamic = 'force-dynamic';
@@ -27,11 +28,11 @@ export default async function ModelPage({
   searchParams,
 }: {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ q?: string; all?: string }>;
+  searchParams: Promise<{ q?: string; all?: string; year?: string }>;
 }) {
   const code = (await params).code.toUpperCase();
   if (!MODEL_RE.test(code)) notFound();
-  const { q = '', all } = await searchParams;
+  const { q = '', all, year: yearParam } = await searchParams;
   const showAll = all === '1';
 
   const vehicles = await query<{ year: number; model_name: string | null; platform: string; engine: string | null; fuel_system: string; has_parts: boolean }>(
@@ -140,7 +141,11 @@ export default async function ModelPage({
           <Timeline from={from} to={to} groups={[...groups.values()]} corner={`${code} · part chain`} exists={built} />
         </div>
         <div>
-          <Notes kind="model" target={code} back={back} title={`Notes on ${code}`} />
+          <div id="spec">
+            <SpecCard code={code} years={vehicles.map((v) => v.year)}
+              year={vehicles.some((v) => v.year === Number(yearParam)) ? Number(yearParam) : vehicles[vehicles.length - 1].year} />
+          </div>
+          <div style={{ marginTop: 14 }}><Notes kind="model" target={code} back={back} title={`Notes on ${code}`} /></div>
           <div className="panel" style={{ marginTop: 14 }}>
             <h3>Model years</h3>
             <table className="list small">

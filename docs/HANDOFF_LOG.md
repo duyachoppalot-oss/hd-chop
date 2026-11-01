@@ -775,3 +775,21 @@ Append one entry per session. Newest at the bottom.
   - These bikes have no fitment only because vehicles lacked them (09 loads onto existing vehicles).
   - Next: 01 --apply, then 09 (and 03/11 --apply), 05 -> 06 -> 07 --max-hole 3 -> 08, then the gate.
   - Possible follow-up: the 2003-04 police books also name FLHPI/FLHPEI, years NHTSA didn't flag. Letting single-year service-catalog model columns add codes would fill more police years.
+- 2026-11-01: applied the 22 owner's-manual bikes, loaded recalls and manual specs, and added a spec card to the admin model page (Laken: "get everything completed").
+  - Chain: 01 --apply (1,873 -> 1,895 vehicles), 03, then 04 -> 09 -> 11 -> 14 -> 17 -> 05 -> 06 -> 07 --max-hole 3 -> 08.
+    - Lesson: 03 rebuilds oem_catalog fitment and drops the condition tags and the 14/17 rows. After 03 always run 04, 09, 11, 14, 17 (03 prints this). A first pass without 04/14/17 lost {hdi} tags and the hydra/vtwin rows until the rerun.
+  - New bikes now have parts, e.g. 2007 FLHTP 1,278 rows, 2009 FLTRSE3 1,336, 2026 FLTRXL 1,309, 2003 FXDP 1,097, 1994 FLTC 274.
+    - Still none: 2003 FLHP and 1999 FXDS-CON (books print them only in multi-year/model lists 09 doesn't target).
+  - Fitment by source: service_catalog 685,202 -> 708,694; oem_catalog 777,679 -> 778,597; catalog_ocr 322,796; hydra_glide 84,863; inferred_span 12,811; admin 3.
+    - vtwin 4,053 -> 1,893. 17 skips a year + platform once an H-D book covers it (200+ H-D rows), and the 1987-90 book now covers the 1987-89 Softails where most old V-Twin rows were. About 2,100 V-Twin-only pairs left with them (e.g. 24016-80 on 1988 FXSTS).
+  - Gate (`reports/gate_after_manual_bikes.txt`) = `gate_after_1340.txt` except 2004 has 51 models (43 with parts) and 68140-99 has 119 spans (was 112).
+  - Migration `017_recalls_manual_specs.sql` (applied): nhtsa_recalls, vehicle_recalls, manual_specs.
+  - DATA_RIGHTS: two rows. NHTSA recalls (public domain); owner's-manual spec facts, admin only until the legal review.
+  - Loaders:
+    - `20_nhtsa_recalls.mjs --apply`: 181 recalls, 1,176 vehicle links; 1,133 of 1,314 pairs map now that the police bikes exist.
+    - `22_manual_specs.mjs --apply`: 27,658 rows from 325 manuals; 1,385 OCR rows flagged. Header rows (ITEM | FLHT | ...) are kept to label columns.
+  - Admin `/model/<code>?year=<y>`: Spec card (`components/SpecCard.tsx`).
+    - Year chips (● = has recalls). Bike, engine and chassis sizes with sources on hover. Recalls with summary / risk / remedy, linked to NHTSA. Owner's-manual tables grouped by kind, with manual ref + page.
+    - A bike's own manual (CVO title naming the code, police manual for police codes, code in the title) replaces the family manual. Without that, 2007 FLHTP showed the Touring 96 ci beside its police 103 ci.
+    - Checked in the browser: 2010 FLHX, 2007 FLHTP.
+  - Known rough edges: a few table rows bleed between side-by-side tables (2010 Capacities shows tire-pressure rows); 1979-2003 OCR rows are rough; new manual bikes have no model name.
