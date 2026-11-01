@@ -793,3 +793,8 @@ Append one entry per session. Newest at the bottom.
     - A bike's own manual (CVO title naming the code, police manual for police codes, code in the title) replaces the family manual. Without that, 2007 FLHTP showed the Touring 96 ci beside its police 103 ci.
     - Checked in the browser: 2010 FLHX, 2007 FLHTP.
   - Known rough edges: a few table rows bleed between side-by-side tables (2010 Capacities shows tire-pressure rows); 1979-2003 OCR rows are rough; new manual bikes have no model name.
+- 2026-11-01: API redeployed from the clean tree, 05e8d81 (`scripts/deploy/api.sh`, container hd-chop-api:05e8d81 healthy).
+  - Live `/v1/vin/<vin>` decodes the format test VINs to 2010 FLHX / FLTR / XL1200N and matches our vehicles.
+  - A bad VIN gives 400, no key 401, and responses are `Cache-Control: no-store`.
+  - Live `/v1/models?year=2007` lists FLHP, FLHPE and FLHTP with parts.
+  - Still to check with real VINs from Laken. The mobile app doesn't call /v1/vin yet.
